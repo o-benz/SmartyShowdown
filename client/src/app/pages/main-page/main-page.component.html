@@ -1,0 +1,22 @@
+<div class="main-page-container">
+    <header>
+        <a [routerLink]="['/home']" class="info-project">
+            <img src="../../../assets/logo.png" alt="project logo" class="project-logo" />
+            <h1>SmartyShowdown</h1>
+        </a>
+    </header>
+
+    <div class="options">
+        <button mat-raised-button (click)="joinGameParty()">Joindre</button>
+        <button mat-raised-button [routerLink]="['/creategame']">Créer</button>
+        <button mat-raised-button (click)="manageGames()">Administrer</button>
+    </div>
+
+    <footer class="footer-item">
+        <h4 class="team-name">Équipe 101</h4>
+        <p>
+            <span class="css-king">Omar BENZEKRI</span>, <span>Charles DESROSIERS</span>, <span>Hugo LEFEBVRE</span>, <span>Thomas ROULEAU</span>,
+            <span>Yassine SEDDAOUI</span>, <span>Éloi VINCENT-LÉGARÉ</span>
+        </p>
+    </footer>
+</div>

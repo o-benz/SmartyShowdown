@@ -1,0 +1,17 @@
+<div class="popup-container">
+    <div class="popup-content" [ngClass]="{'correct': questionBooleanPackage.isAnswerCorrect, 'incorrect': !questionBooleanPackage.isAnswerCorrect}">
+        <div class="score">{{ questionBooleanPackage.isAnswerCorrect ? 'Bonne Réponse' : 'Mauvaise Réponse' }}</div>
+        <div *ngIf="!questionBooleanPackage.isAnswerCorrect">
+            <div class="correct-answer">
+                La bonne réponse était :
+            </div>
+            <div class="correct-answer" *ngFor="let choice of questionBooleanPackage.question.choices; index as choiceId">
+                <div *ngIf="choice.isCorrect">
+                    <div>&#8226; {{ choice.text }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="bonus" *ngIf="questionBooleanPackage.isAnswerCorrect">Vous avez obtenu un bonus de 20% pour la première réponse correcte.</div>
+        <div class="timer">{{ time }}</div>
+    </div>
+</div>

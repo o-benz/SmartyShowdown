@@ -1,0 +1,53 @@
+@import '../../../styles.scss';
+
+::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
+  user-select: none;
+  padding: 10px !important;
+  border-radius: 15px !important;
+}
+
+form {
+  background-color: $white;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+label {
+  user-select: none;
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+input {
+  width: 80%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid $chat-disabled-bg;
+  box-sizing: border-box;
+  border-radius: 4px;
+}
+
+button {
+  width: 80%;
+  padding: 12px;
+  background-color: $main-pink;
+  color: $white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: $main-green;
+}
+
+button:active {
+  background-color: $hover-green;
+}

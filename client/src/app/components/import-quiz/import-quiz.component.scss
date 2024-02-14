@@ -1,0 +1,25 @@
+@import '../../../styles.scss';
+
+.file-upload-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    vertical-align: top;
+    flex: 1;
+    margin: 15px;
+    height: 40vmin;
+    width: 30vmin;
+    border-radius: 15px;
+    font-size: 6vmin;
+    color: $white;
+    background-color: $main-pink;
+    white-space: normal;
+    border: 2px solid $main-green;
+    cursor: pointer;
+}
+
+input {
+    display: none;
+}

@@ -1,0 +1,48 @@
+@import '../../../styles.scss';
+
+.content-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 10px;
+    height: 100%;
+}
+
+.start-container {
+    grid-column: 1 / span 3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Button Styles */
+.start-button {
+    display: inline-block;
+    padding: 25px 50px;
+    font-size: 24px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: $white;
+    background-color: $main-pink;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0px 6px 10px $box-shadow;
+    transition: all 0.3s ease;
+  }
+  
+  .start-button:hover {
+    background-color: $main-green;
+    border: none;
+    transform: translateY(-4px);
+  }
+  
+  .start-button:active {
+    background-color: $hover-green;
+    transform: translateY(2px);
+    box-shadow: 0 2px 4px $box-shadow;
+  }  
+
+.chat-box {
+    grid-column: 4;
+    height: 100%;
+}

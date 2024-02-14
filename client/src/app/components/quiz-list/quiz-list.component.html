@@ -1,0 +1,32 @@
+<div class="titles">
+    <h1>Liste de quiz</h1>
+    <h1 class="bank-button" onclick="document.getElementById('bank').click()">Banque de questions</h1>
+    <button class="bank" id="bank" (click)="questionBank()"></button>
+</div>
+<div class="scrollable-list">
+    <div *ngFor="let quiz of quizzes">
+        <div class="quiz">
+            <div class="quiz-info">
+                <span class="quiz-title">
+                    <h2>Titre:</h2> 
+                    <h3>{{ quiz.title }}</h3>
+                </span>
+                <span class="quiz-date">
+                    <h2>Dernière modification:</h2>
+                    <h3>{{ quiz.lastModification | date:'dd/MM/yyyy' }}</h3>
+                </span>
+            </div>
+            <div class="quiz-options">
+                <button (click)="modify(quiz)">Modifier</button>
+                <button (click)="export(quiz)">Exporter</button>
+                <button (click)="delete(quiz.id)">Supprimer</button>
+                <button (click)="hide(quiz)">{{ quiz.visible ? 'Cacher' : 'Afficher' }}</button>
+            </div>
+        </div>
+    </div>
+    <app-import-quiz></app-import-quiz>
+    <div class="create-wrapper" onclick="document.getElementById('create').click()">
+        <button class="create" id="create" (click)="create()"></button>
+        Créer
+    </div>
+</div>

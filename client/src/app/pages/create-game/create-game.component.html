@@ -1,0 +1,26 @@
+<body>
+    <app-header></app-header>
+
+    <div class="scrollable-list">
+        <div *ngFor="let quiz of quizList">
+            <div *ngIf="quiz.visible">
+                <button (click)="openDialog(quiz)" class="listeGamesVisibleBtn">{{ quiz.title }}</button>
+            </div>
+        </div>
+    </div>
+
+    <ng-template *ngIf="selectedQuiz" #dialogTemplate>
+        <h3>Titre: <div>{{ selectedQuiz.title }}</div></h3>
+        <h3>Description: <div>{{ selectedQuiz.description }}</div></h3>
+        <h3>Temps par question: <div>{{ selectedQuiz.duration }} secondes</div></h3>
+        <h3>Liste de questions:</h3>
+        <ol>
+            <li *ngFor="let question of selectedQuiz.questions">({{ question.type }}) {{ question.text }}</li>
+        </ol>
+        <mat-dialog-actions>
+            <button id="closeBtn" (click)="closeDialog()">Fermer</button>
+            <button id="testBtn" (click)="validateBeforeClosing()" *ngIf="selectedQuiz.title !== 'Mode Aléatoire'">Tester!</button>
+            <button id="createBtn" (click)="closeDialog()" [routerLink]="['/']">Créer une partie</button>
+        </mat-dialog-actions>
+    </ng-template>
+</body>

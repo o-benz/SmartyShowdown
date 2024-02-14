@@ -1,0 +1,14 @@
+{
+    "recommendations": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "Angular.ng-template",
+        "johnpapa.Angular2",
+        "PKief.material-icon-theme",
+        "ecmel.vscode-html-css",
+        "Gruntfuggly.todo-tree",
+        "streetsidesoftware.code-spell-checker",
+        "streetsidesoftware.code-spell-checker-french",
+        "postman.postman-for-vscode"
+    ]
+}

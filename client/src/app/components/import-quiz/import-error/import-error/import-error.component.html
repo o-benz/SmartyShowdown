@@ -1,0 +1,10 @@
+<div *ngIf="nameAlreadyTaken; else elseBlock">
+  <h3>Veuillez choisir un autre nom, celui-ci est déjà pris par un quiz existant.</h3>
+  <div class="form-group">
+    <input #nameInput type="text"(keydown.enter)="newName(nameInput.value)" placeholder="Nouveau nom" [(ngModel)]="inputValue" required>
+  </div>
+</div>
+<ng-template #elseBlock>
+  <h3>Erreur</h3>
+  <p>{{message}}</p>
+</ng-template>

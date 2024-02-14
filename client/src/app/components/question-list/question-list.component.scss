@@ -1,0 +1,154 @@
+@import '../../../styles.scss';
+
+h1{
+  user-select: none;
+  margin: 1%;
+  color: $main-green;
+  text-shadow: 0 0 10px $text-shadow;
+}
+
+.scrollable-list {
+  display: flex;
+  align-items: center;
+  box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
+  user-select: none;
+  border-radius: 15px;
+  background-color: $background-purple;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.scrollable-list::-webkit-scrollbar {
+  width: 12px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb {
+  background-color: $main-green;
+  border-radius: 15px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb:active {
+  background-color: $hover-green;
+}
+
+.qst {
+  perspective: 1000px;
+}
+
+.question {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  user-select: none;
+  vertical-align: top;
+  flex: 1;
+  margin: 15px;
+  height: 40vh;
+  width: 30vh;
+  border-radius: 15px;
+  font-size: 2vmin;
+  color: $white;
+  background-color: $main-pink;
+  white-space: normal;
+  border: 2px solid $main-green;
+  overflow: auto;
+  position: relative;
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+.front, .back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backface-visibility: hidden;
+  transition: opacity 0.5s ease;
+}
+
+.front {
+  opacity: 1;
+}
+
+.back {
+  z-index: 1;
+  transform: rotateY(180deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.qst:hover .question {
+  transform: rotateY(180deg);
+}
+
+.qst:hover .question .front {
+  opacity: 0;
+}
+
+.qst:hover .question .back {
+  backface-visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.choice {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.question-info {
+  margin: 3%;
+}
+
+h2 {
+  margin-block-end: 0;
+  font-size: 137%;
+}
+
+h3 {
+  margin-block-start: 0;
+  margin-block-end: 0;
+  font-size: 120%;
+}
+
+.question-options {
+  margin-bottom: 10%;
+  margin-left: 3%;
+  margin-right: 3%;
+}
+
+.question-choice {
+  margin-top: 45%;
+  margin-left: 3%;
+  margin-right: 3%;
+  background-color: $background-purple;
+  color: $white;
+  width: 50%;
+}
+
+button{
+  font-size: 2vmin;
+  background-color: $background-purple;
+  color: $white;
+  width: 50%;
+  cursor: pointer;
+}
+
+.create {
+  user-select: none;
+  vertical-align: top;
+  flex: 1;
+  margin: 15px;
+  height: 40vh;
+  min-width: 30vh;
+  border-radius: 15px;
+  font-size: 4vmin;
+  color: $white;
+  background-color: $main-pink;
+  white-space: normal;
+  border: 2px solid $main-green;
+  cursor: pointer;
+}

@@ -1,0 +1,34 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+  "html.format.indentInnerHtml": true,
+  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingEmptyBraces": false,
+  "eslint.workingDirectories": [
+    "./client",
+    "./server"
+  ],
+  "eslint.probe": [
+    "javascript",
+    "typescript",
+    "html",
+    "vue",
+    "markdown"
+  ],
+  "eslint.validate": [
+    "javascript",
+    "typescript",
+    "html",
+    "vue",
+    "markdown"
+  ],
+  "eslint.codeAction.disableRuleComment": {
+    "enable": false
+  },
+  "prettier.embeddedLanguageFormatting": "off",
+  "prettier.enable": false,
+  "C_Cpp_Runner.msvcBatchPath": ""
+}

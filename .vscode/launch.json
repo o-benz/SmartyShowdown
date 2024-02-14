@@ -1,0 +1,43 @@
+{
+  "version": "1.0.0",
+  "configurations": [
+    {
+      "name": "Debug server (Attach)",
+      "port": 9229,
+      "request": "attach",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "restart": true,
+      "sourceMaps": true,
+      "localRoot": "${workspaceFolder}/server",
+      "type": "pwa-node"
+    },
+    {
+      "name": "Launch Client With Debug",
+      "request": "launch",
+      "type": "pwa-chrome",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/client"
+    },
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "cwd": "c:/Users/omarb/Desktop/INF2610-TPs/tp1",
+      "program": "c:/Users/omarb/Desktop/INF2610-TPs/tp1/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

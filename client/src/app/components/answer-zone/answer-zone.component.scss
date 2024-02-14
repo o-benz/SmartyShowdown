@@ -1,0 +1,156 @@
+@import '../../../styles.scss';
+
+.answer {
+    box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    background-color: $background-purple;
+    border-radius: 16px;
+    padding: 1%;
+    margin-left: 10px;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    margin-right: 1%;
+}
+
+.answer::-webkit-scrollbar {
+    width: 12px;
+}
+
+.answer::-webkit-scrollbar-thumb {
+    background-color: $main-green;
+    border-radius: 15px;
+}
+
+.answer::-webkit-scrollbar-thumb:active {
+    background-color: $hover-green;
+}
+
+.choice {
+    .choice-number1 {
+        margin: 2%;
+        content: attr(data-number);
+        position: absolute;
+        display: block;
+        top: 0;
+        left: 0;
+    }
+    .choice-number2 {
+        margin: 2%;
+        content: attr(data-number);
+        position: absolute;
+        display: block;
+        bottom: 0;
+        right: 0;
+        transform: rotate(180deg);
+    }
+    position: relative;
+    user-select: none;
+    vertical-align: top;
+    flex: 1;
+    margin: 10px;
+    height: 40vmin;
+    width: 30vmin;
+    border-radius: 15px;
+    border: 2px solid $main-green;
+    font-family: $main-font;
+    font-size: 4vh;
+    color: $white;
+    background-color: $main-pink;
+    cursor: pointer;
+    white-space: normal;
+    transition: all 0.3s ease;
+    animation: dropIn 0.5s ease;
+    &:hover {
+        border-color: $main-pink;
+        background-color: $main-green;
+        transform: translateY(-4px);
+    }
+    &:active {
+        border-color: $main-pink;
+        background-color: $hover-green;
+        transform: translateY(2px);
+    }
+}
+
+.blackboard {
+    position: relative;
+    width: 80%;
+    height: 150px;
+    padding: 10px;
+    margin: 3% auto;
+    border: $bb-border solid 12px;
+    border-top: $bb-border-top solid 12px;
+    border-left: $bb-border-left solid 12px;
+    border-bottom: $bb-border-bottom solid 12px;
+    box-shadow: 0px 0px 6px 5px $bb-box-shadow1, 0px 0px 0px 2px $bb-box-shadow2, 0px 0px 0px 4px $bb-box-shadow3, 3px 4px 8px 5px $bb-box-shadow4;
+    background-image: radial-gradient( circle at left 30%, $bb-bg1, $bb-bg1 20%, $bb-bg2 25%, $bb-bg3 40%, $bb-bg3), linear-gradient( 215deg, transparent, transparent 25%, $bb-bg4 65%, $bb-bg4 80%, transparent), radial-gradient( circle at right, $bb-bg5, $bb-bg6);
+    background-color: $bb-bg7;
+}
+button {
+    display: block;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+input {
+    text-align: center;
+    height: 95%;
+    text-shadow:
+    0px 0px 1px $white,
+    0px 1px 1px $white,
+    1px 0px 1px $white,
+    1px 1px 1px $white;
+    font-family: $chalk-font;
+    font-size: 3vmin;
+    width: 100%;
+    background: none;
+    border: none;
+    color: $white;
+    &:focus {
+        outline: none;
+    }
+    &::placeholder{
+        user-select: none;
+        color: $grey;
+        text-shadow:
+        0px 0px 1px $grey,
+        0px 1px 1px $grey,
+        1px 0px 1px $grey,
+        1px 1px 1px $grey;
+    }
+}
+
+.confirm {
+    box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
+    border-radius: 16px;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 10px;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    margin-right: 1%;
+    background-color: $background-purple;
+}
+
+.confirmbtn {
+    user-select: none;
+    font-weight: bold;
+    background-color: $main-pink;
+    color: $white;
+    width: 50%;
+}
+
+.selected {
+    border-color: $main-pink;
+    background-color: $main-green;
+}
+
+.locked {
+    background-color: $main-green;
+}

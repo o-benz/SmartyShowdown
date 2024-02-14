@@ -1,0 +1,57 @@
+[
+  {
+      "type": "QCM",
+      "question": "What is the capital of France?",
+      "choices": [
+          { "text": "Paris", "isCorrect": true },
+          { "text": "London", "isCorrect": false },
+          { "text": "Berlin", "isCorrect": false },
+          { "text": "Madrid", "isCorrect": false }
+      ],
+      "points": 0
+  },
+  {
+      "type": "QCM",
+      "question": "Who wrote \"To Kill a Mockingbird\"?",
+      "choices": [
+          { "text": "Ernest Hemingway", "isCorrect": false },
+          { "text": "Harper Lee", "isCorrect": true },
+          { "text": "Mark Twain", "isCorrect": false },
+          { "text": "F. Scott Fitzgerald", "isCorrect": false }
+      ],
+      "points": 0
+  },
+  {
+      "type": "QCM",
+      "question": "What is the square root of 81?",
+      "choices": [
+          { "text": "7", "isCorrect": false },
+          { "text": "8", "isCorrect": false },
+          { "text": "9", "isCorrect": true },
+          { "text": "10", "isCorrect": false }
+      ],
+      "points": 0
+  },
+  {
+      "type": "QCM",
+      "question": "What is the chemical symbol for Hydrogen?",
+      "choices": [
+          { "text": "H", "isCorrect": true },
+          { "text": "He", "isCorrect": false },
+          { "text": "Hy", "isCorrect": false },
+          { "text": "Ho", "isCorrect": false }
+      ],
+      "points": 0
+  },
+  {
+      "type": "QCM",
+      "question": "Who painted the Mona Lisa?",
+      "choices": [
+          { "text": "Vincent van Gogh", "isCorrect": false },
+          { "text": "Pablo Picasso", "isCorrect": false },
+          { "text": "Leonardo da Vinci", "isCorrect": true },
+          { "text": "Claude Monet", "isCorrect": false }
+      ],
+      "points": 0
+  }
+]

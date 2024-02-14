@@ -1,0 +1,115 @@
+@import '../../../styles.scss';
+
+.scrollable-list {
+    box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
+    margin: 1%;
+    display: flex;
+    align-items: center;
+    border-radius: 15px;
+    margin-top: 15vmin;
+    background-color: $background-purple;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.scrollable-list::-webkit-scrollbar {
+    width: 12px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb {
+    background-color: $main-green;
+    border-radius: 15px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb:active {
+    background-color: $hover-green;
+}
+
+.listeGamesVisibleBtn {
+    user-select: none;
+    vertical-align: top;
+    flex: 1;
+    margin: 15px;
+    height: 40vmin;
+    width: 30vmin;
+    border-radius: 15px;
+    text-align: center;
+    font-size: 4vmin;
+    color: $white;
+    background-color: $main-pink;
+    cursor: pointer;
+    white-space: normal;
+    border: 2px solid $main-green;
+    transition: all 0.3s ease;
+    animation: dropIn 0.5s ease;
+    &:hover {
+        background-color: $main-green;
+        border: 2px solid $main-pink;
+        transform: translateY(-4px);
+    }
+    &:active {
+        background-color: $hover-green;
+        border: 2px solid $main-pink;
+        transform: translateY(2px);
+    }
+}
+
+h3 {
+    font-size: 2.2vmin;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-bottom: 2%;
+    div {
+        font-weight: normal;
+    }
+}
+
+ol {
+    font-size: 2.2vmin;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-bottom: 2%;
+}
+
+mat-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0;
+    button {
+        margin-left: 1%;
+        color: $white;
+        border: none;
+        padding: 2%;
+        border-radius: 5px;
+        font-size: 2.2vmin;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+}
+
+::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
+    user-select: none;
+    padding: 10px !important;
+    border-radius: 15px !important;
+}
+
+#closeBtn {
+    background-color: $red;
+    &:hover {
+        background-color: $hover-red;
+    }
+}
+
+#testBtn {
+    background-color: $orange;
+    &:hover {
+        background-color: $hover-orange;
+    }
+}
+
+#createBtn {
+    background-color: $dark-green;
+    &:hover {
+        background-color: $darker-green;
+    }
+}

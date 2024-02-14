@@ -1,0 +1,34 @@
+@import '../../../styles.scss';
+
+.new-qcm {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2%;
+}
+
+button {
+    padding: 5px 10px;
+    background-color: $button-blue;
+    color: $white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    &:hover {
+        background-color: $hover-button-blue;
+    }
+}
+
+input[type="text"] {
+    width: 60%;
+    padding: 10px;
+    border: 1px solid $chat-disabled-bg;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+input[type="checkbox" i] {
+    transform: scale(1.8);
+    margin: 0;
+}

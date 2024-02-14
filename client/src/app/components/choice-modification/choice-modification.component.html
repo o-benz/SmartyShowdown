@@ -1,0 +1,7 @@
+<div class="new-qcm">
+    <input type="text" [(ngModel)]="choice.text" value="{{ choice.text }}">
+    <input type="checkbox" [(ngModel)]="choice.isCorrect">
+    <button type="button" (click)="deleteMultipleChoice(choice)">-</button>
+    <button type="button" (click)="placeChoiceHigher(choice)">↑</button>
+    <button type="button" (click)="placeChoiceLower(choice)">↓</button>
+</div>

@@ -1,0 +1,81 @@
+@import '../../../styles.scss';
+
+.new-quiz-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.new-quiz-form {
+    user-select: none;
+    background-color: $white;
+    max-width: 50%;
+    margin-top: 1%;
+    padding-top: 1%;
+    padding-left: 2%;
+    padding-right: 2%;
+    padding-bottom: 0.5%;
+    border-radius: 15px;
+    box-shadow: 0 0 10px $chat-input-shadow;
+}
+
+.new-quiz-form div {
+    margin-bottom: 2%;
+}
+
+label {
+    font-size: 2.5vmin;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="range"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid $chat-disabled-bg;
+    border-radius: 5px;
+    box-sizing: border-box;
+    margin-top: 5px;
+}
+
+input[type="range"] {
+    width: 98%;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: $main-pink;
+    color: $white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    &:hover {
+        background-color: $hover-button-blue;
+    }
+}
+
+button:hover {
+    background-color: $main-green;
+}
+
+button:active {
+    background-color: $hover-green;
+}
+
+h3 {
+    font-size: 2.2vmin;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-bottom: 2%;
+}
+
+.confirm-button {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}

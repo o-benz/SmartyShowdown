@@ -1,0 +1,87 @@
+@import '../../../styles.scss';
+
+.mat-mdc-button:not(:disabled) {
+  color: $white;
+}
+
+input.new-choice-text {
+  max-width: 80%;
+}
+
+.add-new-qcm {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2%;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 2%;
+}
+  
+.truncate {
+  width: 250px;
+}
+
+button {
+  height: 40px;
+  padding: 5px 10px;
+  background-color: $button-blue;
+  color: $white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  &:hover {
+    background-color: $hover-button-blue;
+  }
+}
+
+mat-dialog-content{
+  user-select: none;
+}
+
+mat-dialog-actions {
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+h3 {
+  font-size: 2.2vmin;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  margin-bottom: 2%;
+
+  input[type="number"] {
+    width: 20%;
+    padding: 10px;
+    border: 1px solid $chat-disabled-bg;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid $chat-disabled-bg;
+  border-radius: 5px;
+  box-sizing: border-box;
+  margin-bottom: 2%;
+}
+
+input[type="checkbox" i] {
+  transform: scale(1.8);
+  margin: 0;
+}
+
+::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
+  padding: 10px;
+  border-radius: 15px !important;
+}

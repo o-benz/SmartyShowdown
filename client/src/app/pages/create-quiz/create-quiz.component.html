@@ -1,0 +1,39 @@
+<body>
+    <app-header></app-header>
+
+    <div class="new-quiz-wrapper">
+        <div class="new-quiz-form">
+            <div>
+                <label for="title">Title</label>
+                <input id="title" type="text" [(ngModel)]="quizModified.title" placeholder="Titre">
+            </div>
+
+            <div>
+                <label for="description">Description</label>
+                <input id="description" type="text" [(ngModel)]="quizModified.description" placeholder="Description">
+            </div>
+
+            <div>
+                <label for="duration">Duration</label>
+                <input id="duration" type="range" [(ngModel)]="quizModified.duration" min="10" max="60">
+                <span>{{ quizModified.duration }} secondes</span>
+            </div>
+
+            <div>
+                <h3 *ngIf="modify" >Questions: </h3>
+                <ol>
+                    <li *ngFor="let question of quizModified.questions">
+                        ({{ question.type }}) <app-question-modification [question]="question" [quizModified]="quizModified"></app-question-modification>
+                    </li>
+                </ol>
+                <h3>Ajouter une Question Choix Multiple :</h3>
+                <app-new-qcm [quizModified]="quizModified"></app-new-qcm>
+            </div>
+            
+            <div class="confirm-button">
+                <button type="submit" (click)="onSubmit()">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</body>
+

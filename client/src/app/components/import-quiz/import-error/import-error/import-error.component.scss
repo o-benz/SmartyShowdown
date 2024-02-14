@@ -1,0 +1,28 @@
+@import '../../../../../styles.scss';
+
+::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
+    padding: 10px;
+    border-radius: 15px !important;
+}
+
+h3 {
+    user-select: none;
+    color: $black;
+    font-weight: bold;
+    font-size: 3vmin;
+    margin-block-start: 0;
+    margin-bottom: 2%;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid $chat-disabled-bg;
+    border-radius: 5px;
+    box-sizing: border-box;
+    outline: none;
+}
+
+p {
+    white-space: pre-wrap;
+}

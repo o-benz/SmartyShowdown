@@ -1,0 +1,46 @@
+<h1>Banque de questions</h1>
+<div class="scrollable-list">
+  <div *ngFor="let question of questions" class="qst">
+    <div class="question">
+      <div class="front">
+        <div class="question-info">
+          <span class="question-title">
+            <h2>Question:</h2>
+            <h3>{{ question.text }}</h3>
+          </span>
+          <span class="question-type">
+            <h2>Type:</h2>
+            <h3>{{ question.type }}</h3>
+          </span>
+          <span class="question-points">
+            <h2>Points:</h2>
+            <h3>{{ question.points }}</h3>
+          </span>
+          <span class="question-date">
+            <h2>Dernière modification:</h2>
+            <h3>{{ question.date | date:'dd/MM/yyyy' }}</h3>
+          </span>
+        </div>
+      </div>
+      <div class="back">
+        <div class="question-info">
+            <span class="question-choice">
+                <h3>Choix de réponse:</h3>
+                <div *ngIf="isMultipleChoiceQuestion(question)">
+                    <div *ngFor="let choice of question.choices" class="choice">
+                        <h2>{{ choice.text }}</h2>
+                        <h2>{{ choice.isCorrect ? 'Vrai' : 'Faux' }}</h2>
+                    </div>
+                </div>
+            </span> 
+            <div class="question-options">
+                <button (click)="modifyQuestion(question._id)">Modifier</button>
+                <button (click)="deleteQuestion(question._id)">Supprimer</button>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="create" (click)="addQuestion()">Ajouter une Question</button>
+</div>
+

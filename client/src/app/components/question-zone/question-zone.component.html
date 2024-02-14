@@ -1,0 +1,13 @@
+<div class="question-zone">
+    <div class="blackboard">
+        <p class="question">{{ text }}</p>
+        <div class="info">
+            <p>Temps restant: {{ time }}</p>
+            <p>Score: {{ score }}</p>
+            <p>( {{ points }} points )</p>
+        </div>
+    </div>
+    <div class="abandon">
+        <button class="abandon-button" (click)="navigateHome()">Abandonner</button>
+    </div>
+</div>
