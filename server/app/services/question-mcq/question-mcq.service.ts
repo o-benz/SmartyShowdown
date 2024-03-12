@@ -5,11 +5,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
-    BASE_10,
     MAXIMUM_NUMBER_OF_CHOICES,
     MAXIMUM_NUMBER_OF_POINTS,
     MINIMUM_NUMBER_OF_CHOICES,
     MINIMUM_NUMBER_OF_POINTS,
+    MULTIPLE_IDENTIFIER,
     VALID_QUESTION_TYPE,
 } from './question-mcq.service.constants';
 
@@ -143,7 +143,7 @@ export class MultipleChoiceQuestionService {
     }
 
     private validateMultipleChoiceQuestionPoints(points: number): boolean {
-        return points >= MINIMUM_NUMBER_OF_POINTS && points <= MAXIMUM_NUMBER_OF_POINTS && points % BASE_10 === 0;
+        return points >= MINIMUM_NUMBER_OF_POINTS && points <= MAXIMUM_NUMBER_OF_POINTS && points % MULTIPLE_IDENTIFIER === 0;
     }
 
     private validateMultipleChoiceQuestionChoices(choices: { text: string; isCorrect?: boolean }[]): boolean {

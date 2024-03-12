@@ -1,28 +1,8 @@
 @import '../../../styles.scss';
 
 .scrollable-list {
-    box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
     margin: 1%;
-    display: flex;
-    align-items: center;
-    border-radius: 15px;
     margin-top: 15vmin;
-    background-color: $background-purple;
-    overflow-x: auto;
-    white-space: nowrap;
-}
-
-.scrollable-list::-webkit-scrollbar {
-    width: 12px;
-}
-
-.scrollable-list::-webkit-scrollbar-thumb {
-    background-color: $main-green;
-    border-radius: 15px;
-}
-
-.scrollable-list::-webkit-scrollbar-thumb:active {
-    background-color: $hover-green;
 }
 
 .listeGamesVisibleBtn {
@@ -41,7 +21,7 @@
     white-space: normal;
     border: 2px solid $main-green;
     transition: all 0.3s ease;
-    animation: dropIn 0.5s ease;
+    animation: dropIn 0.7s ease;
     &:hover {
         background-color: $main-green;
         border: 2px solid $main-pink;

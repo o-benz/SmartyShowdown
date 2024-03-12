@@ -9,9 +9,10 @@ import { JsonQuizCheckService } from '@app/services/quiz-check/json-quiz-check.s
 export class ImportQuizComponent {
     constructor(private checker: JsonQuizCheckService) {}
 
-    onFileChange(event: { target: unknown }) {
-        if ((event as { target: { files: File[] } }).target.files[0]) {
-            this.checker.verifyInput((event as { target: { files: File[] } }).target.files[0]);
+    onFileChange(event: Event) {
+        const file = (event.target as HTMLInputElement).files;
+        if (file) {
+            this.checker.importQuiz(file[0]);
         }
     }
 }

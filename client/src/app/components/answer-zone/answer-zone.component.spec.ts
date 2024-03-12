@@ -9,21 +9,33 @@ import { AnswerZoneComponent } from './answer-zone.component';
 describe('AnswerZoneComponent', () => {
     let component: AnswerZoneComponent;
     let fixture: ComponentFixture<AnswerZoneComponent>;
-    let gameService: GameService;
+    let gameServiceSpy: jasmine.SpyObj<GameService>;
 
     beforeEach(async () => {
+        const gameSpy = jasmine.createSpyObj('GameService', ['postCurrentChoices']);
+        let internalIsFinalScore = false;
+        Object.defineProperty(gameSpy, 'isFinalScore', {
+            get: jasmine.createSpy('getIsFinalScore').and.callFake(() => internalIsFinalScore),
+            set: jasmine.createSpy('setIsFinalScore').and.callFake((value) => {
+                internalIsFinalScore = value;
+            }),
+        });
+        let internalCurrentChoices: Choice[] = [];
+        Object.defineProperty(gameSpy, 'currentChoices', {
+            get: jasmine.createSpy('getCurrentChoices').and.callFake(() => internalCurrentChoices),
+            set: jasmine.createSpy('setCurrentChoices').and.callFake((value) => {
+                internalCurrentChoices = value;
+            }),
+        });
         await TestBed.configureTestingModule({
             declarations: [AnswerZoneComponent],
             imports: [HttpClientTestingModule],
-            providers: [GameService],
+            providers: [{ provide: GameService, useValue: gameSpy }],
         }).compileComponents();
-    });
-
-    beforeEach(() => {
         fixture = TestBed.createComponent(AnswerZoneComponent);
         component = fixture.componentInstance;
-        gameService = TestBed.inject(GameService);
-        fixture.detectChanges();
+        gameServiceSpy = TestBed.inject(GameService) as jasmine.SpyObj<GameService>;
+        gameServiceSpy.postCurrentChoices.and.returnValue(of(true));
     });
 
     it('should create', () => {
@@ -37,11 +49,38 @@ describe('AnswerZoneComponent', () => {
             points: 10,
             choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
         };
-        component.currentQuestion = mockQuestion;
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         component.ngOnChanges();
         expect(component.choices).toEqual(mockQuestion.choices || []);
     });
 
+    it('should initialize currentChoices at [] when ngOnChanges is called when round is over', () => {
+        const mockChoice: Choice = { text: 'Sample choice' };
+        gameServiceSpy.currentChoices = [mockChoice];
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: true,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
+        component.ngOnChanges();
+        expect(gameServiceSpy.currentChoices).toEqual([]);
+    });
     it('should lock answer and emit qcmFinishedEvent when lockAnswer is called', () => {
         const mockQuestion: Question = {
             type: 'QCM',
@@ -49,34 +88,74 @@ describe('AnswerZoneComponent', () => {
             points: 10,
             choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
         };
-        component.currentQuestion = mockQuestion;
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         component.textAnswer = '';
         component['gameService'].currentChoices = [{ text: 'Sample choice' }];
 
-        spyOn(gameService, 'postCurrentChoices').and.returnValue(of(true));
         spyOn(component.qcmFinishedEvent, 'emit');
 
         component.lockAnswer();
 
-        expect(component.isAnswerLocked).toBeTrue();
-        expect(gameService.postCurrentChoices).toHaveBeenCalledOnceWith(mockQuestion);
+        expect(gameServiceSpy.postCurrentChoices).toHaveBeenCalledOnceWith(mockQuestion.text);
         expect(component.qcmFinishedEvent.emit).toHaveBeenCalledOnceWith(true);
     });
 
-    it('should emit qrlFinishedEvent when nextQuestion is called with type QRL', () => {
-        spyOn(component.qrlFinishedEvent, 'emit');
-        component.currentQuestion = { type: 'QRL', text: 'Sample QRL question', points: 5 };
-        component.nextQuestion();
-        expect(component.qrlFinishedEvent.emit).toHaveBeenCalledOnceWith(true);
+    it('should lock answer and emit qcmFinishedEvent when lockAnswer is called with textAnswer', () => {
+        const mockQuestion: Question = {
+            type: 'QCM',
+            text: 'Sample question',
+            points: 10,
+            choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+        };
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
+        component.textAnswer = ' ALLO';
+
+        spyOn(component.qcmFinishedEvent, 'emit');
+
+        component.lockAnswer();
+
+        expect(gameServiceSpy.postCurrentChoices).toHaveBeenCalledOnceWith(mockQuestion.text);
+        expect(component.qcmFinishedEvent.emit).toHaveBeenCalledOnceWith(true);
     });
 
     it('should add or remove choice in currentChoices when chooseChoice is called', () => {
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         const mockChoice: Choice = { text: 'Sample choice' };
         component.choices = [mockChoice];
         component.chooseChoice(0);
-        expect(gameService.currentChoices).toEqual([mockChoice]);
+        expect(gameServiceSpy.currentChoices).toEqual([mockChoice]);
         component.chooseChoice(0);
-        expect(gameService.currentChoices).toEqual([]);
+        expect(gameServiceSpy.currentChoices).toEqual([]);
     });
 
     it('should unsubscribe from gameSubscription when ngOnDestroy is called', () => {

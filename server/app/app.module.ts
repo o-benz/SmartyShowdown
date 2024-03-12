@@ -1,5 +1,4 @@
 import { DateController } from '@app/controllers/date/date.controller';
-import { ChatGateway } from '@app/gateways/chat/chat.gateway';
 import { DateService } from '@app/services/date/date.service';
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -12,12 +11,14 @@ import { AuthenticationController } from './controllers/admin/admin.controller';
 import { GameController } from './controllers/game/game.controller';
 import { MultipleChoiceQuestionController } from './controllers/question-mcq/question-mcq.controller';
 import { QuizController } from './controllers/quiz/quiz.controller';
+import { GameGateway } from './gateways/game/game.gateway';
 import { MultipleChoiceQuestion, multipleChoiceQuestionSchema } from './model/database/question-mcq';
 import { FileManagerService } from './services/file-manager/file-manager.service';
 import { GameService } from './services/game/game.service';
 import { AdminService } from './services/login/authentication.service';
 import { MultipleChoiceQuestionService } from './services/question-mcq/question-mcq.service';
 import { QuizService } from './services/quiz/quiz.service';
+import { SocketService } from './services/socket/socket.service';
 
 @Module({
     imports: [
@@ -38,7 +39,7 @@ import { QuizService } from './services/quiz/quiz.service';
     ],
     controllers: [DateController, QuizController, AuthenticationController, GameController, MultipleChoiceQuestionController],
     providers: [
-        ChatGateway,
+        // ChatGateway,
         DateService,
         GameService,
         Logger,
@@ -47,6 +48,8 @@ import { QuizService } from './services/quiz/quiz.service';
         AdminService,
         JwtStrategy,
         MultipleChoiceQuestionService,
+        GameGateway,
+        SocketService,
     ],
 })
 export class AppModule {}

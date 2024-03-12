@@ -7,30 +7,6 @@ h1{
   text-shadow: 0 0 10px $text-shadow;
 }
 
-.scrollable-list {
-  display: flex;
-  align-items: center;
-  box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
-  user-select: none;
-  border-radius: 15px;
-  background-color: $background-purple;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-
-.scrollable-list::-webkit-scrollbar {
-  width: 12px;
-}
-
-.scrollable-list::-webkit-scrollbar-thumb {
-  background-color: $main-green;
-  border-radius: 15px;
-}
-
-.scrollable-list::-webkit-scrollbar-thumb:active {
-  background-color: $hover-green;
-}
-
 .qst {
   perspective: 1000px;
 }
@@ -131,7 +107,7 @@ h3 {
 
 button{
   font-size: 2vmin;
-  background-color: $background-purple;
+  background-color: $main-purple;
   color: $white;
   width: 50%;
   cursor: pointer;
@@ -144,6 +120,7 @@ button{
   margin: 15px;
   height: 40vh;
   min-width: 30vh;
+  max-width: 30vh;
   border-radius: 15px;
   font-size: 4vmin;
   color: $white;

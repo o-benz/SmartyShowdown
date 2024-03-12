@@ -1,8 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Quiz } from '@app/interfaces/quiz-model';
-import * as exporter from 'export-from-json';
-import { IOption } from 'export-from-json/dist/types/exportFromJSON'; //eslint-disable-line 
+// eslint-disable-next-line
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -13,11 +12,10 @@ export class AdminQuizHandler {
     constructor(private http: HttpClient) {}
 
     export(quiz: Quiz): void {
-        const data = quiz;
-        const fileName = quiz.title;
-        const exportType = 'json';
-
-        this.libraryCaller({ data, fileName, exportType });
+        const downloader = document.createElement('a');
+        downloader.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(quiz));
+        downloader.download = quiz.title + '.json';
+        downloader.click();
     }
 
     delete(id: string): Observable<void> {
@@ -26,9 +24,5 @@ export class AdminQuizHandler {
 
     toggleQuizVisibility(id: string): Observable<Quiz> {
         return this.http.put<Quiz>(`${environment.serverUrl}/quiz/${id}`, {});
-    }
-
-    private libraryCaller(args: IOption) {
-        exporter.default(args);
     }
 }

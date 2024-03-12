@@ -1,0 +1,12 @@
+<body>
+    <app-header></app-header>
+    <div class="content-container">
+        <app-player-list-result [players]="playerSubject"></app-player-list-result>
+        <div>
+            <h3 class="arrow-button" (click)="changeDiagram(-1)">Précédent</h3>
+            <app-question-stats [stats] = "selectedQuestion"></app-question-stats>
+            <h3 class="arrow-button" (click)="changeDiagram(1)">Suivant</h3>
+        </div>
+        <app-chat-box class="chat-box"></app-chat-box>
+    </div>
+</body>

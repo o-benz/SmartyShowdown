@@ -1,0 +1,21 @@
+@import '../../../styles.scss';
+
+::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
+    user-select: none;
+    display: contents !important;
+}
+
+.error-container {
+    transform: scale(1.5);
+    background-color: #ffe6e6;
+    border: 1px solid #ff6666;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.error-heading {
+    color: #ff6666;
+    font-size: 18px;
+    margin: 0;
+}

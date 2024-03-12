@@ -13,6 +13,17 @@
     }
 }
 
+@keyframes popIn {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 @keyframes pulse {
     from {
         transform: scale(1);
@@ -32,11 +43,12 @@ $main-font: 'Roboto';
 $chalk-font: 'comic sans ms';
 
 /* Colors */
-$main-green: #1de58c;
-$hover-green: #159b5f;
-$main-pink: #821da3;
-$hover-pink: #681783;
-$background-purple: #331241;
+$main-green: #2fc094;
+$hover-green: #21747a;
+$main-pink: #891b6d;
+$hover-pink: #61255d;
+$main-purple: #361047;
+$background-purple: rgba(#361047, 0.7);
 $white: #fff;
 $black: #000000;
 $red: #dc3545;
@@ -81,12 +93,13 @@ $bbbb: #2c2c2c;
 $bbbc: #eeeeeeb3;
 
 /* ChatBox */
-$chat-area-container: #e6f7ec;
-$chat-area-bg: #b3e6c9;
-$chat-area-header: #14b56b;
-$message-box: #1cd884;
-$message-box-border: #eaeaea;
-$chat-input: #b3e6c9;
+$chat-area-container: rgba(#9665ac, 0.8);
+$chat-area-bg: #bcb3e6;
+$chat-area-header: #7014b5;
+$message-sent: #7014b5;
+$message-received: #a164cf;
+$message-box-border: #d5c6dc;
+$chat-input: #b7b3e6;
 $error: #ff4757;
 $chat-disabled-bg: #ccc;
 $chat-disabled-c: #666;
@@ -122,6 +135,42 @@ body::-webkit-scrollbar-thumb:active {
     background-color: $hover-green;
 }
 
+header {
+    animation: dropIn 0.5s ease forwards;
+}
+
+.scrollable-list {
+    box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
+    display: flex;
+    align-items: center;
+    border-radius: 15px;
+    background-color: $background-purple;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+
+.scrollable-list::-webkit-scrollbar {
+    width: 12px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb {
+    border: 1.5px solid $main-pink;
+    background-color: $main-green;
+    border-radius: 15px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb:active {
+    background-color: $hover-green;
+}
+
 app-root{
     height: 100%;
+}
+
+::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
+    user-select: none;
+    padding: 10px !important;
+    border-radius: 15px !important;
+    display: block !important;
 }

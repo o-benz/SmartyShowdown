@@ -14,7 +14,7 @@ describe('ImportQuizComponent', () => {
             declarations: [ImportQuizComponent],
             providers: [
                 { provide: MatDialog, useValue: jasmine.createSpyObj('MatDialog', ['open']) },
-                { provide: JsonQuizCheckService, useValue: jasmine.createSpyObj('JsonQuizCheckService', ['verifyInput']) },
+                { provide: JsonQuizCheckService, useValue: jasmine.createSpyObj('JsonQuizCheckService', ['importQuiz']) },
                 { provide: Router, useValue: jasmine.createSpyObj('Router', ['']) },
             ],
         }).compileComponents();
@@ -36,10 +36,10 @@ describe('ImportQuizComponent', () => {
             target: {
                 files: [file],
             },
-        };
+        } as unknown as Event;
 
         component.onFileChange(event);
 
-        expect(mockQuizService.verifyInput).toHaveBeenCalledWith(file);
+        expect(mockQuizService.importQuiz).toHaveBeenCalledWith(file);
     });
 });

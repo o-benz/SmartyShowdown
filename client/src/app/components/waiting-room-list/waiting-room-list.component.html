@@ -1,0 +1,8 @@
+<div class="list">
+    <div *ngFor="let user of userList" class="user-wrapper">
+        <div *ngIf="user.username !== 'organisateur'" class="user-container">
+            {{ user.username }}
+            <button *ngIf="isOrganisateur" (click)="banUser(user.username)" class="remove-button">X</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,7 @@
+<div class="player-list-container">
+<div *ngFor="let player of players | async">
+        <h4>{{player.name}}<span *ngIf="player.score">,  score: {{player.score}}</span>
+                <span *ngIf="player.bonusCount && player.bonusCount>0"> et {{player.bonusCount}} bonus</span>
+        </h4>
+</div>
+</div>

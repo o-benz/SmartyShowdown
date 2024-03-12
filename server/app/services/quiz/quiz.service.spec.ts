@@ -1,8 +1,9 @@
 import { Question, Quiz } from '@app/model/quiz/quiz.schema';
 import { FileManagerService } from '@app/services/file-manager/file-manager.service';
+import { QuizService } from '@app/services/quiz/quiz.service';
+import { SocketService } from '@app/services/socket/socket.service';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { QuizService } from './quiz.service';
 
 describe('QuizService', () => {
     let service: QuizService;
@@ -11,6 +12,13 @@ describe('QuizService', () => {
     const IDLENGTH = 6;
     const QUIZNOTFOUND = -1;
     let mockQuiz: Quiz;
+
+    const mockSocketService = {
+        getSocketsInRoom: jest.fn(),
+        getAllUsernamesInRoom: jest.fn(),
+        isUserValid: jest.fn(),
+        isLoginValid: jest.fn(),
+    };
 
     beforeEach(async () => {
         mockQuiz = {
@@ -32,6 +40,7 @@ describe('QuizService', () => {
                         writeCustomFile: jest.fn().mockResolvedValue(undefined),
                     }),
                 },
+                { provide: SocketService, useValue: mockSocketService },
             ],
         }).compile();
 
@@ -80,7 +89,7 @@ describe('QuizService', () => {
         const nonExistentQuizId = 'non-existent-id';
         jest.spyOn(service, 'getQuizById').mockResolvedValueOnce(null);
 
-        await expect(service.deleteQuiz(nonExistentQuizId)).rejects.toThrowError(NotFoundException);
+        await expect(service.deleteQuiz(nonExistentQuizId)).rejects.toThrow(NotFoundException);
     });
 
     it('should check question', async () => {
@@ -148,17 +157,17 @@ describe('QuizService', () => {
 
     it('should throw NotFoundException', async () => {
         service.getQuizById = jest.fn().mockResolvedValueOnce(null);
-        await expect(service.updateQuizVisibility(mockQuiz.id)).rejects.toThrowError(NotFoundException);
+        await expect(service.updateQuizVisibility(mockQuiz.id)).rejects.toThrow(NotFoundException);
     });
 
     it('should not find index', async () => {
         Array.prototype.findIndex = jest.fn().mockReturnValueOnce(QUIZNOTFOUND);
-        await expect(service.updateQuizVisibility(mockQuiz.id)).rejects.toThrowError(NotFoundException);
+        await expect(service.updateQuizVisibility(mockQuiz.id)).rejects.toThrow(NotFoundException);
     });
 
     it('shoud not delete quiz if not found', async () => {
         Array.prototype.findIndex = jest.fn().mockReturnValue(QUIZNOTFOUND);
-        await expect(service.deleteQuiz(mockQuiz.id)).rejects.toThrowError(NotFoundException);
+        await expect(service.deleteQuiz(mockQuiz.id)).rejects.toThrow(NotFoundException);
     });
 
     it('should toggle quiz visibility and return updated quiz', async () => {

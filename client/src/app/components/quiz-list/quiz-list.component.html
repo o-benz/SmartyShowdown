@@ -1,7 +1,6 @@
 <div class="titles">
     <h1>Liste de quiz</h1>
-    <h1 class="bank-button" onclick="document.getElementById('bank').click()">Banque de questions</h1>
-    <button class="bank" id="bank" (click)="questionBank()"></button>
+    <h1 class="bank-button" (click)="questionBank()">Banque de questions</h1>
 </div>
 <div class="scrollable-list">
     <div *ngFor="let quiz of quizzes">
@@ -25,8 +24,7 @@
         </div>
     </div>
     <app-import-quiz></app-import-quiz>
-    <div class="create-wrapper" onclick="document.getElementById('create').click()">
-        <button class="create" id="create" (click)="create()"></button>
+    <div class="create-wrapper" (click)="create()">
         Créer
     </div>
 </div>

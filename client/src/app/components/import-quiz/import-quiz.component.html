@@ -1,4 +1,4 @@
-<div class="file-upload-wrapper" onclick="document.getElementById('fileInput').click()">
-    <input type="file" id="fileInput" class="file-upload" requiredFileType="json" (change)="onFileChange($event)">
+<div class="file-upload-wrapper" (click)="fileInput.click()">
+    <input type="file" #fileInput class="file-upload" requiredFileType="json" (change)="onFileChange($event)">
     Importer
 </div>

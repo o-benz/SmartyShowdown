@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { ImportErrorComponent } from '@app/components/import-quiz/import-error/import-error/import-error.component';
+import { Router } from '@angular/router';
+import { ImportErrorComponent } from '@app/components/import-error/import-error.component';
 import { QuizListComponent } from '@app/components/quiz-list/quiz-list.component';
 import { Quiz } from '@app/interfaces/quiz-model';
-import { QuizImportService } from '@app/services/quiz-import/quiz-import.service';
 import { QuizValueCheckService } from '@app/services/quiz-value-check/quiz-value-check.service';
 import { QuizService } from '@app/services/quiz/quiz.service';
 
@@ -15,46 +15,60 @@ export class JsonQuizCheckService {
     constructor(
         private dialog: MatDialog,
         private quizService: QuizService,
-        private importService: QuizImportService,
         private checkService: QuizValueCheckService,
+        private router: Router,
     ) {}
     /*eslint-enabled*/
 
-    async verifyInput(quizFile: File): Promise<void> {
-        await this.importService
-            .readFileAsQuiz(quizFile)
-            .then((value) => {
-                this.checkService.checkQuiz(value);
+    importQuiz(quizFile: File): Promise<void>{
+        return this.readQuizFromFile(quizFile).then((unsafeQuiz) => {
+            if(unsafeQuiz){
+            this.checkService.checkQuiz(unsafeQuiz);
 
-                if (this.checkService.getResult()) {
-                    this.nameCheck(this.checkService.getSanitizedQuiz());
+            if (this.checkService.isValidQuiz()) {
+                if (this.isNameAvailable(this.checkService.sanitizedQuiz)) {
+                    this.addToQuizList(this.checkService.sanitizedQuiz);
                 } else {
-                    this.handleErrorMessage(this.checkService.getMessage());
+                    this.nameCheck(this.checkService.sanitizedQuiz);
                 }
-            })
-            .catch((error) => this.handleErrorMessage('error importing JSON' + error.toString()));
-        return;
+            } else {
+                this.handleErrorMessage(this.checkService.getMessage());
+            }
+        }}).catch();
     }
 
-    nameCheck(quiz: Quiz) {
-        const title: string = quiz.title;
-        if (QuizListComponent.quizzes.some((value: Quiz) => value.title === title)) {
-            const errorComponent = this.handleErrorMessage('Un quiz a ce nom existe deja');
-            errorComponent.componentInstance.prepareNameCheck(
-                quiz,
-                QuizListComponent.quizzes.map((value) => value.title),
-            );
-            errorComponent
-                .afterClosed()
-                .subscribe((quizNewName) =>
-                    quizNewName ? this.addToQuizList(quizNewName) : this.handleErrorMessage("Un nouveau nom n'a pas été sélectionné"),
-                );
-        } else {
-            this.addToQuizList(quiz);
-        }
+    private readQuizFromFile(quizFile: File) : Promise<Quiz>{
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const content = event?.target?.result as string | null;
+                if (content) {
+                    try {
+                        resolve(JSON.parse(content) as Quiz);
+                    } catch (error) {
+                        this.handleErrorMessage("erreur dans la lecture du fichier, fichier n'est pas un JSON");
+                        resolve(null as unknown as Quiz);
+                    }
+                } else {
+                    this.handleErrorMessage("erreur dans la lecture du fichier, fichier vide");
+                    resolve(null as unknown as Quiz);
+                }
+            };
+            reader.readAsText(quizFile);
+        });
     }
 
-    addToQuizList(quiz: Quiz) {
+    private nameCheck(quiz: Quiz) {
+        const errorComponent = this.handleErrorMessage('Un quiz a ce nom existe deja');
+        errorComponent.componentInstance.prepareNameCheck(quiz,
+            QuizListComponent.quizzes.map((value) => value.title),
+        );
+        errorComponent.afterClosed().subscribe((quizNewName) =>
+                quizNewName ? this.addToQuizList(quizNewName) : this.handleErrorMessage("Un nouveau nom n'a pas été sélectionné"),
+        );
+    }
+
+    private addToQuizList(quiz: Quiz) {
         this.quizService.addQuiz(quiz).subscribe({
             next: () => {
                 this.stealthPageReload();
@@ -65,13 +79,18 @@ export class JsonQuizCheckService {
         });
     }
 
-    handleErrorMessage(message: string): MatDialogRef<ImportErrorComponent> {
+    private handleErrorMessage(message: string): MatDialogRef<ImportErrorComponent> {
         const errorComponent = this.dialog.open(ImportErrorComponent);
         errorComponent.componentInstance.message = message;
         return errorComponent;
     }
 
-    private stealthPageReload() {
-        location.reload();
+    private isNameAvailable(quiz:Quiz):Boolean{
+        return !QuizListComponent.quizzes.some((value: Quiz) => value.title === quiz.title);
+    }
+
+    private async stealthPageReload() {
+        await this.router.navigateByUrl('/', { skipLocationChange: true });
+        this.router.navigate(['/admin']);
     }
 }

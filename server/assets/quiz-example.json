@@ -1,11 +1,11 @@
 [
   {
     "id": "1a2b3d",
-    "visible": true,
+    "visible": false,
     "title": "Questionnaire sur le JS",
     "description": "question 1",
     "duration": 56,
-    "lastModification": "2024-02-11T18:00:05.309Z",
+    "lastModification": "2024-02-26T21:17:44.401Z",
     "questions": [
       {
         "type": "QCM",
@@ -342,59 +342,6 @@
     "description": "Questions de pratique sur le langage JavaScript",
     "duration": 60,
     "lastModification": "2024-02-11T17:40:23.462Z",
-    "questions": [
-      {
-        "type": "QCM",
-        "text": "Parmi les mots suivants, lesquels sont des mots clés réservés en JS?",
-        "points": 40,
-        "choices": [
-          {
-            "text": "var",
-            "isCorrect": true
-          },
-          {
-            "text": "self",
-            "isCorrect": false
-          },
-          {
-            "text": "this",
-            "isCorrect": true
-          },
-          {
-            "text": "int",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "type": "QRL",
-        "text": "Donnez la différence entre 'let' et 'var' pour la déclaration d'une variable en JS ?",
-        "points": 60
-      },
-      {
-        "type": "QCM",
-        "text": "Est-ce qu'on le code suivant lance une erreur : const a = 1/NaN; ? ",
-        "points": 20,
-        "choices": [
-          {
-            "text": "Non",
-            "isCorrect": true
-          },
-          {
-            "text": "Oui",
-            "isCorrect": false
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "796471",
-    "visible": false,
-    "title": "A",
-    "description": "Questions de pratique sur le langage JavaScript",
-    "duration": 60,
-    "lastModification": "2024-02-12T17:30:56.652Z",
     "questions": [
       {
         "type": "QCM",

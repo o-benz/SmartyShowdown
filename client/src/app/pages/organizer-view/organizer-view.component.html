@@ -1,0 +1,37 @@
+<div class="question-zone">
+    <div class="blackboard">
+        <p class="question">{{ text }}</p>
+        <div class="info">
+            <p>Temps restant: {{ time }}</p>
+            <p>( {{ points }} points )</p>
+        </div>
+    </div>
+    <div *ngFor="let user of users; index as choiceId">
+        <ng-container *ngIf="this.removedUsers.includes(user)">
+            <s> {{user.name}}, {{user.score}}</s>
+        </ng-container>
+        <ng-container *ngIf="!this.removedUsers.includes(user)">
+            {{user.name}}, {{user.score}}
+        </ng-container>
+    </div>
+    <div class="abandon">
+        <button class="abandon-button" (click)="navigateHome()">Abandonner</button>
+    </div>
+    <div>
+        <app-question-stats [stats]="questionStats"></app-question-stats>
+    </div>
+    <ng-container *ngIf="this.isRoundOver">
+        <ng-container *ngIf="this.questionTimePackage.currentQuestionIndex === this.gameStats.questions.length - 1"> 
+            <div class="show-result">
+                <button class="show-result-button" (click)="showResults()">Montrer les résultats</button>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="this.questionTimePackage.currentQuestionIndex < this.gameStats.questions.length - 1"> 
+            <div class="next-question">
+                <button class="next-question-button" (click)="nextQuestion()">Question suivante</button>
+            </div>
+        </ng-container>
+    </ng-container>
+    
+    
+</div>

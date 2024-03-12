@@ -22,11 +22,11 @@ describe('Admin', () => {
     });
     it('should throw an error if initialize is called more than once', () => {
         Admin.initialize(initialPassword);
-        expect(() => Admin.initialize(initialPassword)).toThrowError("L'instance Admin a déjà été initialisée.");
+        expect(() => Admin.initialize(initialPassword)).toThrow("L'instance Admin a déjà été initialisée.");
     });
 
     it('should throw an error if getInstance is called before initialize', () => {
-        expect(() => Admin.getInstance()).toThrowError("L'instance Admin n'a pas été initialisée. Appelez Admin.initialize(password) d'abord.");
+        expect(() => Admin.getInstance()).toThrow("L'instance Admin n'a pas été initialisée. Appelez Admin.initialize(password) d'abord.");
     });
 
     describe('after initialization', () => {

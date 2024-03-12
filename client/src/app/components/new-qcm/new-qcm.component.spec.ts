@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { Question } from '@app/interfaces/quiz-model';
+import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { QuestionService } from '@app/services/question/question.service';
 import { of } from 'rxjs';
 import { NewQcmComponent } from './new-qcm.component';
@@ -9,13 +11,19 @@ describe('NewQcmComponent', () => {
     let component: NewQcmComponent;
     let fixture: ComponentFixture<NewQcmComponent>;
     let mockQuestionService: jasmine.SpyObj<QuestionService>;
+    let mockDialogErrorService: jasmine.SpyObj<DialogErrorService>;
 
     beforeEach(async () => {
         mockQuestionService = jasmine.createSpyObj('QuestionService', ['addMultipleChoice', 'checkValidity', 'getAllQuestions']);
+        mockDialogErrorService = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog']);
         mockQuestionService.getAllQuestions.and.returnValue(of([{}] as Question[]));
         await TestBed.configureTestingModule({
             declarations: [NewQcmComponent],
-            providers: [{ provide: QuestionService, useValue: mockQuestionService }],
+            providers: [
+                { provide: QuestionService, useValue: mockQuestionService },
+                MatDialog,
+                { provide: DialogErrorService, useValue: mockDialogErrorService },
+            ],
             imports: [FormsModule],
         }).compileComponents();
     });
@@ -61,12 +69,10 @@ describe('NewQcmComponent', () => {
     it('should not save QCM if question is invalid', () => {
         const isValid = false;
         mockQuestionService.checkValidity.and.returnValue(of(isValid));
-        spyOn(window, 'alert');
 
         component.saveQCM();
 
         expect(mockQuestionService.checkValidity).toHaveBeenCalledWith(component['newQuestion']);
-        expect(window.alert).toHaveBeenCalledWith('Invalid question');
         expect(component.quizModified.questions.length).toBe(0);
     });
 });

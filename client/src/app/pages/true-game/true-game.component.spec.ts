@@ -9,20 +9,30 @@ import { QuestionZoneComponent } from '@app/components/question-zone/question-zo
 import { GameService } from '@app/services/game/game.service';
 import { QuizService } from '@app/services/quiz/quiz.service';
 import { of } from 'rxjs';
+// eslint-disable-next-line
+import { OrganizerViewComponent } from '../organizer-view/organizer-view.component';
 import { TrueGameComponent } from './true-game.component';
 describe('TrueGameComponent', () => {
     let component: TrueGameComponent;
     let fixture: ComponentFixture<TrueGameComponent>;
-    let quizService: QuizService;
-    let gameService: GameService;
-    let router: Router;
+    let gameServiceSpy: jasmine.SpyObj<GameService>;
+    let quizServiceSpy: jasmine.SpyObj<QuizService>;
+    // let router: Router;
     const durationTest = 60;
-    const pointsTest = 10;
     const pointsModifier = 1.2;
 
     beforeEach(() => {
+        const gameSpy = jasmine.createSpyObj('GameService', ['dummyMethod']);
+        let internalScore = 0;
+        Object.defineProperty(gameSpy, 'score', {
+            get: jasmine.createSpy('getScore').and.callFake(() => internalScore),
+            set: jasmine.createSpy('setScore').and.callFake((value) => {
+                internalScore = value;
+            }),
+        });
+        const quizSpy = jasmine.createSpyObj('QuizService', ['getQuizById']);
         TestBed.configureTestingModule({
-            declarations: [TrueGameComponent, AnswerZoneComponent, QuestionZoneComponent, HeaderComponent, ChatBoxComponent],
+            declarations: [TrueGameComponent, AnswerZoneComponent, QuestionZoneComponent, HeaderComponent, ChatBoxComponent, OrganizerViewComponent],
             imports: [MatDialogModule, HttpClientTestingModule],
             providers: [
                 { provide: ActivatedRoute, useValue: { snapshot: { url: ['test'], paramMap: { get: () => 'test-id' } } } },
@@ -32,17 +42,17 @@ describe('TrueGameComponent', () => {
                         navigate = jasmine.createSpy('navigate');
                     },
                 },
-                QuizService,
-                GameService,
+                { provide: QuizService, useValue: quizSpy },
+                { provide: GameService, useValue: gameSpy },
             ],
         });
 
         fixture = TestBed.createComponent(TrueGameComponent);
         component = fixture.componentInstance;
-        quizService = TestBed.inject(QuizService);
-        gameService = TestBed.inject(GameService);
-        router = TestBed.inject(Router);
-        spyOn(quizService, 'getQuizById').and.returnValue(
+        quizServiceSpy = TestBed.inject(QuizService) as jasmine.SpyObj<QuizService>;
+        gameServiceSpy = TestBed.inject(GameService) as jasmine.SpyObj<GameService>;
+        // router = TestBed.inject(Router);
+        quizServiceSpy.getQuizById.and.returnValue(
             of({
                 id: 'test-id',
                 visible: true,
@@ -88,13 +98,6 @@ describe('TrueGameComponent', () => {
         expect(component.currentQuestion).toEqual(testQuestions[1]);
     });
 
-    it('should navigate to create game route when no more questions', () => {
-        component.questionIndex = 1;
-        component.nextQuestion(false);
-        expect(gameService.score).toEqual(0);
-        expect(router.navigate).toHaveBeenCalledWith(['/creategame']);
-    });
-
     it('should calculate score correctly in test mode', () => {
         component.currentQuestion = {
             type: 'Multiple Choice',
@@ -108,6 +111,6 @@ describe('TrueGameComponent', () => {
         };
         component.mode = 'test';
         component.calculateScore(true);
-        expect(gameService.score).toEqual(pointsTest * pointsModifier);
+        expect(gameServiceSpy.score).toEqual(component.currentQuestion.points * pointsModifier);
     });
 });

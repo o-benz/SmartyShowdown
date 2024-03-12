@@ -62,10 +62,9 @@ export class QuizService {
     }
 
     generateRandomID(len: number) {
-        const hex = QuizEnum.IDHEX;
         let output = '';
         for (let i = 0; i < len; ++i) {
-            output += hex.charAt(Math.floor(Math.random() * hex.length));
+            output += QuizEnum.IDHEX.charAt(Math.floor(Math.random() * QuizEnum.IDHEX.length));
         }
         return output;
     }

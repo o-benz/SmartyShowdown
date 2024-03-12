@@ -1,4 +1,4 @@
-@import '../../../../../styles.scss';
+@import '../../../styles.scss';
 
 ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
     padding: 10px;
@@ -9,7 +9,7 @@ h3 {
     user-select: none;
     color: $black;
     font-weight: bold;
-    font-size: 3vmin;
+    font-size: 2vmin;
     margin-block-start: 0;
     margin-bottom: 2%;
 }
@@ -24,5 +24,6 @@ input[type="text"] {
 }
 
 p {
-    white-space: pre-wrap;
+    margin-block-start: 0;
+    margin-block-end: 0;
 }

@@ -1,43 +1,59 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Choice, Question, Quiz } from '@app/interfaces/quiz-model';
+import { GameStats } from '@app/interfaces/game-stats';
+import { Question, Quiz } from '@app/interfaces/quiz-model';
+import { User } from '@app/interfaces/socket-model';
 import { GameService } from '@app/services/game/game.service';
 import { QuizService } from '@app/services/quiz/quiz.service';
+import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-true-game',
     templateUrl: './true-game.component.html',
     styleUrls: ['./true-game.component.scss'],
 })
-export class TrueGameComponent implements Quiz, Question, OnInit, Choice {
+export class TrueGameComponent implements OnInit, OnDestroy {
+    @ViewChild('chat') chatElement: ElementRef | undefined;
+    @ViewChild('game') gameElement: ElementRef | undefined;
     game: Quiz;
+    gameStats: GameStats;
     questions: Question[] = [];
     questionIndex: number = 0;
     currentQuestion: Question;
-    id: string;
-    visible: boolean;
-    title: string;
-    description: string;
     duration: number;
-    lastModification: string;
-    text: string;
-    type: string;
-    points: number = 0;
     mode: string;
     time: number = 0;
     isRoundFinished: boolean = false;
+    isTimeOver: boolean = false;
     isAnswerCorrect: boolean = false;
     readonly bonus: number = 1.2;
-
+    isChatFocused = false;
+    isGameFocused = false;
+    protected isOrganizer: boolean = false;
+    private gameSubscription: Subscription | undefined;
+    private socketSubscription: Subscription;
     // eslint-disable-next-line max-params
     constructor(
         private quizService: QuizService,
-        private readonly gameService: GameService,
+        private gameService: GameService,
         private route: ActivatedRoute,
         private router: Router,
+        private socketService: SocketCommunicationService,
     ) {}
 
     ngOnInit(): void {
+        this.game = {
+            id: '',
+            title: '',
+            description: '',
+            duration: 0,
+            lastModification: '',
+            questions: [],
+        };
+        this.socketService.getUser().subscribe((user: User) => {
+            this.isOrganizer = user.username === 'organisateur';
+        });
         this.gameService.score = 0;
         this.gameService.currentChoices = [];
         let id;
@@ -45,37 +61,97 @@ export class TrueGameComponent implements Quiz, Question, OnInit, Choice {
         if (url.includes('test')) {
             this.mode = 'test';
             id = this.route.snapshot.paramMap.get('id');
-        }
 
-        this.quizService.getQuizById(id || '').subscribe((quiz: Quiz) => {
-            this.game = quiz;
-            if (this.game.questions !== undefined) {
-                this.questions = this.game.questions;
-            }
-            this.time = this.game.duration;
-            this.currentQuestion = this.questions[this.questionIndex];
+            this.quizService.getQuizById(id || '').subscribe((quiz: Quiz) => {
+                this.game = quiz;
+                if (this.game.id) {
+                    this.gameService.quizId = this.game.id;
+                }
+                if (this.game.questions) {
+                    this.questions = this.game.questions;
+                }
+                this.time = this.game.duration;
+                this.currentQuestion = this.questions[this.questionIndex];
+            });
+        } else {
+            this.socketSubscription = this.socketService.getStats().subscribe({
+                next: (gameStats) => {
+                    this.gameStats = gameStats;
+                    if (this.gameStats.id) {
+                        this.gameService.quizId = this.gameStats.id;
+                    }
+                    if (this.gameStats.questions) {
+                        this.questions = gameStats.questions.map((question) => {
+                            return {
+                                text: question.title,
+                                type: question.type,
+                                points: question.points,
+                                choices: question.statLines.map((line) => {
+                                    return { text: line.label, isCorrect: line.isCorrect };
+                                }),
+                            };
+                        });
+                    }
+                    this.time = this.gameStats.duration;
+                    this.currentQuestion = this.questions[this.questionIndex];
+                },
+                complete: () => {
+                    if (this.socketSubscription) this.socketSubscription.unsubscribe();
+                },
+            });
+        }
+        this.socketService.onRoomClosed(() => {
+            this.socketService.leaveRoom();
+            this.router.navigate(['/']);
         });
+        this.socketService.onChangeQuestion(() => {
+            this.isRoundFinished = true;
+        });
+        this.socketService.onFinalizeAnswers(() => {
+            if (!this.gameService.isChoiceFinal) {
+                this.gameSubscription = this.gameService.postCurrentChoices(this.currentQuestion.text).subscribe((isAnswerCorrect: boolean) => {
+                    this.calculateScore(isAnswerCorrect);
+                });
+            }
+        });
+        this.socketService.onShowResults(() => {
+            this.router.navigate(['/']);
+        });
+    }
+
+    setFocusOnChat() {
+        this.chatElement?.nativeElement?.focus();
+        this.isChatFocused = true;
+        this.isGameFocused = false;
+    }
+
+    setFocusOnGame() {
+        this.gameElement?.nativeElement?.focus();
+        this.isChatFocused = false;
+        this.isGameFocused = true;
     }
 
     nextQuestion(isPopupOver: boolean) {
         this.isRoundFinished = isPopupOver;
         this.isAnswerCorrect = isPopupOver;
+        this.isTimeOver = isPopupOver;
         this.questionIndex++;
         if (this.questionIndex < this.questions.length) {
             this.currentQuestion = this.questions[this.questionIndex];
-        } else {
-            this.gameService.score = 0;
-            this.router.navigate(['/creategame']);
         }
     }
 
     calculateScore(isAnswerCorrect: boolean) {
-        if (isAnswerCorrect === true) {
+        if (isAnswerCorrect) {
             if (this.mode === 'test') {
                 this.gameService.score += this.currentQuestion.points * this.bonus;
-            }
+            } else this.gameService.score += this.currentQuestion.points;
             this.isAnswerCorrect = true;
         }
-        this.isRoundFinished = true;
+        this.isTimeOver = true;
+    }
+
+    ngOnDestroy(): void {
+        this.gameSubscription?.unsubscribe();
     }
 }

@@ -1,9 +1,20 @@
 <body>
     <app-header></app-header>
-    
+
     <div class="content-container">
-        <div class="start-container">
-            <button class="start-button" (click)="startGame()">Start Game</button>
+        <div  class="start-container">
+            <h1 *ngIf="roomCode" class="room">
+                Code d'accès: {{ roomCode }}
+            </h1>
+    
+            <app-waiting-room-list class="waiting-list" [isOrganisateur]="isOrganizer"></app-waiting-room-list>
+            
+            <div class="centered-item" *ngIf="isOrganizer">
+                <button class="lock-button" (click)="toggleRoomLock()">
+                    {{ roomLocked ? 'Déverrouiller la salle' : 'Verrouiller la salle' }}
+                </button>
+                <button class="start-button" (click)="startGame()">Start Game</button>
+            </div>
         </div>
         
         <app-chat-box class="chat-box"></app-chat-box>

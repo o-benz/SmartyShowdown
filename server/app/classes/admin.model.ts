@@ -1,6 +1,8 @@
 // https://bcrypt.online/
 import * as bcrypt from 'bcrypt';
 
+const saltRounds = 10;
+
 export class Admin {
     private static instance: Admin | null = null;
     private hashPassword: string;
@@ -11,7 +13,6 @@ export class Admin {
 
     static initialize(password: string): void {
         if (!Admin.instance) {
-            const saltRounds = 10;
             const passwordHash = bcrypt.hashSync(password, saltRounds);
             Admin.instance = new Admin(passwordHash);
         } else {

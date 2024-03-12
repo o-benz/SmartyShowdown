@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { LoginToken } from '@app/interfaces/admin-connection';
+import { environment } from 'src/environments/environment';
 import { AuthenticationService } from './authentication.service';
 
 describe('AuthenticationService', () => {
@@ -39,7 +40,7 @@ describe('AuthenticationService', () => {
             done();
         });
 
-        const req = httpTestingController.expectOne('http://localhost:3000/api/auth/login');
+        const req = httpTestingController.expectOne(`${environment.serverUrl}/auth/login`);
         expect(req.request.method).toEqual('POST');
         req.flush(mockResponse);
     });
@@ -53,7 +54,7 @@ describe('AuthenticationService', () => {
             expect(navigateSpy).toHaveBeenCalledWith(['/admin']);
         });
 
-        const req = httpTestingController.expectOne('http://localhost:3000/api/auth/login');
+        const req = httpTestingController.expectOne(`${environment.serverUrl}/auth/login`);
         req.flush(mockResponse);
     });
 
@@ -67,7 +68,7 @@ describe('AuthenticationService', () => {
             },
         });
 
-        const req = httpTestingController.expectOne('http://localhost:3000/api/auth/login');
+        const req = httpTestingController.expectOne(`${environment.serverUrl}/auth/login`);
         req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
     });
 });

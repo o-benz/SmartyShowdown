@@ -1,11 +1,28 @@
 <div class="chat-area-container">
-    <h1 class="chat-area">Chat</h1>
+    <h1 class="chat-area">
+        Chat
+        {{ user.username }}
+    </h1>
     <div class="chat-history">
-        <div class="chat-text">
+        <div
+            #messageList
+            class="message-box"
+            *ngFor="let message of roomMessages" 
+            [class.sent]="isSent(message)"
+            [class.received]="!isSent(message)"
+        >
+            {{ message }}
         </div>
     </div>
     <div class="chat-input">
-        <input type="text" placeholder="Entrez votre message..."/>
-        <button type="submit">Envoyer</button>
+        <input 
+            type="text" 
+            placeholder="Entrez votre message..."
+            [(ngModel)]="roomMessage"
+            (keydown)="handleKeydown($event)"
+            (input)="limitMessageLength()"
+            [maxlength]="limitMessagesCharacters"
+        />
+        <button type="submit" (click)="sendToRoom()">Envoyer</button>
     </div>
 </div>

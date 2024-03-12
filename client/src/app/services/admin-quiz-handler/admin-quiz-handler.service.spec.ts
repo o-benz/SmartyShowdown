@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { games } from '@app/interfaces/quiz';
 import { Quiz } from '@app/interfaces/quiz-model';
 import { AdminQuizHandler } from '@app/services/admin-quiz-handler/admin-quiz-handler.service';
 import { of } from 'rxjs';
@@ -24,15 +25,18 @@ describe('AdminQuizHandlerService', () => {
         expect(service).toBeTruthy();
     });
 
-    it('export should call the library with the right argument', () => {
+    it('export should download to computer', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const spy = spyOn<any>(service, 'libraryCaller');
-        const quiz: Quiz = { title: 'titre' } as Quiz;
-        const data = quiz;
-        const fileName = quiz.title;
-        const exportType = 'json';
+        const quiz: Quiz = games[0];
+        // create spy object with a click() method
+        const spyObj = jasmine.createSpyObj('a', ['click']);
+        spyOn(document, 'createElement').and.returnValue(spyObj);
+
         service.export(quiz);
-        expect(spy).toHaveBeenCalledWith({ data, fileName, exportType });
+
+        expect(spyObj.href).toContain('data:text/json;charset=utf-8,');
+        expect(spyObj.download).toContain(quiz.title);
+        expect(spyObj.click).toHaveBeenCalled();
     });
 
     it('delete should call an http delete with the right arguments', () => {

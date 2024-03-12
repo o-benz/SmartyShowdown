@@ -7,7 +7,7 @@
     </header>
 
     <div class="options">
-        <button mat-raised-button (click)="joinGameParty()">Joindre</button>
+        <button mat-raised-button [routerLink]="['/joingame']">Joindre</button>
         <button mat-raised-button [routerLink]="['/creategame']">Créer</button>
         <button mat-raised-button (click)="manageGames()">Administrer</button>
     </div>

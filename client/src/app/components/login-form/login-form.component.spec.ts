@@ -43,8 +43,6 @@ describe('LoginFormComponent', () => {
 
         component.onLogin();
         expect(authServiceMock.attemptLogin).toHaveBeenCalledWith(component.adminConnection.password);
-        expect(component.isLoggedIn).toBeTrue();
-        expect(component.loginError).toBeFalse();
         expect(dialogRefMock.close).toHaveBeenCalledWith(true);
     });
 
@@ -54,9 +52,7 @@ describe('LoginFormComponent', () => {
 
         component.onLogin();
         expect(authServiceMock.attemptLogin).toHaveBeenCalledWith(component.adminConnection.password);
-        expect(component.isLoggedIn).toBeFalse();
-        expect(component.loginError).toBeTrue();
-        expect(component.loginErrorMessage).toEqual('Accès refusé.');
+        expect(component.errorMessage).toEqual('Accès refusé.');
     });
 
     it('should handle login error', () => {
@@ -64,13 +60,11 @@ describe('LoginFormComponent', () => {
 
         component.onLogin();
         expect(authServiceMock.attemptLogin).toHaveBeenCalledWith(component.adminConnection.password);
-        expect(component.isLoggedIn).toBeFalse();
-        expect(component.loginError).toBeTrue();
-        expect(component.loginErrorMessage).toEqual('Erreur de connexion. Veuillez réessayer.');
+        expect(component.errorMessage).toEqual('Erreur de connexion. Veuillez réessayer.');
     });
 
-    it('should log out Successfully', () => {
-        component.onLogout();
-        expect(component.isLoggedIn).toBeFalse();
+    it('should unsubscribe on component destroy', () => {
+        component.ngOnDestroy();
+        expect(component.isLoginSubscriptionClosed).toBeTruthy();
     });
 });

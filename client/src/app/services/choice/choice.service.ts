@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Choice, Question } from '@app/interfaces/quiz-model';
+import { moveItem } from '@app/services/utils/utils';
 
 @Injectable({
     providedIn: 'root',
@@ -12,16 +13,12 @@ export class ChoiceService {
     placeHigher(choice: Choice, question: Question): void {
         if (!question.choices) return;
         const index = question.choices.indexOf(choice);
-        if (index > 0) {
-            [question.choices[index - 1], question.choices[index]] = [question.choices[index], question.choices[index - 1]];
-        }
+        moveItem(question.choices, index, index - 1);
     }
 
     placeLower(choice: Choice, question: Question): void {
         if (!question.choices) return;
         const index = question.choices.indexOf(choice);
-        if (index < question.choices.length - 1) {
-            [question.choices[index + 1], question.choices[index]] = [question.choices[index], question.choices[index + 1]];
-        }
+        moveItem(question.choices, index, index + 1);
     }
 }

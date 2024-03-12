@@ -1,0 +1,21 @@
+@import '../../../styles.scss';
+
+.content-container {
+    display: grid;
+    grid-template-columns: 4fr 4fr 3fr;
+    grid-gap: 10px;
+    height: 100%;
+}
+
+.arrow-button{
+    box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
+    text-align:center;
+    color:white;
+    background-color: $chat-area-container;
+    border-radius: 5px;
+}
+
+.chat-box {
+    grid-column: 3;
+    height: 100%;
+}

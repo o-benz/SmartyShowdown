@@ -2,11 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { of, throwError } from 'rxjs';
 
-import { AdminQuestionHandlerService } from '@app/services/mcq-handler/mcq-handler.service';
-
 import { NewQuestionFormComponent } from '@app/components/new-question-form/new-question-form.component';
 import { MultipleChoiceQuestion, QuestionModel, TypeEnum } from '@app/interfaces/question-model';
 import { Choice } from '@app/interfaces/quiz-model';
+import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { AdminQuestionHandlerService } from '@app/services/mcq-handler/mcq-handler.service';
 import { Types } from 'mongoose';
 import { QuestionListComponent } from './question-list.component';
 
@@ -15,6 +15,7 @@ describe('QuestionListComponent', () => {
     let fixture: ComponentFixture<QuestionListComponent>;
     let mockAdminQuestionHandlerService: jasmine.SpyObj<AdminQuestionHandlerService>;
     let mockMatDialog: jasmine.SpyObj<MatDialog>;
+    let mockDialogError: jasmine.SpyObj<DialogErrorService>;
     const dialogWidth = '50%';
 
     beforeEach(() => {
@@ -29,12 +30,14 @@ describe('QuestionListComponent', () => {
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed'], ['confirm']);
         mockDialogRef.afterClosed.and.returnValue(of(true));
         mockMatDialog.open.and.returnValue(mockDialogRef);
+        mockDialogError = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog']);
 
         TestBed.configureTestingModule({
             declarations: [QuestionListComponent],
             providers: [
                 { provide: AdminQuestionHandlerService, useValue: mockAdminQuestionHandlerService },
                 { provide: MatDialog, useValue: mockMatDialog },
+                { provide: DialogErrorService, useValue: mockDialogError },
             ],
         }).compileComponents();
 
@@ -49,9 +52,9 @@ describe('QuestionListComponent', () => {
     });
 
     it('should call unsubscribe on the subscription when component is destroyed', () => {
-        spyOn(component.subscription, 'unsubscribe');
+        const questionsSubscriptionSpy = spyOn(component['questionsSubscription'], 'unsubscribe');
         component.ngOnDestroy();
-        expect(component.subscription.unsubscribe).toHaveBeenCalled();
+        expect(questionsSubscriptionSpy).toHaveBeenCalled();
     });
 
     it('should fetch all multiple choice questions on init', () => {
@@ -96,12 +99,14 @@ describe('QuestionListComponent', () => {
     });
 
     it('deleteQuestion should send error message when delete fails', () => {
+        const mockId = new Types.ObjectId();
+        const mockErrorMessage = 'Erreur lors de la suppression de la question. Veuillez réessayer.';
+
         spyOn(window, 'confirm').and.returnValue(true);
-        const questionId = new Types.ObjectId();
-        mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion.and.returnValue(throwError(() => new Error('Error message')));
-        const alertSpy = spyOn(window, 'alert');
-        component.deleteQuestion(questionId);
-        expect(alertSpy).toHaveBeenCalledWith('Erreur lors de la suppression de la question. Veuillez réessayer.');
+        mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion.and.returnValue(throwError(() => new Error('error')));
+        component.deleteQuestion(mockId);
+
+        expect(mockDialogError.openErrorDialog).toHaveBeenCalledWith(mockErrorMessage); // Change access modifier to public
     });
 
     it('deleteQuestion should not delete question when not confirmed', () => {
@@ -152,9 +157,8 @@ describe('QuestionListComponent', () => {
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
         mockMatDialog.open.and.returnValue(mockDialogRef);
         mockAdminQuestionHandlerService.updateMultipleChoiceQuestion.and.returnValue(throwError(() => new Error('Error message')));
-        const alertSpy = spyOn(window, 'alert');
         component.modifyQuestion(questionId);
-        expect(alertSpy).toHaveBeenCalledWith('Erreur lors de la modification de la question. Veuillez réessayer.');
+        expect(mockDialogError.openErrorDialog).toHaveBeenCalledWith('Erreur lors de la modification de la question. Veuillez réessayer.');
     });
 
     it('modifyQuestion should not do anything if question type is not QCM', () => {
@@ -169,7 +173,7 @@ describe('QuestionListComponent', () => {
     });
 
     it('addQuestion should open a dialog with the correct data', () => {
-        component.addQuestion();
+        component.createQuestion();
         expect(mockMatDialog.open).toHaveBeenCalledWith(NewQuestionFormComponent, {
             data: { baseQuestion: null },
             width: dialogWidth,
@@ -183,7 +187,7 @@ describe('QuestionListComponent', () => {
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
         mockMatDialog.open.and.returnValue(mockDialogRef);
         mockAdminQuestionHandlerService.addMultipleChoiceQuestion.and.returnValue(of(mockQuestion as MultipleChoiceQuestion));
-        component.addQuestion();
+        component.createQuestion();
         expect(mockAdminQuestionHandlerService.addMultipleChoiceQuestion).toHaveBeenCalledWith({
             ...(mockQuestion as MultipleChoiceQuestion),
         });
@@ -195,9 +199,8 @@ describe('QuestionListComponent', () => {
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
         mockMatDialog.open.and.returnValue(mockDialogRef);
         mockAdminQuestionHandlerService.addMultipleChoiceQuestion.and.returnValue(throwError(() => new Error('Error message')));
-        const alertSpy = spyOn(window, 'alert');
-        component.addQuestion();
-        expect(alertSpy).toHaveBeenCalledWith("Erreur lors de l'ajout de la question. Veuillez réessayer.");
+        component.createQuestion();
+        expect(mockDialogError.openErrorDialog).toHaveBeenCalledWith("Erreur lors de l'ajout de la question. Veuillez réessayer.");
     });
 
     it('addQuestion should not do anything if question type is not QCM', () => {
@@ -206,7 +209,7 @@ describe('QuestionListComponent', () => {
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
         mockMatDialog.open.and.returnValue(mockDialogRef);
         mockAdminQuestionHandlerService.addMultipleChoiceQuestion.and.returnValue(of(mockQuestion as MultipleChoiceQuestion));
-        component.addQuestion();
+        component.createQuestion();
         expect(mockAdminQuestionHandlerService.addMultipleChoiceQuestion).not.toHaveBeenCalled();
     });
 });
@@ -223,10 +226,10 @@ const getMockQuestion = (type: TypeEnum): QuestionModel => {
 };
 
 const BASE_36 = 36;
-const BASE_10 = 10;
+const MULTIPLE_IDENTIFIER = 10;
 const PROBABILITY = 0.5;
 const getRandomString = (): string => (Math.random() + 1).toString(BASE_36).substring(2);
-const getRandomNumber = (): number => Math.floor(Math.random() * BASE_10) * BASE_10;
+const getRandomNumber = (): number => Math.floor(Math.random() * MULTIPLE_IDENTIFIER) * MULTIPLE_IDENTIFIER;
 const getRandomChoice = (): Choice => ({
     text: getRandomString(),
     isCorrect: Math.random() > PROBABILITY,

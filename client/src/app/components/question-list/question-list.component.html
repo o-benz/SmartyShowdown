@@ -32,7 +32,7 @@
                         <h2>{{ choice.isCorrect ? 'Vrai' : 'Faux' }}</h2>
                     </div>
                 </div>
-            </span> 
+            </span>
             <div class="question-options">
                 <button (click)="modifyQuestion(question._id)">Modifier</button>
                 <button (click)="deleteQuestion(question._id)">Supprimer</button>
@@ -41,6 +41,6 @@
       </div>
     </div>
   </div>
-  <button class="create" (click)="addQuestion()">Ajouter une Question</button>
+  <button class="create" (click)="createQuestion()">Ajouter une Question</button>
 </div>
 

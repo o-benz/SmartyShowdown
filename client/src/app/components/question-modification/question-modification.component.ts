@@ -1,24 +1,29 @@
-import { Component, Input, TemplateRef, ViewChild } from '@angular/core';
+import { Component, Input, OnDestroy, TemplateRef, ViewChild } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { ErrorMessages } from '@app/interfaces/error-messages';
 import { Question, Quiz, QuizEnum } from '@app/interfaces/quiz-model';
+import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { QuestionService } from '@app/services/question/question.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-question-modification',
     templateUrl: './question-modification.component.html',
     styleUrls: ['./question-modification.component.scss'],
 })
-export class QuestionModificationComponent {
+export class QuestionModificationComponent implements OnDestroy {
     @ViewChild('dialogTemplate') dialogTemplate: TemplateRef<unknown>;
     @Input() question: Question;
     @Input() quizModified: Quiz;
     dialogRef: MatDialogRef<unknown>;
 
     protected previousSelectedQuestion: Question;
+    private questionModificationSubscription: Subscription;
 
     constructor(
         private questionService: QuestionService,
         public dialog: MatDialog,
+        private dialogService: DialogErrorService,
     ) {}
 
     closeDialog(): void {
@@ -56,12 +61,12 @@ export class QuestionModificationComponent {
 
     saveChanges(): void {
         if (this.question.type === QuizEnum.QCM) {
-            this.questionService.checkValidity(this.question).subscribe((isValid) => {
+            this.questionModificationSubscription = this.questionService.checkValidity(this.question).subscribe((isValid) => {
                 if (isValid) {
                     this.dialogRef.close();
                 } else {
                     this.question = JSON.parse(JSON.stringify(this.previousSelectedQuestion));
-                    alert('Question is not valid');
+                    this.dialogService.openErrorDialog(ErrorMessages.QuestionInvalid);
                 }
             });
         } else {
@@ -70,6 +75,10 @@ export class QuestionModificationComponent {
     }
 
     addToBank(qcm: Question): void {
-        this.questionService.addQuestionToBank(qcm).subscribe({});
+        this.questionModificationSubscription = this.questionService.addQuestionToBank(qcm).subscribe({});
+    }
+
+    ngOnDestroy(): void {
+        if (this.questionModificationSubscription) this.questionModificationSubscription.unsubscribe();
     }
 }

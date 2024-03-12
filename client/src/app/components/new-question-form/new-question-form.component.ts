@@ -1,7 +1,10 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { ErrorMessages } from '@app/interfaces/error-messages';
+import { Control } from '@app/interfaces/form-controls';
 import { BaseMultipleChoiceQuestion, Choice, TypeEnum } from '@app/interfaces/question-model';
+import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { QuestionBankService } from '@app/services/question-bank/question-bank.service';
 import { QuestionService } from '@app/services/question/question.service';
 
@@ -9,7 +12,7 @@ const MAXIMUM_NUMBER_OF_POINTS = 100;
 const MINIMUM_NUMBER_OF_POINTS = 10;
 const MINIMUM_CHOICES = 2;
 const MAXIMUM_CHOICES = 4;
-const BASE_10 = 10;
+const MULTIPLE_IDENTIFIER = 10;
 
 @Component({
     selector: 'app-new-question-form',
@@ -28,11 +31,37 @@ export class NewQuestionFormComponent implements OnInit {
         private dialogRef: MatDialogRef<NewQuestionFormComponent>,
         private questionService: QuestionService,
         private questionBankService: QuestionBankService,
+        private dialogErrorService: DialogErrorService,
         @Inject(MAT_DIALOG_DATA) public data: { baseQuestion: BaseMultipleChoiceQuestion | null },
     ) {}
 
-    get choices(): FormArray {
+    protected get choices(): FormArray {
         return this.questionForm.get('choices') as FormArray;
+    }
+
+    private get questionControls(): Control[] {
+        return [
+            { control: this.questionForm.get('question'), name: 'Question' },
+            { control: this.questionForm.get('points'), name: 'Points' },
+            { control: this.questionForm.get('choices'), name: 'Choix' },
+            { control: this.questionForm.get('type'), name: 'Type' },
+        ];
+    }
+
+    private get pointsValidators() {
+        return [Validators.required, Validators.min(MINIMUM_NUMBER_OF_POINTS), Validators.max(MAXIMUM_NUMBER_OF_POINTS), this.isMultipleOfIdentifier];
+    }
+
+    private get typeValidators() {
+        return [Validators.required];
+    }
+
+    private get questionValidators() {
+        return [Validators.required];
+    }
+
+    private get choicesValidators() {
+        return [Validators.required, Validators.minLength(MINIMUM_CHOICES), Validators.maxLength(MAXIMUM_CHOICES)];
     }
 
     ngOnInit() {
@@ -40,47 +69,23 @@ export class NewQuestionFormComponent implements OnInit {
         this.newMultipleChoiceQuestion = this.data.baseQuestion || {
             type: TypeEnum.QCM,
             text: '',
-            points: 10,
+            points: MINIMUM_NUMBER_OF_POINTS,
             choices: [],
         };
         this.questionForm = this.fb.group({
-            type: new FormControl(this.newMultipleChoiceQuestion.type, Validators.required),
-            question: new FormControl(this.newMultipleChoiceQuestion.text, Validators.required),
-            points: new FormControl(this.newMultipleChoiceQuestion.points, [
-                Validators.required,
-                Validators.min(MINIMUM_NUMBER_OF_POINTS),
-                Validators.max(MAXIMUM_NUMBER_OF_POINTS),
-                this.isMultipleOf10,
-            ]),
-            choices: this.fb.array(
-                this.newMultipleChoiceQuestion.choices.map((choice) => this.fb.group(choice)),
-                [Validators.required, Validators.minLength(MINIMUM_CHOICES), Validators.maxLength(MAXIMUM_CHOICES)],
-            ),
+            type: this.getTypeFormControl(),
+            question: this.getQuestionFormControl(),
+            points: this.getPointsFormControl(),
+            choices: this.getChoicesFormArray(),
         });
     }
 
     onSubmit(): void {
-        const controls = [
-            { control: this.questionForm.get('question'), name: 'Question' },
-            { control: this.questionForm.get('points'), name: 'Points' },
-            { control: this.questionForm.get('choices'), name: 'Choix' },
-            { control: this.questionForm.get('type'), name: 'Type' },
-        ];
-
         this.questionService.checkValidity(this.questionForm.value).subscribe((validQuestion) => {
             if (this.questionForm.valid && validQuestion) {
                 this.dialogRef.close(this.questionForm.value as BaseMultipleChoiceQuestion);
             } else {
-                if (this.questionForm.invalid) {
-                    for (const { control, name } of controls) {
-                        if (control?.errors) {
-                            this.checkErrors(control, name);
-                            break;
-                        }
-                    }
-                } else {
-                    window.alert('Formulaire invalide');
-                }
+                this.handleInvalidForm(this.questionControls);
             }
         });
     }
@@ -110,8 +115,8 @@ export class NewQuestionFormComponent implements OnInit {
         this.questionBankService.placeChoiceLower(choices, choice);
     }
 
-    protected isMultipleOf10(control: AbstractControl): { [key: string]: boolean } | null {
-        if (control.value % BASE_10 !== 0) {
+    protected isMultipleOfIdentifier(control: AbstractControl): { [key: string]: boolean } | null {
+        if (control.value % MULTIPLE_IDENTIFIER !== 0) {
             return { notMultipleOf10: true };
         }
         return null;
@@ -119,5 +124,41 @@ export class NewQuestionFormComponent implements OnInit {
 
     protected checkErrors(control: AbstractControl, controlName: string): void {
         this.questionBankService.checkErrors(control, controlName);
+    }
+
+    private handleInvalidForm(controls: Control[]): void {
+        if (this.questionForm.invalid) {
+            this.findFirstError(controls);
+        } else {
+            this.dialogErrorService.openErrorDialog(ErrorMessages.InvalidForm);
+        }
+    }
+
+    private findFirstError(controls: Control[]): void {
+        for (const { control, name } of controls) {
+            if (control?.errors) {
+                this.checkErrors(control, name);
+                break;
+            }
+        }
+    }
+
+    private getTypeFormControl(): FormControl {
+        return new FormControl(this.newMultipleChoiceQuestion.type, this.typeValidators);
+    }
+
+    private getQuestionFormControl(): FormControl {
+        return new FormControl(this.newMultipleChoiceQuestion.text, this.questionValidators);
+    }
+
+    private getPointsFormControl(): FormControl {
+        return new FormControl(this.newMultipleChoiceQuestion.points, this.pointsValidators);
+    }
+
+    private getChoicesFormArray(): FormArray {
+        return new FormArray(
+            this.newMultipleChoiceQuestion.choices.map((choice) => this.fb.group(choice)),
+            this.choicesValidators,
+        );
     }
 }

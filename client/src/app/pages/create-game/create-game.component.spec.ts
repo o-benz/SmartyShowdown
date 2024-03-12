@@ -2,13 +2,14 @@ import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { Quiz } from '@app/interfaces/quiz-model';
-import { QuizService } from '@app/services/quiz/quiz.service';
-import { of } from 'rxjs';
-// eslint-disable-next-line no-restricted-imports
 import { HeaderComponent } from '@app/components/header/header.component';
+import { Quiz } from '@app/interfaces/quiz-model';
 import { TrueGameComponent } from '@app/pages/true-game/true-game.component';
+import { QuizService } from '@app/services/quiz/quiz.service';
+import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
+import { of } from 'rxjs';
 import { CreateGameComponent } from './create-game.component';
 import SpyObj = jasmine.SpyObj;
 
@@ -18,7 +19,9 @@ describe('CreateGameComponent', () => {
     let dialogSpy: SpyObj<MatDialog>;
     let mockButton: HTMLButtonElement;
     const dialogRefSpyObj = jasmine.createSpyObj({ close: null });
-    let quizService: QuizService;
+    let quizServiceSpy: SpyObj<QuizService>;
+    let routerSpy: SpyObj<Router>;
+    let socketServiceSpy: SpyObj<SocketCommunicationService>;
 
     const mockQuiz: Quiz = {
         id: '1',
@@ -33,6 +36,13 @@ describe('CreateGameComponent', () => {
     beforeEach(async () => {
         dialogSpy = jasmine.createSpyObj('MatDialog', ['open', 'close']);
         dialogSpy.open.and.returnValue(dialogRefSpyObj);
+        quizServiceSpy = jasmine.createSpyObj('QuizService', ['getAllQuiz', 'getQuizById']);
+        quizServiceSpy.getAllQuiz.and.returnValue(of([mockQuiz]));
+
+        routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+        socketServiceSpy = jasmine.createSpyObj('SocketCommunicationService', ['createRoom', 'connect']);
+        // Simulate the room creation by returning a room code
+        socketServiceSpy.createRoom.and.returnValue(of('12345'));
 
         await TestBed.configureTestingModule({
             declarations: [CreateGameComponent, HeaderComponent],
@@ -42,14 +52,18 @@ describe('CreateGameComponent', () => {
                 BrowserAnimationsModule,
                 RouterTestingModule.withRoutes([{ path: 'game/test/:id', component: TrueGameComponent }]),
             ],
-            providers: [{ provide: MatDialog, useValue: dialogSpy }],
+            providers: [
+                { provide: MatDialog, useValue: dialogSpy },
+                { provide: QuizService, useValue: quizServiceSpy },
+                { provide: Router, useValue: routerSpy },
+                { provide: SocketCommunicationService, useValue: socketServiceSpy },
+            ],
         }).compileComponents();
     });
 
     beforeEach(() => {
         fixture = TestBed.createComponent(CreateGameComponent);
         component = fixture.componentInstance;
-        quizService = TestBed.inject(QuizService);
         fixture.detectChanges();
     });
 
@@ -88,13 +102,25 @@ describe('CreateGameComponent', () => {
     }));
 
     it('should check if the quiz is available', fakeAsync(() => {
-        spyOn(quizService, 'getQuizById').and.returnValue(of(mockQuiz));
+        quizServiceSpy.getQuizById.and.returnValue(of(mockQuiz));
         component.selectedQuiz = mockQuiz;
 
         component.dialogRef = dialogRefSpyObj;
 
         component.validateBeforeClosing();
         tick();
+        expect(dialogRefSpyObj.close).toHaveBeenCalled();
+    }));
+
+    it('should store the room code, navigate to lobby, and close the dialog', fakeAsync(() => {
+        component.dialogRef = dialogRefSpyObj; // Ensure dialogRef is set before calling createGameRoom
+        component.selectedQuiz = mockQuiz;
+        component.createGameRoom();
+        tick();
+
+        expect(socketServiceSpy.createRoom).toHaveBeenCalled();
+        expect(localStorage.getItem('roomCode')).toBe('12345');
+        expect(routerSpy.navigate).toHaveBeenCalledWith(['/game/lobby']);
         expect(dialogRefSpyObj.close).toHaveBeenCalled();
     }));
 });

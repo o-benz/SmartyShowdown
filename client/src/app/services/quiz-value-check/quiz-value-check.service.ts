@@ -10,36 +10,42 @@ import { CheckerT, IErrorDetail, createCheckers } from 'ts-interface-checker';
     providedIn: 'root',
 })
 export class QuizValueCheckService {
+    _sanitizedQuiz: Quiz; // eslint-disable-line
     errors: string = '';
-    sanitizedQuiz: Quiz;
     result: IErrorDetail[] | null;
 
     constructor(private quizService: QuizService) {}
 
-    getResult(): boolean {
+    get sanitizedQuiz(): Quiz {
+        return this._sanitizedQuiz; // eslint-disable-line no-underscore-dangle
+    }
+
+    isValidQuiz(): boolean {
         return this.result == null && this.errors === '';
     }
 
     getMessage(): string {
-        if (this.result == null) {
-            return this.errors;
-        } else {
+        if (this.result) {
             return this.resultToString(this.result);
+        } else {
+            return this.errors;
         }
     }
 
-    getSanitizedQuiz(): Quiz {
-        return this.sanitizedQuiz;
-    }
-
     checkQuiz(quiz: Quiz): void {
-        // eslint-disable-next-line
-        const checkers = createCheckers(quizmodelTI) as { Quiz: CheckerT<Quiz> };
-        // eslint-disable-next-line
-        this.result = checkers.Quiz.strictValidate(quiz);
+        /* eslint-disable  */
+        const checkers = createCheckers(quizmodelTI) as { Quiz: CheckerT<Quiz> }; // utilisation suggested by library, 
+        this.result = checkers.Quiz.strictValidate(quiz); // see https://github.com/gristlabs/ts-interface-checker under the typeGuard section
+        /* eslint-enabled */
         if (this.result == null) {
-            this.checkQuizParamLimit(quiz);
-            this.sanitizedQuiz = this.prepareQuiz(quiz);
+            this.errors = '';
+            if (this.isNotInInterval(quiz.duration, DURATION_RANGE)) this.errors += "Erreur: la duree du quiz n'est pas dans l'intervale [10,60]\n";
+            if (quiz.questions.length < 1) {
+                this.errors += "Erreur: le quiz n'a pas de questions\n";
+            } else {
+                this.checkQuestions(quiz.questions);
+            }
+            this._sanitizedQuiz = this.prepareQuiz(quiz); // eslint-disable-line no-underscore-dangle
         }
     }
 
@@ -51,40 +57,34 @@ export class QuizValueCheckService {
         return quiz;
     }
 
-    private checkQuizParamLimit(quiz: Quiz): void {
-        this.errors = '';
-        if (this.isNotInInterval(quiz.duration, DURATION_RANGE)) this.errors += "Erreur: la duree du quiz n'est pas dans l'intervale [10,60]\n";
-        if (quiz.questions.length < 1) {
-            this.errors += "Erreur: le quiz n'a pas de questions\n";
-        } else {
-            quiz.questions.forEach((value: Question, index: number) => {
-                const questionError = this.checkQuestion(value);
-                if (questionError !== '') {
-                    this.errors += 'a la question ' + index.toString() + '\n' + questionError;
-                }
-            });
-        }
+    private checkQuestions(questions: Question[]) {
+        questions.forEach((question: Question, index: number) => {
+            let questionError = '';
+            if (this.isNotInInterval(question.points, POINT_RANGE)) 
+                questionError += '    Erreur: les points doivent etre entre 10 et 100 en multiple de 10\n';
+            if (question.type === 'QCM') {
+                questionError += this.checkQCM(question);
+            } else if (question.type === 'QRL') {
+                if (question.choices) questionError += '    Erreur: une question à réponse longue ne peut pas avoir de choix\n';
+            } else {
+                questionError += '    Erreur: le type de question doit être QCM ou QRL\n';
+            }
+            if (questionError !== '') 
+                this.errors += 'a la question ' + index.toString() + '\n' + questionError;
+        });
     }
 
-    private checkQuestion(question: Question): string {
+    private checkQCM(question: Question):string{
         let errors = '';
-        if (this.isNotInInterval(question.points, POINT_RANGE)) errors += '    Erreur: les points doivent etre entre 10 et 100 en multiple de 10\n';
-
-        if (question.type === 'QCM') {
-            if (!question.choices || this.isNotInInterval(question.choices.length, QUESTION_RANGE)) {
-                errors += '    Erreur: la question a choix multiple doit avoir de 2 à 4 choix\n';
-            } else {
-                if (!this.oneFalseAndTrueMinimum(question.choices)) {
-                    errors += '    Erreur: il doit y avoir au moins 1 mauvais et 1 bon choix\n';
-                }
-                question.choices.forEach((value) => {
-                    this.checkChoice(value);
-                });
-            }
-        } else if (question.type === 'QRL') {
-            if (question.choices) errors += '    Erreur: une question à réponse longue ne peut pas avoir de choix\n';
+        if (!question.choices || this.isNotInInterval(question.choices.length, QUESTION_RANGE)) {
+            errors += '    Erreur: la question a choix multiple doit avoir de 2 à 4 choix\n';
         } else {
-            errors += '    Erreur: le type de question doit être QCM ou QRL\n';
+            if (!this.oneFalseAndTrueMinimum(question.choices)) {
+                errors += '    Erreur: il doit y avoir au moins 1 mauvais et 1 bon choix\n';
+            }
+            question.choices.forEach((value) => {
+                this.checkChoice(value);
+            });
         }
         return errors;
     }
@@ -107,10 +107,16 @@ export class QuizValueCheckService {
         let fullMessage = '';
         if (errors)
             errors.forEach((value) => {
-                fullMessage += value.nested
-                    ? this.resultToString(value.nested)
-                    : value.path + ' ' + value.message.replace('is missing', 'est manquant').replace('is not a', "n'est pas de type") + ',\n';
+                fullMessage +=
+                    this.resultToString(value.nested) +
+                    this.translateError(value);
             });
         return fullMessage;
+    }
+
+    private translateError(error:IErrorDetail):string {
+        return error.path +' ' +
+               error.message.replace('is missing', 'est manquant').replace('is not a', "n'est pas de type") +
+                    ',\n';
     }
 }

@@ -1,7 +1,6 @@
 @import '../../../styles.scss';
 
 .chat-area-container {
-    height: 95%;
     box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
     display: flex;
     flex-direction: column;
@@ -11,6 +10,7 @@
     margin-top: 5px;
     margin-left: 10px;
     margin-right: 10px;
+    animation: crownAppear 0.6s ease forwards;
 }
 
 .chat-area {
@@ -32,7 +32,19 @@
     flex-grow: 1;
     overflow-y: scroll;
     padding: 20px;
-    background: $chat-area-container;
+}
+
+.chat-history::-webkit-scrollbar {
+    width: 12px;
+}
+
+.chat-history::-webkit-scrollbar-thumb {
+    background-color: $main-green;
+    border-radius: 15px;
+}
+
+.chat-history::-webkit-scrollbar-thumb:active {
+    background-color: $hover-green;
 }
 
 .chat-text {
@@ -50,19 +62,21 @@
     font-size: 1rem;
     line-height: 1.4;
     overflow-x: auto;
+    white-space: normal;
     word-wrap: break-word;
+    color: $white;
+    border: 1px solid $message-box-border;
 }
 .message-box.sent {
-    background-color: $message-box;
+    background-color: $message-sent;
     align-self: flex-end;
     border-bottom-right-radius: 0;
 }
 
 .message-box.received {
-    background-color: $message-box;
+    background-color: $message-received;
     align-self: flex-start;
     border-bottom-left-radius: 0;
-    border: 1px solid $message-box-border;
 }
 
 .chat-input {
@@ -79,9 +93,14 @@
     padding: 10px 15px;
     border: none;
     border-radius: 20px;
+    color: $white;
     background: $chat-area-container;
     margin-right: 10px;
     box-shadow: inset 0 2px 4px $chat-input-shadow;
+    outline-color: $white;
+    &::placeholder {
+        color: #e3e3e3;
+    }
 }
 
 .error-message {
@@ -92,14 +111,14 @@
 .chat-input button {
     width: 90px;
     padding: 10px 20px;
-    background-color: $message-box;
-    color: $black;
+    background-color: $message-sent;
+    color: $white;
     border: none;
     border-radius: 20px;
     cursor: pointer;
     transition: background-color 0.3s;
     &:hover {
-        background-color: $chat-area-header;
+        background-color: $message-received;
     }
 
     &:disabled {

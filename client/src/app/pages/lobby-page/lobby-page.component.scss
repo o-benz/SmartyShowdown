@@ -1,48 +1,91 @@
 @import '../../../styles.scss';
 
+h1{
+  user-select: none;
+  text-shadow: 0 0 10px $text-shadow;
+}
+
+.waiting-list {
+  grid-row: 2 / span 2;
+}
+
 .content-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-gap: 10px;
-    height: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 10px;
+  height: 100%;
+}
+
+.room {
+  grid-row: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-left: 2%;
+  margin-right: 2%;
+  padding: 25px 50px;
+  color: $white;
+  background-color: $main-pink;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0px 6px 10px $box-shadow;
+}
+
+.centered-item {
+  grid-row: 4;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
 }
 
 .start-container {
-    grid-column: 1 / span 3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  grid-column: 1 / span 3;
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
 }
 
-/* Button Styles */
-.start-button {
-    display: inline-block;
-    padding: 25px 50px;
-    font-size: 24px;
-    font-weight: bold;
-    text-transform: uppercase;
-    color: $white;
-    background-color: $main-pink;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    box-shadow: 0px 6px 10px $box-shadow;
-    transition: all 0.3s ease;
-  }
-  
-  .start-button:hover {
-    background-color: $main-green;
-    border: none;
-    transform: translateY(-4px);
-  }
-  
-  .start-button:active {
-    background-color: $hover-green;
-    transform: translateY(2px);
-    box-shadow: 0 2px 4px $box-shadow;
-  }  
+button {
+  margin-left: 2%;
+  margin-right: 2%;
+  width: 50%;
+  display: inline-block;
+  padding: 25px 50px;
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: $white;
+  background-color: $main-pink;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0px 6px 10px $box-shadow;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: $main-green;
+  border: none;
+  transform: translateY(-4px);
+}
+
+button:active {
+  background-color: $hover-green;
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px $box-shadow;
+}
 
 .chat-box {
-    grid-column: 4;
-    height: 100%;
+  grid-column: 4;
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .start-container {
+      grid-column: 1 / span 4;
+  }
+  .chat-box {
+      display: none;
+  }
 }

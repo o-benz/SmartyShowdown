@@ -1,19 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AdminConnection } from '@app/interfaces/admin-connection';
 import { AuthenticationService } from '@app/services/authentication/authentication.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-login-form',
     templateUrl: './login-form.component.html',
     styleUrls: ['./login-form.component.scss'],
 })
-export class LoginFormComponent {
+export class LoginFormComponent implements OnDestroy {
     adminConnection: AdminConnection;
 
-    isLoggedIn: boolean = false;
-    loginError: boolean = false;
-    loginErrorMessage: string = '';
+    protected loginErrorMessage: string;
+    private loginSubscription: Subscription | null = null;
 
     constructor(
         public dialogRef: MatDialogRef<LoginFormComponent>,
@@ -22,28 +22,30 @@ export class LoginFormComponent {
         this.adminConnection = { password: '' };
     }
 
+    get errorMessage(): string | null {
+        return this.loginErrorMessage.length > 0 ? this.loginErrorMessage : null;
+    }
+
+    get isLoginSubscriptionClosed(): boolean {
+        return this.loginSubscription ? this.loginSubscription.closed : true;
+    }
+
     onLogin() {
-        this.authService.attemptLogin(this.adminConnection.password).subscribe({
+        this.loginSubscription = this.authService.attemptLogin(this.adminConnection.password).subscribe({
             next: (response) => {
                 if (response) {
-                    this.isLoggedIn = true;
-                    this.loginError = false;
                     this.dialogRef.close(true);
                 } else {
-                    this.isLoggedIn = false;
-                    this.loginError = true;
                     this.loginErrorMessage = 'Accès refusé.';
                 }
             },
             error: () => {
-                this.isLoggedIn = false;
-                this.loginError = true;
                 this.loginErrorMessage = 'Erreur de connexion. Veuillez réessayer.';
             },
         });
     }
 
-    onLogout() {
-        this.isLoggedIn = false;
+    ngOnDestroy() {
+        this.loginSubscription?.unsubscribe();
     }
 }

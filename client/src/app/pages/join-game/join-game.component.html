@@ -1,0 +1,17 @@
+<body>
+    <app-header></app-header>
+    
+    <div class="join-wrapper">
+        <h1>Rejoindre une partie</h1>
+        <div class="join-container">
+            <input (keydown.enter)="confirmCode()" type="text" [(ngModel)]="roomCode" placeholder="Code d'accès" maxlength="4">
+            <button (click)="confirmCode()">Confirmer</button>
+        </div>
+    </div>
+
+    <ng-template #dialogTemplate>
+        <h3>Salle: {{roomCode}}</h3>
+        <input placeholder="Nom d'utilisateur" class="room-id" (keydown.enter)="login()" type="text" [(ngModel)]="username">
+        <button class="dialog" (click)="login()">Rejoindre!</button>
+    </ng-template>
+</body>

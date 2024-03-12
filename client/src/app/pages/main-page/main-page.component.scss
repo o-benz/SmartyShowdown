@@ -1,6 +1,7 @@
 @import '../../../styles.scss';
 
 .main-page-container {
+    overflow-y: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -48,6 +49,7 @@ header {
 }
 
 .options button {
+    animation: crownAppear 0.5s forwards;
     flex: 1;
     height: 10vmin;
     width: 30vmin;
@@ -78,6 +80,7 @@ header {
 }
 
 .footer-item {
+    animation: popIn 0.5s ease forwards;
     font-size: 2vmin;
     user-select: none;
     text-align: center;

@@ -2,17 +2,20 @@
     <app-header></app-header>
 
     <div class="content-container">
-        <div class="question-container">
-            <app-question-zone
-                class="question-zone"
-                [questionTimePackage]="{ time: this.time, question: this.currentQuestion }"
-                (endTimerEvent)="calculateScore($event)"
-            ></app-question-zone>
-
-            <app-answer-zone class="answer-zone" [currentQuestion]="currentQuestion"
-             (qcmFinishedEvent)="calculateScore($event)" (qrlFinishedEvent)="calculateScore($event)"></app-answer-zone>
-        </div>
-        
+        <ng-container *ngIf="!this.isOrganizer">
+            <div class="question-container">
+                <app-question-zone
+                    class="question-zone"
+                    [questionTimePackage]="{ time: this.time, question: this.currentQuestion, isTimeOver: this.isTimeOver}"
+                ></app-question-zone>
+    
+                <app-answer-zone class="answer-zone" [roundEndedQuestionPackage]="{ isRoundEnded: this.isRoundFinished, question: this.currentQuestion, questionIndex: this.questionIndex}" 
+                 (qcmFinishedEvent)="calculateScore($event)" (qrlFinishedEvent)="calculateScore($event)"></app-answer-zone>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="this.isOrganizer">
+            <app-organizer-view [questionTimePackage]="{ time: this.time, question: this.currentQuestion, currentQuestionIndex: this.questionIndex}"></app-organizer-view>
+        </ng-container>
         <app-chat-box class="chat-box"></app-chat-box>
         
         <app-result-popup 
@@ -20,6 +23,5 @@
             [questionBooleanPackage]="{ isAnswerCorrect: isAnswerCorrect, question: this.currentQuestion }" 
             (nextQuestionEvent)="nextQuestion($event)"
         ></app-result-popup>
-        
     </div>
 </body>

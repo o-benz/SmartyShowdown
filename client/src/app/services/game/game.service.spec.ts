@@ -46,7 +46,7 @@ describe('GameService', () => {
         service.currentChoices = mockChoices;
         const expectedResponse = true;
 
-        service.postCurrentChoices(mockQuestion).subscribe((response) => {
+        service.postCurrentChoices(mockQuestion.text).subscribe((response) => {
             expect(response).toEqual(expectedResponse);
         });
 

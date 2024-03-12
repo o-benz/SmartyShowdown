@@ -1,12 +1,13 @@
-<div class="answer" *ngIf="currentQuestion !== undefined && choices !== undefined">
-    <ng-container *ngIf="currentQuestion.type === 'QCM'">
-        <div *ngFor="let choice of currentQuestion.choices; index as choiceId">
+<div class="scrollable-list" *ngIf="roundEndedQuestionPackage.question !== undefined && choices !== undefined">
+    <ng-container *ngIf="roundEndedQuestionPackage.question.type === 'QCM'">
+        <div *ngFor="let choice of roundEndedQuestionPackage.question.choices; index as choiceId">
             <button class="choice" [class.selected]="isChoiceSelected(choice)" (click)="chooseChoice(choiceId)">
                 <div class="choice-number1" [attr.data-number]="choiceId + 1">
                     <ng-container *ngIf="!isChoiceSelected(choice); else selectedChoice">{{ choiceId + 1 }} ?</ng-container>
                     <ng-template #selectedChoice>{{ choiceId + 1 }} !</ng-template>
                 </div>
                 {{ choice.text }}
+                <ng-container *ngIf="roundEndedQuestionPackage.isRoundEnded">{{ choice.isCorrect }} ?</ng-container>
                 <div class="choice-number2" [attr.data-number]="choiceId + 1">
                     <ng-container *ngIf="!isChoiceSelected(choice); else selectedChoice">{{ choiceId + 1 }} ?</ng-container>
                     <ng-template #selectedChoice>{{ choiceId + 1 }} !</ng-template>
@@ -14,7 +15,7 @@
             </button>
         </div>
     </ng-container>
-    <ng-container *ngIf="currentQuestion.type === 'QRL'">
+    <ng-container *ngIf="roundEndedQuestionPackage.question.type === 'QRL'">
         <div class="blackboard">
             <input [(ngModel)]="textAnswer" placeholder="Entrez votre réponse..."/>
         </div>
@@ -22,5 +23,5 @@
 </div>
 
 <div class="confirm">
-    <button class="confirmbtn" (click)="lockAnswer()" [class.locked]="isAnswerLocked === true">Lock In Answer</button>
+    <button class="confirmbtn" (click)="lockAnswer()" [class.locked]="this['gameService'].isChoiceFinal === true">Lock In Answer</button>
 </div>

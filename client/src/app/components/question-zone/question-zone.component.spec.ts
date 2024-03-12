@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { EventEmitter } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { GameService } from '@app/services/game/game.service';
 import { TimeService } from '@app/services/time/time.service';
-import { of } from 'rxjs';
 import { QuestionZoneComponent } from './question-zone.component';
 describe('QuestionZoneComponent', () => {
     let component: QuestionZoneComponent;
@@ -29,7 +27,6 @@ describe('QuestionZoneComponent', () => {
         routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
         fixture = TestBed.createComponent(QuestionZoneComponent);
         component = fixture.componentInstance;
-        component.endTimerEvent = new EventEmitter<boolean>();
     });
 
     it('should create', () => {
@@ -37,7 +34,7 @@ describe('QuestionZoneComponent', () => {
     });
 
     it('should start timer when ngOnChanges is called', () => {
-        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' } };
+        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' }, isTimeOver: false };
         component.questionTimePackage = questionPackage;
 
         spyOn(component, 'startTimer').and.callThrough();
@@ -48,33 +45,18 @@ describe('QuestionZoneComponent', () => {
         expect(component.duration).toEqual(questionPackage.time);
     });
 
-    it('should unsubscribe timer and game subscriptions on ngOnDestroy', () => {
-        const unsubscribeSpy = jasmine.createSpy('unsubscribe');
-        component.timerSubscription = { unsubscribe: unsubscribeSpy } as any;
-        component['gameSubscription'] = { unsubscribe: unsubscribeSpy } as any;
-
-        component.ngOnDestroy();
-        expect(component['gameSubscription']?.unsubscribe).toHaveBeenCalled();
-        expect(component.timerSubscription?.unsubscribe).toHaveBeenCalled();
-    });
-
-    it('should emit end timer event and post current choices on timer event', () => {
-        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' } };
+    it('should only change score when ngOnChanges is called when the round is ended', () => {
+        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' }, isTimeOver: true };
         component.questionTimePackage = questionPackage;
-        const isAnswerCorrect = true;
-        gameServiceSpy.postCurrentChoices.and.returnValue(of(isAnswerCorrect));
+        spyOn(component, 'startTimer').and.callThrough();
 
         component.ngOnChanges();
-
-        const timeServiceElement = fixture.debugElement.injector.get(TimeService) as TimeService;
-        timeServiceElement.timerEvent.emit(true);
-
-        fixture.detectChanges();
-        expect(gameServiceSpy.postCurrentChoices).toHaveBeenCalledWith(questionPackage.question);
+        expect(component.score).toBe(gameServiceSpy.score);
+        expect(component.startTimer).not.toHaveBeenCalled();
     });
 
     it('should set component properties when ngOnChanges is called with valid question package', () => {
-        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' } };
+        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' }, isTimeOver: false };
         component.questionTimePackage = questionPackage;
 
         component.ngOnChanges();

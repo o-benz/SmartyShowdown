@@ -1,4 +1,4 @@
-import { Choice, Question } from '@app/model/quiz/quiz.schema';
+import { CorrectionData } from '@app/model/quiz/quiz.schema';
 import { GameService } from '@app/services/game/game.service';
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -11,8 +11,8 @@ export class GameController {
     @Post('/correct')
     @ApiResponse({ status: 201, description: 'Received choice list successfully.' })
     @ApiResponse({ status: 400, description: 'Bad request.' })
-    async correct(@Body() requestBody: { choices: Choice[]; question: Question }) {
-        const result = this.gameService.correctQuiz(requestBody.choices, requestBody.question);
+    async correct(@Body() requestBody: CorrectionData) {
+        const result = this.gameService.correctQuiz(requestBody.clientAnswers, requestBody.questionText, requestBody.quizId);
         return result;
     }
 }

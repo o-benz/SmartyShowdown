@@ -171,10 +171,10 @@ const generateMockMCQ = (): MultipleChoiceQuestion => {
 };
 
 const BASE_36 = 36;
-const BASE_10 = 10;
+const MULTIPLE_IDENTIFIER = 10;
 const PROBABILITY = 0.5;
 const getRandomString = (): string => (Math.random() + 1).toString(BASE_36).substring(2);
-const getRandomNumber = (): number => Math.floor(Math.random() * BASE_10) * BASE_10;
+const getRandomNumber = (): number => Math.floor(Math.random() * MULTIPLE_IDENTIFIER) * MULTIPLE_IDENTIFIER;
 const getRandomChoice = (): Choice => ({
     text: getRandomString(),
     isCorrect: Math.random() > PROBABILITY,

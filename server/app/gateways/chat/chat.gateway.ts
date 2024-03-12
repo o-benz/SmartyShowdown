@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { DELAY_BEFORE_EMITTING_TIME, PRIVATE_ROOM_ID, WORD_MIN_LENGTH } from './chat.gateway.constants';
+import { PRIVATE_ROOM_ID, WORD_MIN_LENGTH } from './chat.gateway.constants';
 import { ChatEvents } from './chat.gateway.events';
 
 @WebSocketGateway({ cors: true })
@@ -42,9 +42,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
     afterInit() {
-        setInterval(() => {
-            this.emitTime();
-        }, DELAY_BEFORE_EMITTING_TIME);
+        // setInterval(() => {
+        //     this.emitTime();
+        // }, DELAY_BEFORE_EMITTING_TIME);
     }
 
     handleConnection(socket: Socket) {

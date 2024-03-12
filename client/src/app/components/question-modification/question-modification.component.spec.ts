@@ -111,14 +111,4 @@ describe('QuestionModificationComponent', () => {
         component.saveChanges();
         expect(questionServiceSpy.checkValidity).not.toHaveBeenCalled();
     });
-
-    it('should show an alert if the question is not valid', () => {
-        spyOn(window, 'alert');
-        component.question.type = 'QCM';
-        component['previousSelectedQuestion'] = {} as Question;
-        questionServiceSpy.checkValidity.and.returnValue(of(false));
-        component.saveChanges();
-        fixture.detectChanges();
-        expect(window.alert).toHaveBeenCalledWith('Question is not valid');
-    });
 });

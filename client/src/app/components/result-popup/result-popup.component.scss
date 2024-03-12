@@ -1,6 +1,7 @@
 @import '../../../styles.scss';
 
 .popup-container {
+    animation: crownAppear 0.5s forwards;
     display: flex;
     flex-direction: column;
     justify-content: space-around;

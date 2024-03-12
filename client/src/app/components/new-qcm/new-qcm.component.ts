@@ -1,22 +1,29 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ErrorMessages } from '@app/interfaces/error-messages';
 import { Question, Quiz, QuizEnum } from '@app/interfaces/quiz-model';
+import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { QuestionService } from '@app/services/question/question.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-new-qcm',
     templateUrl: './new-qcm.component.html',
     styleUrls: ['./new-qcm.component.scss'],
 })
-export class NewQcmComponent implements OnInit {
+export class NewQcmComponent implements OnInit, OnDestroy {
     @Input() quizModified: Quiz;
 
     protected newQuestion: Question;
     protected listQCM: Question[];
+    private newQcmSubscription: Subscription;
 
-    constructor(private questionService: QuestionService) {}
+    constructor(
+        private questionService: QuestionService,
+        private dialogService: DialogErrorService,
+    ) {}
 
     ngOnInit(): void {
-        this.questionService.getAllQuestions().subscribe((questions) => {
+        this.newQcmSubscription = this.questionService.getAllQuestions().subscribe((questions) => {
             this.listQCM = questions;
         });
         this.newQuestion = {
@@ -32,12 +39,16 @@ export class NewQcmComponent implements OnInit {
     }
 
     saveQCM(): void {
-        this.questionService.checkValidity(this.newQuestion).subscribe((isValid) => {
+        this.newQcmSubscription = this.questionService.checkValidity(this.newQuestion).subscribe((isValid) => {
             if (isValid) {
                 this.quizModified.questions.push(JSON.parse(JSON.stringify(this.newQuestion)));
             } else {
-                alert('Invalid question');
+                this.dialogService.openErrorDialog(ErrorMessages.QuestionInvalid);
             }
         });
+    }
+
+    ngOnDestroy(): void {
+        if (this.newQcmSubscription) this.newQcmSubscription.unsubscribe();
     }
 }

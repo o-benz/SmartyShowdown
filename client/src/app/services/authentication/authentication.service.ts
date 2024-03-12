@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginToken } from '@app/interfaces/admin-connection';
 import { Observable, catchError, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 const UNAUTHORIZED = 401;
 
@@ -16,7 +17,7 @@ export class AuthenticationService {
     ) {}
 
     login(password: string): Observable<LoginToken> {
-        return this.http.post<LoginToken>('http://localhost:3000/api/auth/login', { password });
+        return this.http.post<LoginToken>(`${environment.serverUrl}/auth/login`, { password });
     }
 
     attemptLogin(password: string): Observable<LoginToken> {

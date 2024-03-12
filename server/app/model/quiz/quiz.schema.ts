@@ -20,6 +20,11 @@ export interface Quiz {
     questions: Question[];
 }
 
+export interface CorrectionData {
+    clientAnswers: Choice[];
+    questionText: string;
+    quizId: string;
+}
 export enum QuizEnum {
     MINCHOICESLENGTH = 1,
     MAXCHOICESLENGTH = 4,

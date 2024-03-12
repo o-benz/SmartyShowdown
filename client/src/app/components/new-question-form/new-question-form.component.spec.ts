@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AbstractControl, FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogActions, MatDialogRef } from '@angular/material/dialog';
 import { BaseMultipleChoiceQuestion, Choice, MultipleChoiceQuestion, TypeEnum } from '@app/interfaces/question-model';
+import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { QuestionBankService } from '@app/services/question-bank/question-bank.service';
 import { QuestionService } from '@app/services/question/question.service';
 import { Types } from 'mongoose';
@@ -16,6 +17,7 @@ describe('NewQuestionFormComponent', () => {
     let mockQuestionBankService: jasmine.SpyObj<QuestionBankService>;
     let mockMatDialog: jasmine.SpyObj<MatDialog>;
     let mockMatDialogRef: jasmine.SpyObj<MatDialogRef<NewQuestionFormComponent>>;
+    let mockDialogError: jasmine.SpyObj<DialogErrorService>;
     let abstractControl: AbstractControl;
     let fb: FormBuilder;
     let choices: FormArray;
@@ -34,6 +36,7 @@ describe('NewQuestionFormComponent', () => {
         fb = new FormBuilder();
         mockMatDialog = jasmine.createSpyObj('MatDialog', ['open', 'close', 'afterClosed']);
         mockMatDialogRef = jasmine.createSpyObj('MatDialogRef', ['open', 'close', 'afterClosed']);
+        mockDialogError = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog']);
 
         TestBed.configureTestingModule({
             imports: [ReactiveFormsModule],
@@ -48,6 +51,7 @@ describe('NewQuestionFormComponent', () => {
                 { provide: QuestionService, useValue: mockQuestionService },
                 { provide: QuestionBankService, useValue: mockQuestionBankService },
                 { provide: MatDialogActions, useValue: {} },
+                { provide: DialogErrorService, useValue: mockDialogError },
             ],
         }).compileComponents();
 
@@ -120,10 +124,9 @@ describe('NewQuestionFormComponent', () => {
         });
 
         mockQuestionService.checkValidity.and.returnValue(of(false));
-        const alertSpy = spyOn(window, 'alert');
         component.onSubmit();
 
-        expect(alertSpy).toHaveBeenCalledWith('Formulaire invalide');
+        expect(mockDialogError.openErrorDialog).toHaveBeenCalledWith('Formulaire invalide');
     });
 
     it('onSubmit should call checkErrors if form is invalid', () => {
@@ -176,11 +179,11 @@ describe('NewQuestionFormComponent', () => {
         expect(mockQuestionBankService.placeChoiceLower).toHaveBeenCalledWith(choices, choice);
     });
 
-    it('isMultipleOf10 should return true when the control value is a multiple of 10', () => {
+    it('isMultipleOfIdentifier should return true when the control value is a multiple of 10', () => {
         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         const control = new FormControl(15);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((component as any).isMultipleOf10(control)).toEqual({ notMultipleOf10: true });
+        expect((component as any).isMultipleOfIdentifier(control)).toEqual({ notMultipleOf10: true });
     });
 });
 
@@ -203,7 +206,7 @@ const generateMockChoice = () => {
 };
 const BASE_36 = 36;
 const BOOLEAN_PROBABILITY = 0.5;
-const BASE_10 = 10;
-const getRandomNumber = (): number => Math.floor(Math.random() * (BASE_10 + 1)) * BASE_10;
+const MULTIPLE_IDENTIFIER = 10;
+const getRandomNumber = (): number => Math.floor(Math.random() * (MULTIPLE_IDENTIFIER + 1)) * MULTIPLE_IDENTIFIER;
 const getRandomString = (): string => (Math.random() + 1).toString(BASE_36).substring(2);
 const getRandomBoolean = (): boolean => Math.random() < BOOLEAN_PROBABILITY;

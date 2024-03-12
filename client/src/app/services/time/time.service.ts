@@ -1,13 +1,15 @@
 import { EventEmitter, Injectable } from '@angular/core';
+import { Subscription, interval } from 'rxjs';
+import { takeWhile, tap } from 'rxjs/operators';
 
 @Injectable()
 export class TimeService {
     timerEvent: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-    private interval: number | undefined;
     private readonly tick = 1000;
-
     private counter = 0;
+    private timerSubscription!: Subscription | undefined;
+
     get time() {
         return this.counter;
     }
@@ -16,20 +18,32 @@ export class TimeService {
     }
 
     startTimer(startValue: number) {
-        if (this.interval) return;
+        if (this.timerSubscription && !this.timerSubscription.closed) return;
         this.time = startValue;
-        this.interval = window.setInterval(() => {
-            if (this.time > 0) {
-                this.time--;
-            } else {
-                this.stopTimer();
-                this.timerEvent.emit(true);
-            }
-        }, this.tick);
+
+        this.timerSubscription = interval(this.tick)
+            .pipe(
+                tap(() => this.time--),
+                takeWhile(() => this.time >= 0),
+            )
+            .subscribe({
+                next: () => {
+                    if (this.time <= 0) {
+                        this.stopTimer();
+                        this.timerEvent.emit(true);
+                    }
+                },
+                complete: () => {
+                    this.stopTimer();
+                    this.timerEvent.emit(true);
+                },
+            });
     }
 
     stopTimer() {
-        clearInterval(this.interval);
-        this.interval = undefined;
+        if (this.timerSubscription) {
+            this.timerSubscription.unsubscribe();
+            this.timerSubscription = undefined;
+        }
     }
 }
