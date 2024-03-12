@@ -21,7 +21,7 @@ To install SmartyShowdown, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/o-benz/SmartyShowdown`
 2. Install dependencies in both client and server: `cd client`, `npm ci`; `cd server`, `npm ci`
-3. Test the project (optional): `cd client`, `npm run coverage`; `cd server`, `npm run coveragecoverage`
+3. Test the project (optional): `cd client`, `npm run coverage`; `cd server`, `npm run coverage`
 4. Run the project (no need to redirect to client and server): `npm start`
 
 ## Usage
