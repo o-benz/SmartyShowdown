@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Quiz } from '@app/interfaces/quiz-model';
-// eslint-disable-next-line
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 

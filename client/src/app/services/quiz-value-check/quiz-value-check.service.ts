@@ -10,7 +10,7 @@ import { CheckerT, IErrorDetail, createCheckers } from 'ts-interface-checker';
     providedIn: 'root',
 })
 export class QuizValueCheckService {
-    _sanitizedQuiz: Quiz; // eslint-disable-line
+    _sanitizedQuiz: Quiz;
     errors: string = '';
     result: IErrorDetail[] | null;
 
@@ -33,10 +33,9 @@ export class QuizValueCheckService {
     }
 
     checkQuiz(quiz: Quiz): void {
-        /* eslint-disable  */
-        const checkers = createCheckers(quizmodelTI) as { Quiz: CheckerT<Quiz> }; // utilisation suggested by library, 
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        const checkers = createCheckers(quizmodelTI) as { Quiz: CheckerT<Quiz> }; // utilization suggested by library,
         this.result = checkers.Quiz.strictValidate(quiz); // see https://github.com/gristlabs/ts-interface-checker under the typeGuard section
-        /* eslint-enabled */
         if (this.result == null) {
             this.errors = '';
             if (this.isNotInInterval(quiz.duration, DURATION_RANGE)) this.errors += "Erreur: la duree du quiz n'est pas dans l'intervale [10,60]\n";
@@ -60,7 +59,7 @@ export class QuizValueCheckService {
     private checkQuestions(questions: Question[]) {
         questions.forEach((question: Question, index: number) => {
             let questionError = '';
-            if (this.isNotInInterval(question.points, POINT_RANGE)) 
+            if (this.isNotInInterval(question.points, POINT_RANGE))
                 questionError += '    Erreur: les points doivent etre entre 10 et 100 en multiple de 10\n';
             if (question.type === 'QCM') {
                 questionError += this.checkQCM(question);
@@ -69,12 +68,11 @@ export class QuizValueCheckService {
             } else {
                 questionError += '    Erreur: le type de question doit être QCM ou QRL\n';
             }
-            if (questionError !== '') 
-                this.errors += 'a la question ' + index.toString() + '\n' + questionError;
+            if (questionError !== '') this.errors += 'a la question ' + index.toString() + '\n' + questionError;
         });
     }
 
-    private checkQCM(question: Question):string{
+    private checkQCM(question: Question): string {
         let errors = '';
         if (!question.choices || this.isNotInInterval(question.choices.length, QUESTION_RANGE)) {
             errors += '    Erreur: la question a choix multiple doit avoir de 2 à 4 choix\n';
@@ -107,16 +105,12 @@ export class QuizValueCheckService {
         let fullMessage = '';
         if (errors)
             errors.forEach((value) => {
-                fullMessage +=
-                    this.resultToString(value.nested) +
-                    this.translateError(value);
+                fullMessage += this.resultToString(value.nested) + this.translateError(value);
             });
         return fullMessage;
     }
 
-    private translateError(error:IErrorDetail):string {
-        return error.path +' ' +
-               error.message.replace('is missing', 'est manquant').replace('is not a', "n'est pas de type") +
-                    ',\n';
+    private translateError(error: IErrorDetail): string {
+        return error.path + ' ' + error.message.replace('is missing', 'est manquant').replace('is not a', "n'est pas de type") + ',\n';
     }
 }

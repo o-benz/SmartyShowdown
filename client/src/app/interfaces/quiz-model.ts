@@ -52,3 +52,20 @@ export const defaultQuiz: Quiz = {
     lastModification: '',
     questions: [],
 };
+
+export interface Answer {
+    answer: number;
+    questionIndex: number;
+}
+
+export interface Answers {
+    answers: Choice[];
+    questionIndex: number;
+}
+
+export interface DataPoint {
+    label: string;
+    y: number;
+    isCorrect: boolean | undefined;
+    x: number;
+}

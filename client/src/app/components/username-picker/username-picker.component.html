@@ -1,0 +1,5 @@
+<form>
+    <h3>Salle: {{this.data.roomCode}}</h3>
+    <input name="username" placeholder="Nom d'utilisateur" class="room-id" (keydown.enter)="login()" type="text" [(ngModel)]="username">
+    <button class="dialog" (click)="login()">Rejoindre!</button>
+</form>

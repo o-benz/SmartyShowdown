@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { User } from '@app/interfaces/socket-model';
 import { Socket } from 'socket.io-client';
 import { SOCKET_EVENTS } from './socket-communication.constants';
 import { SocketCommunicationService } from './socket-communication.service';
@@ -116,39 +115,6 @@ describe('SocketCommunicationService', () => {
 
         expect(sendSpy).toHaveBeenCalledWith(SOCKET_EVENTS.logout);
     });
-
-    it('should retrieve a list of users and return as observable', async () => {
-        const fakeUsers: User[] = [{ id: '1', username: 'User1', room: '1234', score: 1, bonus: 0 }];
-        service.socket.emit = jasmine.createSpy().and.callFake((event, data, callback) => {
-            if (event === SOCKET_EVENTS.getUsers && typeof callback === 'function') {
-                callback(fakeUsers);
-            }
-        });
-
-        const sendSpy = spyOn(service, 'send').and.callThrough();
-
-        service.getListUsers().subscribe((users) => {
-            expect(users).toEqual(fakeUsers);
-            expect(sendSpy).toHaveBeenCalledWith(SOCKET_EVENTS.getUsers, null, jasmine.any(Function));
-        });
-    });
-
-    it('should retrieve user data and return as observable', async () => {
-        const fakeUser = { id: '123', username: 'Test User' };
-        service.socket.emit = jasmine.createSpy().and.callFake((event, data, callback) => {
-            if (event === SOCKET_EVENTS.getUser && typeof callback === 'function') {
-                callback(fakeUser);
-            }
-        });
-
-        const sendSpy = spyOn(service, 'send').and.callThrough();
-
-        service.getUser().subscribe((user) => {
-            expect(user).toEqual(fakeUser);
-            expect(sendSpy).toHaveBeenCalledWith(SOCKET_EVENTS.getUser, null, jasmine.any(Function));
-        });
-    });
-
     it('should set up an event listener for user list updates', () => {
         const userUpdateAction = jasmine.createSpy('userUpdateAction');
         spyOn(service.socket, 'on');
@@ -181,5 +147,25 @@ describe('SocketCommunicationService', () => {
         service.unlockRoom(roomCode);
 
         expect(emitSpy).toHaveBeenCalledWith(SOCKET_EVENTS.unlockRoom, { roomCode });
+    });
+
+    describe('onGameStarted', () => {
+        it('should set up an event listener for game started and call provided action', () => {
+            // Arrange
+            const action = jasmine.createSpy('action');
+            const onSpy = spyOn(service.socket, 'on').and.callFake((event, callback) => {
+                if (event === 'gameStarted') {
+                    callback(); // Simulate the event being emitted
+                }
+                return service.socket;
+            });
+
+            // Act
+            service.onGameStarted(action);
+
+            // Assert
+            expect(onSpy).toHaveBeenCalledWith('gameStarted', jasmine.any(Function));
+            expect(action).toHaveBeenCalled();
+        });
     });
 });

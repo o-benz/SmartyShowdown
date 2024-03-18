@@ -1,5 +1,6 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { QuestionStats } from '@app/interfaces/game-stats';
+import { DataPoint } from '@app/interfaces/quiz-model';
 import { Observable, Subscription } from 'rxjs';
 
 @Component({
@@ -10,33 +11,30 @@ import { Observable, Subscription } from 'rxjs';
 export class QuestionStatsComponent implements OnInit, OnDestroy {
     @Input() stats: Observable<QuestionStats> = new Observable<QuestionStats>();
     subscription: Subscription;
-    chartInstance: { render: () => void };
-    chartOptions = {
-        title: {
-            text: 'Faite défiler les questions avec les boutons',
-        },
-        data: [
-            {
-                type: 'column',
-                dataPoints: [{}],
-            },
-        ],
-    };
-    // eslint-disable-next-line
-    getChartInstance(chart: any) { // chartJS doesnt have up to date type definition for this object
-        this.chartInstance = chart;
-        this.chartInstance.render();
-    }
+    dataPoints: DataPoint[] = [];
+    maxValue: number = 1;
+    title: string;
 
     ngOnInit(): void {
         this.subscription = this.stats.subscribe((question: QuestionStats) => {
-            this.chartOptions.title.text = question.title;
-            this.chartOptions.data[0].dataPoints = question.statLines;
-            this.chartInstance.render();
+            this.title = question.title;
+            this.maxValue = 1;
+            this.dataPoints = question.statLines.map((statLine, index) => ({
+                label: statLine.label,
+                y: statLine.nbrOfSelection,
+                isCorrect: statLine.isCorrect,
+                x: index,
+            }));
+
+            this.dataPoints.forEach((dataPoint) => {
+                if (dataPoint.y > this.maxValue) {
+                    this.maxValue = dataPoint.y;
+                }
+            });
         });
     }
 
     ngOnDestroy(): void {
-        this.subscription.unsubscribe();
+        if (this.subscription) this.subscription.unsubscribe();
     }
 }

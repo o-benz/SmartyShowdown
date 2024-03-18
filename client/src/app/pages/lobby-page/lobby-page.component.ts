@@ -1,35 +1,87 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ErrorMessages } from '@app/interfaces/error-messages';
 import { User } from '@app/interfaces/socket-model';
+import { CountdownService } from '@app/services/countdown/countdown.service';
 import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
+import { Subscription } from 'rxjs';
+
+const TIME = 5;
+
 @Component({
     selector: 'app-lobby-page',
     templateUrl: './lobby-page.component.html',
     styleUrls: ['./lobby-page.component.scss'],
 })
-export class LobbyPageComponent implements OnInit {
-    roomCode: string | null = null;
+export class LobbyPageComponent implements OnInit, OnDestroy {
+    countdownValue: number = TIME;
+    roomCode: string;
+    quizName: string;
     roomLocked: boolean = false;
+    gameStarted: boolean = false;
     protected isOrganizer: boolean = false;
+    private lobbySubscription: Subscription;
+    private countdownSubscription: Subscription;
+
     // eslint-disable-next-line max-params
     constructor(
         private router: Router,
         private changeDetectorRef: ChangeDetectorRef,
         private socketCommunicationService: SocketCommunicationService,
         private dialogError: DialogErrorService,
+        private countdownService: CountdownService,
     ) {}
 
+    get countdownSub(): Subscription {
+        return this.countdownSubscription;
+    }
+
+    get lobbySub(): Subscription {
+        return this.lobbySubscription;
+    }
+
+    set countdownSub(sub: Subscription) {
+        this.countdownSubscription = sub;
+    }
+
+    set lobbySub(sub: Subscription) {
+        this.lobbySubscription = sub;
+    }
+
+    set organizer(bool: boolean) {
+        this.isOrganizer = bool;
+    }
+
     ngOnInit(): void {
-        this.socketCommunicationService.getUser().subscribe((user: User) => {
-            this.roomCode = user.room || '';
-            this.isOrganizer = user.username === 'organisateur';
+        this.getQuizName();
+
+        this.lobbySubscription = this.socketCommunicationService.getUser()?.subscribe((user: User) => {
+            this.roomCode = user?.room || '';
+            this.isOrganizer = user?.username === 'organisateur';
         });
 
         this.socketCommunicationService.onGameStarted(() => {
-            this.router.navigate(['/game/play']);
+            this.startGameCountdown();
         });
-        this.changeDetectorRef.detectChanges();
+
+        this.socketCommunicationService.onRoomClosed(() => {
+            this.dialogError.closeErrorDialog();
+            this.dialogError.openErrorDialog(this.isOrganizer ? ErrorMessages.QuitRoom : ErrorMessages.ClosedRoom);
+            this.socketCommunicationService.leaveRoom();
+            this.router.navigate(['/']);
+        });
+    }
+
+    getQuizName(): void {
+        const statsObservable = this.socketCommunicationService.getStats();
+        if (statsObservable) {
+            statsObservable.subscribe({
+                next: (value) => {
+                    this.quizName = value.name;
+                },
+            });
+        }
     }
 
     toggleRoomLock(): void {
@@ -48,16 +100,42 @@ export class LobbyPageComponent implements OnInit {
     }
 
     startGame(): void {
-        if (this.roomCode) {
+        if (this.roomCode && this.isOrganizer) {
             this.socketCommunicationService.attemptStartGame(this.roomCode).subscribe((open) => {
                 if (open) {
-                    this.router.navigate(['/game/play']);
-                } else if (!this.itIsOrganizer()) {
-                    this.dialogError.openErrorDialog("Seulement l'organisateur peut demarrer une partie");
+                    //
+                } else if (!this.roomLocked) {
+                    this.dialogError.openErrorDialog(ErrorMessages.NotLockRoom);
                 } else {
-                    this.dialogError.openErrorDialog('Aucun joueur avec qui jouer 😔');
+                    this.dialogError.openErrorDialog(ErrorMessages.NoPlayer);
                 }
             });
         }
+    }
+
+    startGameCountdown(): void {
+        this.gameStarted = true;
+        this.countdownService.startCountdown(this.countdownValue);
+        if (this.countdownService.countdownTick) {
+            this.countdownSubscription = this.countdownService.countdownTick.subscribe((value) => {
+                this.countdownValue = value;
+                this.changeDetectorRef.detectChanges();
+            });
+        }
+        if (this.countdownService.countdownEnded) {
+            this.countdownSubscription.add(
+                this.countdownService.countdownEnded.subscribe(() => {
+                    this.router.navigate(['/game/play']);
+                }),
+            );
+        }
+    }
+
+    ngOnDestroy(): void {
+        this.lobbySubscription?.unsubscribe();
+        if (this.countdownSubscription) {
+            this.countdownSubscription.unsubscribe();
+        }
+        this.countdownService.stopCountdown();
     }
 }

@@ -1,7 +1,9 @@
 import { Component, OnDestroy } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AdminConnection } from '@app/interfaces/admin-connection';
+import { ErrorMessages } from '@app/interfaces/error-messages';
 import { AuthenticationService } from '@app/services/authentication/authentication.service';
+import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -12,18 +14,15 @@ import { Subscription } from 'rxjs';
 export class LoginFormComponent implements OnDestroy {
     adminConnection: AdminConnection;
 
-    protected loginErrorMessage: string;
     private loginSubscription: Subscription | null = null;
+    component: { closed: false; };
 
     constructor(
         public dialogRef: MatDialogRef<LoginFormComponent>,
         private authService: AuthenticationService,
+        private errorDialogService: DialogErrorService,
     ) {
         this.adminConnection = { password: '' };
-    }
-
-    get errorMessage(): string | null {
-        return this.loginErrorMessage.length > 0 ? this.loginErrorMessage : null;
     }
 
     get isLoginSubscriptionClosed(): boolean {
@@ -36,11 +35,11 @@ export class LoginFormComponent implements OnDestroy {
                 if (response) {
                     this.dialogRef.close(true);
                 } else {
-                    this.loginErrorMessage = 'Accès refusé.';
+                    this.errorDialogService.openErrorDialog(ErrorMessages.RefusedAccess);
                 }
             },
             error: () => {
-                this.loginErrorMessage = 'Erreur de connexion. Veuillez réessayer.';
+                this.errorDialogService.openErrorDialog(ErrorMessages.ConnectionError);
             },
         });
     }

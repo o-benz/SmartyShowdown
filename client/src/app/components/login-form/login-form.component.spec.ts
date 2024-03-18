@@ -2,7 +2,9 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { AuthServiceMock, MatDialogRefMock } from '@app/interfaces/admin-connection';
+import { ErrorMessages } from '@app/interfaces/error-messages';
 import { AuthenticationService } from '@app/services/authentication/authentication.service';
+import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { of, throwError } from 'rxjs';
 import { LoginFormComponent } from './login-form.component';
 
@@ -11,10 +13,12 @@ describe('LoginFormComponent', () => {
     let fixture: ComponentFixture<LoginFormComponent>;
     let authServiceMock: AuthServiceMock;
     let dialogRefMock: MatDialogRefMock;
+    let dialogErrorService: DialogErrorService;
 
     beforeEach(waitForAsync(() => {
         authServiceMock = jasmine.createSpyObj('AuthenticationService', ['attemptLogin']);
         dialogRefMock = jasmine.createSpyObj('MatDialogRef', ['close']);
+        dialogErrorService = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog']);
 
         TestBed.configureTestingModule({
             imports: [FormsModule],
@@ -23,6 +27,7 @@ describe('LoginFormComponent', () => {
                 { provide: AuthenticationService, useValue: authServiceMock },
                 { provide: MatDialogRef, useValue: dialogRefMock },
                 { provide: MAT_DIALOG_DATA, useValue: {} },
+                { provide: DialogErrorService, useValue: dialogErrorService },
             ],
         }).compileComponents();
     }));
@@ -44,6 +49,7 @@ describe('LoginFormComponent', () => {
         component.onLogin();
         expect(authServiceMock.attemptLogin).toHaveBeenCalledWith(component.adminConnection.password);
         expect(dialogRefMock.close).toHaveBeenCalledWith(true);
+        expect(component.isLoginSubscriptionClosed).toBeTruthy();
     });
 
     it('should attempt login and handle failure', () => {
@@ -52,7 +58,8 @@ describe('LoginFormComponent', () => {
 
         component.onLogin();
         expect(authServiceMock.attemptLogin).toHaveBeenCalledWith(component.adminConnection.password);
-        expect(component.errorMessage).toEqual('Accès refusé.');
+        expect(dialogErrorService.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.RefusedAccess);
+        expect(component.isLoginSubscriptionClosed).toBeTruthy();
     });
 
     it('should handle login error', () => {
@@ -60,7 +67,8 @@ describe('LoginFormComponent', () => {
 
         component.onLogin();
         expect(authServiceMock.attemptLogin).toHaveBeenCalledWith(component.adminConnection.password);
-        expect(component.errorMessage).toEqual('Erreur de connexion. Veuillez réessayer.');
+        expect(dialogErrorService.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.ConnectionError);
+        expect(component.isLoginSubscriptionClosed).toBeTruthy();
     });
 
     it('should unsubscribe on component destroy', () => {

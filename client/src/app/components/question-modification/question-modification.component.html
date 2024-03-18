@@ -8,28 +8,30 @@
 </div>
 
 <ng-template *ngIf="question" class="dialog" #dialogTemplate>
-    <h3>Question</h3>
-    <input type="text" [(ngModel)]="question.text" value="{{ question.text }}">
-    
-    <h3>Type: {{ question.type }} </h3>
-    <h3>Points: <input value="{{ question.points }}" type="number" [(ngModel)]="question.points" min="10" max="100"/></h3>
-    
-    <ol>
-        <li *ngFor="let choice of question.choices">
-            <app-choice-modification [choice]="choice" [selectedQuestion]="question"></app-choice-modification>
-        </li>
-    </ol>
-    <div *ngIf="question.type === 'QCM'">
-        <h3>Add Choice:</h3>
-        <div class="add-new-qcm">
-            <input class="new-choice-text" type="text" #newChoiceText>
-            <input type="checkbox" #newChoiceIsCorrect>
-            <button type="button" (click)="addMultipleChoice(newChoiceText.value, newChoiceIsCorrect.checked)">+</button>
+    <div class="wrapper">
+        <h3>Question</h3>
+        <input type="text" [(ngModel)]="question.text" value="{{ question.text }}">
+        
+        <h3>Type: {{ question.type }} </h3>
+        <h3>Points: <input value="{{ question.points }}" type="number" [(ngModel)]="question.points" min="10" max="100"/></h3>
+        
+        <ol>
+            <li *ngFor="let choice of question.choices">
+                <app-choice-modification [choice]="choice" [selectedQuestion]="question"></app-choice-modification>
+            </li>
+        </ol>
+        <div *ngIf="question.type === 'QCM'">
+            <h3>Add Choice:</h3>
+            <div class="add-new-qcm">
+                <input class="new-choice-text" type="text" #newChoiceText>
+                <input type="checkbox" #newChoiceIsCorrect>
+                <button type="button" (click)="addMultipleChoice(newChoiceText.value, newChoiceIsCorrect.checked)">+</button>
+            </div>
         </div>
-    </div>
 
-    <mat-dialog-actions>
-        <button mat-button (click)="closeDialog()">Close</button>
-        <button mat-button (click)="saveChanges()">Apply Changes</button>
-    </mat-dialog-actions>
+        <mat-dialog-actions>
+            <button mat-button (click)="closeDialog()">Close</button>
+            <button mat-button (click)="saveChanges()">Apply Changes</button>
+        </mat-dialog-actions>
+    </div>
 </ng-template>

@@ -1,7 +1,6 @@
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Choice, MultipleChoiceQuestion, TypeEnum } from '@app/interfaces/question-model';
-import { Types } from 'mongoose';
 import { environment } from 'src/environments/environment';
 import { AdminQuestionHandlerService } from './mcq-handler.service';
 
@@ -165,7 +164,7 @@ const generateMockMCQ = (): MultipleChoiceQuestion => {
         text: getRandomString(),
         points: getRandomNumber(),
         date: new Date(),
-        _id: new Types.ObjectId(),
+        _id: getRandomId(),
         choices: generateChoices(1),
     };
 };
@@ -173,8 +172,11 @@ const generateMockMCQ = (): MultipleChoiceQuestion => {
 const BASE_36 = 36;
 const MULTIPLE_IDENTIFIER = 10;
 const PROBABILITY = 0.5;
+const MILLIS_IN_SECOND = 1000;
+const HEX_BASE = 16;
 const getRandomString = (): string => (Math.random() + 1).toString(BASE_36).substring(2);
 const getRandomNumber = (): number => Math.floor(Math.random() * MULTIPLE_IDENTIFIER) * MULTIPLE_IDENTIFIER;
+const getRandomId = (): string => Math.floor(Date.now() / MILLIS_IN_SECOND).toString(HEX_BASE);
 const getRandomChoice = (): Choice => ({
     text: getRandomString(),
     isCorrect: Math.random() > PROBABILITY,

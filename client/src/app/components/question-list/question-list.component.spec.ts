@@ -1,13 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
-import { of, throwError } from 'rxjs';
-
 import { NewQuestionFormComponent } from '@app/components/new-question-form/new-question-form.component';
 import { MultipleChoiceQuestion, QuestionModel, TypeEnum } from '@app/interfaces/question-model';
 import { Choice } from '@app/interfaces/quiz-model';
 import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { AdminQuestionHandlerService } from '@app/services/mcq-handler/mcq-handler.service';
-import { Types } from 'mongoose';
+import { of, throwError } from 'rxjs';
 import { QuestionListComponent } from './question-list.component';
 
 describe('QuestionListComponent', () => {
@@ -71,7 +69,7 @@ describe('QuestionListComponent', () => {
     it('deleteQuestion should open a window to delete a question', () => {
         spyOn(window, 'confirm').and.returnValue(true);
         mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion.and.returnValue(of(undefined));
-        const questionId = new Types.ObjectId();
+        const questionId = getRandomId();
         component.deleteQuestion(questionId);
         expect(window.confirm).toHaveBeenCalledWith('Êtes-vous sûr de vouloir supprimer cette question ?');
     });
@@ -79,14 +77,14 @@ describe('QuestionListComponent', () => {
     it('deleteQuestion should delete question when confirmed', () => {
         spyOn(window, 'confirm').and.returnValue(true);
         mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion.and.returnValue(of(undefined));
-        const questionId = new Types.ObjectId();
+        const questionId = getRandomId();
         component.deleteQuestion(questionId);
         expect(mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion).toHaveBeenCalledWith(questionId);
     });
 
     it('deleteQuestion should remove question from list when delete is successful', () => {
         spyOn(window, 'confirm').and.returnValue(true);
-        const id = new Types.ObjectId();
+        const id = getRandomId();
         QuestionListComponent.questions = [getMockQuestion(TypeEnum.QCM), getMockQuestion(TypeEnum.QCM)];
         // eslint-disable-next-line no-underscore-dangle
         QuestionListComponent.questions[0]._id = id;
@@ -99,7 +97,7 @@ describe('QuestionListComponent', () => {
     });
 
     it('deleteQuestion should send error message when delete fails', () => {
-        const mockId = new Types.ObjectId();
+        const mockId = getRandomId();
         const mockErrorMessage = 'Erreur lors de la suppression de la question. Veuillez réessayer.';
 
         spyOn(window, 'confirm').and.returnValue(true);
@@ -111,13 +109,13 @@ describe('QuestionListComponent', () => {
 
     it('deleteQuestion should not delete question when not confirmed', () => {
         spyOn(window, 'confirm').and.returnValue(false);
-        const questionId = new Types.ObjectId();
+        const questionId = getRandomId();
         component.deleteQuestion(questionId);
         expect(mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion).not.toHaveBeenCalled();
     });
 
     it('modifyQuestion should open a dialog window to modify a question', () => {
-        const questionId = new Types.ObjectId();
+        const questionId = getRandomId();
         const mockQuestion = getMockQuestion(TypeEnum.QCM);
         mockAdminQuestionHandlerService.updateMultipleChoiceQuestion.and.returnValue(of(mockQuestion as MultipleChoiceQuestion));
         component.modifyQuestion(questionId);
@@ -137,7 +135,7 @@ describe('QuestionListComponent', () => {
     });
 
     it('modifyQuestion should update the question when the dialog is closed', () => {
-        const questionId = new Types.ObjectId();
+        const questionId = getRandomId();
         const mockQuestion = getMockQuestion(TypeEnum.QCM);
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
@@ -151,7 +149,7 @@ describe('QuestionListComponent', () => {
     });
 
     it('modifyQuestion should send error message when update fails', () => {
-        const questionId = new Types.ObjectId();
+        const questionId = getRandomId();
         const mockQuestion = getMockQuestion(TypeEnum.QCM);
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
@@ -162,7 +160,7 @@ describe('QuestionListComponent', () => {
     });
 
     it('modifyQuestion should not do anything if question type is not QCM', () => {
-        const questionId = new Types.ObjectId();
+        const questionId = getRandomId();
         const mockQuestion = getMockQuestion(TypeEnum.QRL);
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
@@ -220,7 +218,7 @@ const getMockQuestion = (type: TypeEnum): QuestionModel => {
         text: getRandomString(),
         points: getRandomNumber(),
         date: new Date(),
-        _id: new Types.ObjectId(),
+        _id: getRandomId(),
         choices: generateChoices(1),
     };
 };
@@ -228,8 +226,11 @@ const getMockQuestion = (type: TypeEnum): QuestionModel => {
 const BASE_36 = 36;
 const MULTIPLE_IDENTIFIER = 10;
 const PROBABILITY = 0.5;
+const MILLIS_IN_SECOND = 1000;
+const HEX_BASE = 16;
 const getRandomString = (): string => (Math.random() + 1).toString(BASE_36).substring(2);
 const getRandomNumber = (): number => Math.floor(Math.random() * MULTIPLE_IDENTIFIER) * MULTIPLE_IDENTIFIER;
+const getRandomId = (): string => Math.floor(Date.now() / MILLIS_IN_SECOND).toString(HEX_BASE);
 const getRandomChoice = (): Choice => ({
     text: getRandomString(),
     isCorrect: Math.random() > PROBABILITY,

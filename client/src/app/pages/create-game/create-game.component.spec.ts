@@ -119,7 +119,6 @@ describe('CreateGameComponent', () => {
         tick();
 
         expect(socketServiceSpy.createRoom).toHaveBeenCalled();
-        expect(localStorage.getItem('roomCode')).toBe('12345');
         expect(routerSpy.navigate).toHaveBeenCalledWith(['/game/lobby']);
         expect(dialogRefSpyObj.close).toHaveBeenCalled();
     }));

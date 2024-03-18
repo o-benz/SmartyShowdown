@@ -29,7 +29,9 @@ import { QuestionStatsComponent } from './components/question-stats/question-sta
 import { QuestionZoneComponent } from './components/question-zone/question-zone.component';
 import { QuizListComponent } from './components/quiz-list/quiz-list.component';
 import { ResultPopupComponent } from './components/result-popup/result-popup.component';
+import { RightAnswerPopupComponent } from './components/right-answer-popup/right-answer-popup.component';
 import { StatsZoneComponent } from './components/stats-zone/stats-zone.component';
+import { UsernamePickerComponent } from './components/username-picker/username-picker.component';
 import { WaitingRoomListComponent } from './components/waiting-room-list/waiting-room-list.component';
 import { AdminPageComponent } from './pages/admin-page/admin-page.component';
 import { CreateGameComponent } from './pages/create-game/create-game.component';
@@ -80,6 +82,8 @@ import { AuthInterceptor } from './services/auth-interceptor/auth.interceptor';
         QuestionStatsComponent,
         PlayerListResultComponent,
         OrganizerViewComponent,
+        UsernamePickerComponent,
+        RightAnswerPopupComponent,
     ],
     imports: [
         AppMaterialModule,

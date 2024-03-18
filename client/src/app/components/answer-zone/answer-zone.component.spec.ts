@@ -58,6 +58,7 @@ describe('AnswerZoneComponent', () => {
                 choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
             },
             questionIndex: 1,
+            mode: '',
         };
         component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         component.ngOnChanges();
@@ -76,6 +77,7 @@ describe('AnswerZoneComponent', () => {
                 choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
             },
             questionIndex: 1,
+            mode: '',
         };
         component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         component.ngOnChanges();
@@ -97,6 +99,7 @@ describe('AnswerZoneComponent', () => {
                 choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
             },
             questionIndex: 1,
+            mode: '',
         };
         component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         component.textAnswer = '';
@@ -126,6 +129,7 @@ describe('AnswerZoneComponent', () => {
                 choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
             },
             questionIndex: 1,
+            mode: '',
         };
         component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         component.textAnswer = ' ALLO';
@@ -148,6 +152,7 @@ describe('AnswerZoneComponent', () => {
                 choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
             },
             questionIndex: 1,
+            mode: '',
         };
         component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         const mockChoice: Choice = { text: 'Sample choice' };

@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Choice } from '@app/interfaces/quiz-model';
+import { Choice, Question } from '@app/interfaces/quiz-model';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { SocketCommunicationService } from '../sockets-communication/socket-communication.service';
 
 @Injectable({
     providedIn: 'root',
@@ -13,10 +14,13 @@ export class GameService {
     quizId: string;
     isChoiceFinal: boolean = false;
 
-    constructor(private http: HttpClient) {}
+    constructor(
+        private http: HttpClient,
+        private socketService: SocketCommunicationService,
+    ) {}
 
-    static staysInInterval(last: number, value: number, first: number = 0): boolean {
-        return value >= first && value <= last;
+    staysInInterval(last: number, value: number, first: number = 0): boolean {
+        return first <= value && value < last;
     }
 
     postCurrentChoices(questionText: string): Observable<boolean> {
@@ -26,5 +30,14 @@ export class GameService {
             questionText,
             quizId: this.quizId,
         });
+    }
+
+    getAnswers(question: Question): string[] {
+        if (question.choices) return question.choices.filter((choice) => choice.isCorrect).map((choice) => choice.text);
+        return [];
+    }
+
+    isValidAnswer(questionIndex: number): Observable<boolean> {
+        return this.socketService.isAnswerValid({ answers: this.currentChoices, questionIndex });
     }
 }

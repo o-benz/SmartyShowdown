@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GameStats } from '@app/interfaces/game-stats';
 import { Question, Quiz } from '@app/interfaces/quiz-model';
 import { User } from '@app/interfaces/socket-model';
+import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { GameService } from '@app/services/game/game.service';
 import { QuizService } from '@app/services/quiz/quiz.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
@@ -40,6 +41,7 @@ export class TrueGameComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         private router: Router,
         private socketService: SocketCommunicationService,
+        private dialogErrorService: DialogErrorService,
     ) {}
 
     ngOnInit(): void {
@@ -100,13 +102,11 @@ export class TrueGameComponent implements OnInit, OnDestroy {
                 },
             });
         }
-        this.socketService.onRoomClosed(() => {
-            this.socketService.leaveRoom();
-            this.router.navigate(['/']);
-        });
+
         this.socketService.onChangeQuestion(() => {
             this.isRoundFinished = true;
         });
+
         this.socketService.onFinalizeAnswers(() => {
             if (!this.gameService.isChoiceFinal) {
                 this.gameSubscription = this.gameService.postCurrentChoices(this.currentQuestion.text).subscribe((isAnswerCorrect: boolean) => {
@@ -115,7 +115,8 @@ export class TrueGameComponent implements OnInit, OnDestroy {
             }
         });
         this.socketService.onShowResults(() => {
-            this.router.navigate(['/']);
+            this.dialogErrorService.closeErrorDialog();
+            this.router.navigate(['/game/result']);
         });
     }
 
@@ -138,6 +139,10 @@ export class TrueGameComponent implements OnInit, OnDestroy {
         this.questionIndex++;
         if (this.questionIndex < this.questions.length) {
             this.currentQuestion = this.questions[this.questionIndex];
+        } else {
+            if (this.mode === 'test') {
+                this.router.navigate(['/creategame']);
+            }
         }
     }
 
@@ -153,5 +158,9 @@ export class TrueGameComponent implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.gameSubscription?.unsubscribe();
+    }
+
+    changeQuestion(isRoundFinished: boolean): void {
+        this.isRoundFinished = isRoundFinished;
     }
 }

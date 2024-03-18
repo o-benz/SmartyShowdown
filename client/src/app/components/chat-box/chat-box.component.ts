@@ -77,10 +77,8 @@ export class ChatBoxComponent implements AfterViewInit, OnInit {
         const currentDate = new Date();
         if (this.roomMessage.trim() === '') return;
         this.roomMessage = `[${currentDate.getHours()}h:${currentDate.getMinutes()}min ${this.user.username}]: ${this.roomMessage}`;
-        if (!this.isMessageTooLong) {
-            this.chatService.send('roomMessage', this.roomMessage);
-            this.roomMessage = '';
-        }
+        this.chatService.send('roomMessage', this.roomMessage);
+        this.roomMessage = '';
     }
 
     receiveMessage(): void {
@@ -97,6 +95,6 @@ export class ChatBoxComponent implements AfterViewInit, OnInit {
     }
 
     isSent(message: string): boolean {
-        return message.includes(this.user.username);
+        return message.split(' ').includes(this.user.username + ']:');
     }
 }

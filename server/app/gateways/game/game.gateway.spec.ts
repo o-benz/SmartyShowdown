@@ -1,9 +1,10 @@
+import { Room } from '@app/model/socket/socket.schema';
 import { FAKE_GAME_STAT, FAKE_QUESTION_STAT } from '@app/model/stats/stats.schema';
 import { QuizService } from '@app/services/quiz/quiz.service';
 import { SocketService } from '@app/services/socket/socket.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { GameGateway } from './game.gateway';
-import { GameClientEvents, GameEnum, GameEvents } from './game.gateway.events';
+import { GameClientEvents, GameEnum } from './game.gateway.events';
 /* eslint-disable max-lines */
 
 describe('GameGateway', () => {
@@ -132,7 +133,13 @@ describe('GameGateway', () => {
 
     it('should not handle login for invalid username', async () => {
         const username = '';
-        gateway['rooms'].set('1234', { isOpen: true, bannedUsers: [], gameStats: FAKE_GAME_STAT, isStarted: false });
+        gateway['rooms'].set('1234', {
+            roomMessages: [],
+            isOpen: true,
+            isStarted: true,
+            bannedUsers: [],
+            gameStats: FAKE_GAME_STAT,
+        });
         mockSocketService.isUserValid.mockReturnValue(true);
         mockSocketService.isLoginValid.mockReturnValue(false);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -236,7 +243,7 @@ describe('GameGateway', () => {
         mockSocket.data.username = 'fake';
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        gateway.addAnswer(mockSocket as any, answer, questionIndex);
+        gateway.addAnswer(mockSocket as any, { answer, questionIndex });
 
         const room = gateway['rooms'].get(roomCode);
         expect(room.gameStats.questions[questionIndex].statLines[answer].users).toContain('fake');
@@ -253,6 +260,7 @@ describe('GameGateway', () => {
                 duration: 0,
                 questions: [],
                 users: [],
+                name: '',
             },
             isStarted: false,
         });
@@ -266,105 +274,13 @@ describe('GameGateway', () => {
         expect(mockServer.emit).toHaveBeenCalledWith(GameClientEvents.RoomClosed);
     });
 
-<<<<<<< HEAD
-    it('should handle room message', () => {
-        const roomCode = '1234';
-        const message = 'Test message';
-        mockSocket.data.room = roomCode;
-        gateway['rooms'].set(roomCode, {
-            roomMessages: [],
-            isOpen: true,
-            bannedUsers: [],
-            gameStats: {
-                id: '',
-                questions: [],
-                users: [],
-            },
-        });
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        gateway.handleRoomMessage(mockSocket as any, message);
-
-        const room = gateway['rooms'].get(roomCode);
-        expect(room.roomMessages).toContain(message);
-        expect(mockServer.to).toHaveBeenCalledWith(roomCode);
-        expect(mockServer.emit).toHaveBeenCalledWith(GameEvents.RoomMessage, message);
-    });
-
-    it('should get answers for a question', () => {
-        const roomCode = '1234';
-        const questionIndex = 0;
-        gateway['rooms'].set(roomCode, {
-            roomMessages: [],
-            isOpen: false,
-            bannedUsers: [],
-            gameStats: {
-                id: '',
-                questions: [{ title: '', statLines: [{ label: '', players: [] }] }],
-                users: [],
-            },
-        });
-        mockSocket.data.room = roomCode;
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result = gateway.getAnswers(mockSocket as any, questionIndex);
-
-        const expectedQuestion = gateway['rooms'].get(roomCode).gameStats.questions[questionIndex];
-        expect(result).toEqual(expectedQuestion);
-    });
-
-    it('should get stats for a room', () => {
-        const roomCode = '1234';
-        gateway['rooms'].set(roomCode, {
-            roomMessages: [],
-            isOpen: false,
-            bannedUsers: [],
-            gameStats: {
-                id: '',
-                questions: [],
-                users: [],
-            },
-        });
-        mockSocket.data.room = roomCode;
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result = gateway.getStats(mockSocket as any);
-
-        const expectedStats = gateway['rooms'].get(roomCode).gameStats;
-        expect(result).toEqual(expectedStats);
-    });
-
-    it('should ban a user from a room', () => {
-        const roomCode = '1234';
-        const username = 'bannedUser';
-        gateway['rooms'].set(roomCode, {
-            roomMessages: [],
-            isOpen: false,
-            bannedUsers: [],
-            gameStats: {
-                id: '',
-                questions: [],
-                users: [],
-            },
-        });
-        mockSocket.data.room = roomCode;
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        gateway.banUser(mockSocket as any, username);
-
-        const bannedUsers = gateway['rooms'].get(roomCode).bannedUsers;
-        expect(bannedUsers).toContain(username.toLocaleLowerCase());
-    });
-
-    it('should leave room when invoked', () => {
-=======
     it('should ban a user and make them leave the room', async () => {
         const roomCode = '1234';
         const usernameToBan = 'userToBan';
         const mockBannedSocket = { ...mockSocket, data: { username: usernameToBan, room: roomCode, id: 'bannedSocketId' } };
         const mockRoom = { bannedUsers: [], isOpen: true, gameStats: FAKE_GAME_STAT, isStarted: false };
 
-        gateway['rooms'].set(roomCode, mockRoom);
+        gateway['rooms'].set(roomCode, mockRoom as unknown as Room);
 
         mockSocketService.getSocketsInRoom.mockResolvedValue([mockBannedSocket]);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -374,22 +290,12 @@ describe('GameGateway', () => {
     });
 
     it('should get user info', async () => {
->>>>>>> feature/organizer-view
         const roomCode = '1234';
         mockSocket.data.room = roomCode;
         mockSocket.data.username = 'testUser';
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-<<<<<<< HEAD
-        gateway.leaveRoom(mockSocket as any);
-
-        expect(mockSocket.leave).toHaveBeenCalledWith(roomCode);
-        const leftRoomEmitCall = mockServer.emit.mock.calls[1];
-        expect(leftRoomEmitCall[0]).toBe(GameClientEvents.LeftRoom);
-        expect(leftRoomEmitCall[1]).toBe('testUser');
-=======
         const result = gateway.getUserInfo(mockSocket as any);
         expect(result).toStrictEqual(mockSocket.data);
->>>>>>> feature/organizer-view
     });
 });

@@ -1,37 +1,49 @@
-<div class="question-zone">
-    <div class="blackboard">
-        <p class="question">{{ text }}</p>
-        <div class="info">
-            <p>Temps restant: {{ time }}</p>
-            <p>( {{ points }} points )</p>
+<div class="content-zone">
+    <div class="question-zone">
+        <div class="blackboard">
+            <p class="question">{{ text }}</p>
+            <div class="info">
+                <p>Temps restant: {{ time }}</p>
+                <p>( {{ points }} points )</p>
+            </div>
+        </div>
+        <div class="abandon">
+            <button (click)="navigateHome()" class="button-82-pushable" role="button">
+                <span class="button-82-shadow"></span>
+                <span class="button-82-edge"></span>
+                <span class="button-82-front text">
+                  Abandonner
+                </span>
+              </button>
         </div>
     </div>
-    <div *ngFor="let user of users; index as choiceId">
-        <ng-container *ngIf="this.removedUsers.includes(user)">
-            <s> {{user.name}}, {{user.score}}</s>
-        </ng-container>
-        <ng-container *ngIf="!this.removedUsers.includes(user)">
-            {{user.name}}, {{user.score}}
+
+    <div class="organizer-zone">
+        <app-question-stats class="stats" [stats]="questionStats"></app-question-stats>
+        <div class="users">
+            <table>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Score</th>
+                </tr>
+                <ng-container *ngFor="let user of users">
+                    <tr [class.leftUser]="user.hasLeft">
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.score }}</td>
+                    </tr>
+                </ng-container>
+            </table>
+        </div>
+    </div>
+
+    <div class="confirm">
+        <ng-container *ngIf="this.isRoundOver">
+            <ng-container *ngIf="this.questionTimePackage.currentQuestionIndex === this.gameStats.questions.length - 1"> 
+                <button class="confirmbtn" (click)="showResults()">Montrer les résultats</button>
+            </ng-container>
+            <ng-container *ngIf="this.questionTimePackage.currentQuestionIndex < this.gameStats.questions.length - 1"> 
+                <button class="confirmbtn" (click)="nextQuestion()">Question suivante</button>
+            </ng-container>
         </ng-container>
     </div>
-    <div class="abandon">
-        <button class="abandon-button" (click)="navigateHome()">Abandonner</button>
-    </div>
-    <div>
-        <app-question-stats [stats]="questionStats"></app-question-stats>
-    </div>
-    <ng-container *ngIf="this.isRoundOver">
-        <ng-container *ngIf="this.questionTimePackage.currentQuestionIndex === this.gameStats.questions.length - 1"> 
-            <div class="show-result">
-                <button class="show-result-button" (click)="showResults()">Montrer les résultats</button>
-            </div>
-        </ng-container>
-        <ng-container *ngIf="this.questionTimePackage.currentQuestionIndex < this.gameStats.questions.length - 1"> 
-            <div class="next-question">
-                <button class="next-question-button" (click)="nextQuestion()">Question suivante</button>
-            </div>
-        </ng-container>
-    </ng-container>
-    
-    
 </div>

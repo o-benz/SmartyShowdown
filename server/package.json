@@ -26,11 +26,11 @@
         "bcrypt": "^5.1.1",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.0",
-        "file-system": "^2.2.2",
+        "file-system": "^1.2.2",
         "http-status-codes": "^2.3.0",
         "jwt-decode": "^4.0.0",
         "module-alias": "^2.2.3",
-        "mongoose": "7.4.2",
+        "mongoose": "^7.6.9",
         "reflect-metadata": "^0.1.13",
         "rimraf": "^5.0.1",
         "rxjs": "^7.8.1"
@@ -58,7 +58,7 @@
         "eslint-plugin-prefer-arrow": "^1.2.3",
         "eslint-plugin-prettier": "^5.0.0",
         "eslint-plugin-unicorn": "^48.0.1",
-        "jest": "^29.6.2",
+        "jest": "^29.7.0",
         "jsonwebtoken": "^9.0.2",
         "mongodb-memory-server": "9.1.3",
         "passport": "^0.7.0",
@@ -74,7 +74,7 @@
         "typescript": "^5.1.6"
     },
     "_moduleAliases": {
-        "@app": "out/server/app",
+        "@app": "out/app",
         "@common": "out/common"
     },
     "jest": {

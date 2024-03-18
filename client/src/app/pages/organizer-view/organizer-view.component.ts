@@ -1,9 +1,10 @@
 import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationStart, Router } from '@angular/router';
 import { GameStats, PlayerInfo, QuestionStats, TimePackage } from '@app/interfaces/game-stats';
+import { Naviguation } from '@app/interfaces/socket-model';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { TimeService } from '@app/services/time/time.service';
-import { Observable, Subscription, of } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-organizer-view',
@@ -15,7 +16,7 @@ export class OrganizerViewComponent implements OnInit, OnChanges, OnDestroy {
     @Input() questionTimePackage: TimePackage = {} as TimePackage;
     @Output() endTimerEvent: EventEmitter<boolean> = new EventEmitter<boolean>();
     gameStats: GameStats;
-    questionStats: Observable<QuestionStats> = new Observable<QuestionStats>();
+    questionStats: Subject<QuestionStats> = new Subject<QuestionStats>();
     isRoundOver: boolean = false;
     duration: number;
     text: string;
@@ -23,6 +24,7 @@ export class OrganizerViewComponent implements OnInit, OnChanges, OnDestroy {
     users: PlayerInfo[] = [];
     removedUsers: PlayerInfo[] = [];
     timerSubscription: Subscription | undefined;
+    private answerSubscription: Subscription;
     private socketSubscription: Subscription;
     constructor(
         private timeService: TimeService,
@@ -35,12 +37,36 @@ export class OrganizerViewComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnInit(): void {
+        this.answerSubscription = this.router.events.subscribe((event) => {
+            if (event instanceof NavigationStart && event.navigationTrigger === Naviguation.Back) this.socketService.disconnect();
+        });
+        this.socketService.onAnswerChange((stats) => {
+            this.questionStats.next(stats);
+        });
         this.gameStats = {
             id: '',
             duration: 0,
             questions: [],
             users: [],
+            name: '',
         };
+
+        this.socketService.onUserLeft((username: string) => {
+            this.users = this.users.map((user) => {
+                if (user.name === username) return { ...user, hasLeft: true };
+                return user;
+            });
+        });
+
+        this.socketService.onEndRound(() => {
+            this.isRoundOver = true;
+            this.socketService.getStats().subscribe({
+                next: (value) => {
+                    this.users = value.users;
+                },
+            });
+            this.timeService.stopTimer();
+        });
     }
 
     ngOnChanges(): void {
@@ -53,16 +79,14 @@ export class OrganizerViewComponent implements OnInit, OnChanges, OnDestroy {
             this.startTimer();
             this.requestUpdatedStats();
             this.timerSubscription = this.timeService.timerEvent.subscribe(() => {
-                this.socketService.roundOver();
-                this.isRoundOver = true;
-            });
-            this.socketService.onEndRound(() => {
+                this.socketService.roundOver(this.questionTimePackage.currentQuestionIndex);
                 this.isRoundOver = true;
             });
         }
     }
     ngOnDestroy(): void {
-        this.timerSubscription?.unsubscribe();
+        if (this.timerSubscription) this.timerSubscription.unsubscribe();
+        if (this.answerSubscription) this.answerSubscription.unsubscribe();
     }
     startTimer() {
         this.timeService.startTimer(this.duration);
@@ -74,13 +98,15 @@ export class OrganizerViewComponent implements OnInit, OnChanges, OnDestroy {
         this.socketService.endGame();
     }
     navigateHome() {
+        this.socketService.disconnect();
         this.router.navigate(['/home']);
     }
+
     requestUpdatedStats() {
         this.socketSubscription = this.socketService.getStats().subscribe({
             next: (gameStats) => {
                 this.gameStats = gameStats;
-                this.questionStats = of(gameStats.questions[this.questionTimePackage.currentQuestionIndex]);
+                this.questionStats.next(gameStats.questions[this.questionTimePackage.currentQuestionIndex]);
                 this.updateUsersList(gameStats.users);
             },
             complete: () => {
@@ -88,6 +114,7 @@ export class OrganizerViewComponent implements OnInit, OnChanges, OnDestroy {
             },
         });
     }
+
     updateUsersList(users: PlayerInfo[]) {
         const newUsersSet = new Set(users);
         const currentUsersSet = new Set(this.users);

@@ -1,5 +1,11 @@
 @import '../../../styles.scss';
 
+.create-game{
+    background-color: $white;
+    padding: 10px;
+    border-radius: 15px;
+}
+
 .scrollable-list {
     margin: 1%;
     margin-top: 15vmin;
@@ -69,7 +75,7 @@ mat-dialog-actions {
 
 ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
     user-select: none;
-    padding: 10px !important;
+    padding: 0px !important;
     border-radius: 15px !important;
 }
 

@@ -5,6 +5,7 @@ import { takeWhile, tap } from 'rxjs/operators';
 @Injectable()
 export class TimeService {
     timerEvent: EventEmitter<boolean> = new EventEmitter<boolean>();
+    countdownEvent: EventEmitter<number> = new EventEmitter<number>();
 
     private readonly tick = 1000;
     private counter = 0;

@@ -8,7 +8,6 @@ export const SOCKET_EVENTS = {
     createRoom: 'createRoom',
     banUser: 'banUser',
     leftRoom: 'leftRoom',
-    getUser: 'getUserInfo',
     roomClosed: 'roomClosed',
     lockRoom: 'lockRoom',
     unlockRoom: 'unlockRoom',
@@ -27,4 +26,6 @@ export const SOCKET_EVENTS = {
     confirmAnswer: 'confirmAnswer',
     receiveMessage: 'sendMessage',
     getAllMessages: 'getAllMessages',
+    getUser: 'getUserInfo',
+    isAnswerValid: 'isAnswerValid',
 };

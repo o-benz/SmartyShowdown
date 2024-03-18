@@ -5,7 +5,6 @@ import { ErrorMessages } from '@app/interfaces/error-messages';
 import { BaseMultipleChoiceQuestion, MultipleChoiceQuestion, QuestionModel } from '@app/interfaces/question-model';
 import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { AdminQuestionHandlerService } from '@app/services/mcq-handler/mcq-handler.service';
-import { Types } from 'mongoose';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -37,7 +36,7 @@ export class QuestionListComponent implements OnInit, OnDestroy {
         this.questionsSubscription.unsubscribe();
     }
 
-    deleteQuestion(id: Types.ObjectId): void {
+    deleteQuestion(id: string): void {
         if (confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
             this.adminQuestionHandler.deleteMultipleChoiceQuestion(id).subscribe({
                 next: () => {
@@ -51,7 +50,7 @@ export class QuestionListComponent implements OnInit, OnDestroy {
         }
     }
 
-    modifyQuestion(id: Types.ObjectId): void {
+    modifyQuestion(id: string): void {
         const dialogRef = this.dialog.open(NewQuestionFormComponent, {
             // eslint-disable-next-line no-underscore-dangle
             data: { baseQuestion: QuestionListComponent.questions.find((question) => question._id === id) },
@@ -83,7 +82,7 @@ export class QuestionListComponent implements OnInit, OnDestroy {
         return question.type === 'QCM';
     }
 
-    private updateQuestion(result: QuestionModel, id: Types.ObjectId): void {
+    private updateQuestion(result: QuestionModel, id: string): void {
         this.adminQuestionHandler.updateMultipleChoiceQuestion({ ...(result as MultipleChoiceQuestion), _id: id }).subscribe({
             next: () => {
                 this.updateQuestionsList();

@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { JsonQuizCheckService } from '@app/services/quiz-check/json-quiz-check.service';
+import { QuizImportService } from '@app/services/quiz-import/quiz-import.service';
 import { ImportQuizComponent } from './import-quiz.component';
 
 describe('ImportQuizComponent', () => {
     let component: ImportQuizComponent;
     let fixture: ComponentFixture<ImportQuizComponent>;
-    let mockQuizService: jasmine.SpyObj<JsonQuizCheckService>;
+    let mockQuizService: jasmine.SpyObj<QuizImportService>;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [ImportQuizComponent],
             providers: [
                 { provide: MatDialog, useValue: jasmine.createSpyObj('MatDialog', ['open']) },
-                { provide: JsonQuizCheckService, useValue: jasmine.createSpyObj('JsonQuizCheckService', ['importQuiz']) },
+                { provide: QuizImportService, useValue: jasmine.createSpyObj('JsonQuizCheckService', ['importQuiz']) },
                 { provide: Router, useValue: jasmine.createSpyObj('Router', ['']) },
             ],
         }).compileComponents();
@@ -22,7 +22,7 @@ describe('ImportQuizComponent', () => {
         fixture = TestBed.createComponent(ImportQuizComponent);
         component = fixture.componentInstance;
         TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
-        mockQuizService = TestBed.inject(JsonQuizCheckService) as jasmine.SpyObj<JsonQuizCheckService>;
+        mockQuizService = TestBed.inject(QuizImportService) as jasmine.SpyObj<QuizImportService>;
         TestBed.inject(Router) as jasmine.SpyObj<Router>;
     });
 

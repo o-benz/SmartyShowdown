@@ -26,9 +26,7 @@ describe('AdminQuizHandlerService', () => {
     });
 
     it('export should download to computer', () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const quiz: Quiz = games[0];
-        // create spy object with a click() method
         const spyObj = jasmine.createSpyObj('a', ['click']);
         spyOn(document, 'createElement').and.returnValue(spyObj);
 

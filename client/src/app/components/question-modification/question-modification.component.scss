@@ -81,7 +81,7 @@ input[type="checkbox" i] {
   margin: 0;
 }
 
-::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
+.wrapper {
+  border-radius: 15px;
   padding: 10px;
-  border-radius: 15px !important;
 }

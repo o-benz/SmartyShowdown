@@ -13,6 +13,9 @@ describe('ChatBoxComponent', () => {
     beforeEach(() => {
         chatServiceMock = {
             send: jasmine.createSpy('send').and.returnValue(of(null)),
+            onMessageReceived: jasmine.createSpy('onMessageReceived').and.returnValue(of(null)),
+            getUser: jasmine.createSpy('getUser').and.returnValue(of({ username: 'testUser' })),
+            getAllMessages: jasmine.createSpy('getAllMessages').and.returnValue(of(null)),
         };
 
         TestBed.configureTestingModule({
@@ -32,9 +35,11 @@ describe('ChatBoxComponent', () => {
 
     it('should send message to room', () => {
         const message = 'Hello, world!';
+        const currentDate = new Date();
+        const prefixedMessage = `[${currentDate.getHours()}h:${currentDate.getMinutes()}min TestUser]: ${message}`;
         component.roomMessage = message;
         component.sendToRoom();
-        expect(chatServiceMock.send).toHaveBeenCalledWith('roomMessage', message);
+        expect(chatServiceMock.send).toHaveBeenCalledWith('roomMessage', prefixedMessage);
         expect(component.roomMessage).toBe('');
     });
 
@@ -47,10 +52,9 @@ describe('ChatBoxComponent', () => {
     });
 
     it('should check if message is sent', () => {
-        const message = 'Hello, world!';
+        const message = '[0h:47min TestUser]: Hello, world!';
         component.roomMessages = [];
-        expect(component.isSent(message)).toBeTrue();
         component.roomMessages.push(message);
-        expect(component.isSent(message)).toBeFalse();
+        expect(component.isSent(message)).toBeTrue();
     });
 });

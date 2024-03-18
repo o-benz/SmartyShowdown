@@ -14,7 +14,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    color: $white;
 }
 
 .popup-content {
@@ -28,14 +27,33 @@
     padding: 2%;
     border-radius: 15px;
     font-weight: bold;
+    max-width: 500px;
+}
+
+.next-content {
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 2vmin;
+    padding: 2%;
+    border-radius: 15px;
+    font-weight: bold;
+    background-color: $white;
+    color: $black;
+    max-width: 500px;
 }
 
 .correct {
     background-color: $correct-green;
+    color: $white;
 }
 
 .incorrect {
     background-color: $incorrect-red;
+    color: $white;
 }
 
 .score {

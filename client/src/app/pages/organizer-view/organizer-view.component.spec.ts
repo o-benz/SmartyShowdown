@@ -5,11 +5,10 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { Router, RouterOutlet } from '@angular/router';
 import { QuestionStatsComponent } from '@app/components/question-stats/question-stats.component';
 import { GameStats } from '@app/interfaces/game-stats';
-import { PLACEHOLDER_GAME_STATS } from '@app/services/constants';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { TimeService } from '@app/services/time/time.service';
 import { CanvasJSAngularChartsModule } from '@canvasjs/angular-charts';
-import { Subject, of } from 'rxjs';
+import { Subject } from 'rxjs';
 import { OrganizerViewComponent } from './organizer-view.component';
 
 describe('OrganizerViewComponent', () => {
@@ -20,7 +19,13 @@ describe('OrganizerViewComponent', () => {
 
     beforeEach(async () => {
         const timeSpy = jasmine.createSpyObj('TimeService', ['startTimer', 'stopTimer']);
-        socketServiceSpy = jasmine.createSpyObj('SocketCommunicationService', ['getStats', 'nextQuestion', 'roundOver', 'onEndRound']);
+        socketServiceSpy = jasmine.createSpyObj('SocketCommunicationService', [
+            'getStats',
+            'nextQuestion',
+            'roundOver',
+            'onEndRound',
+            'onAnswerChange',
+        ]);
 
         const updateUsersSubject = new Subject<GameStats>();
         socketServiceSpy.getStats.and.returnValue(updateUsersSubject.asObservable());
@@ -99,7 +104,7 @@ describe('OrganizerViewComponent', () => {
             question: { text: 'Question', points: 10, type: 'Type' },
             currentQuestionIndex: 0,
         };
-        socketServiceSpy.getStats.and.returnValue(of(PLACEHOLDER_GAME_STATS));
+        // socketServiceSpy.getStats.and.returnValue(of(PLACEHOLDER_GAME_STATS));
         spyOn(component, 'updateUsersList').and.callThrough();
         component.requestUpdatedStats();
         tick();
@@ -132,7 +137,7 @@ describe('OrganizerViewComponent', () => {
         socketServiceSpy.getStats.and.returnValue(updateUsersSubject.asObservable());
         component.requestUpdatedStats();
 
-        updateUsersSubject.next(PLACEHOLDER_GAME_STATS);
+        // updateUsersSubject.next(PLACEHOLDER_GAME_STATS);
         updateUsersSubject.complete();
 
         tick();

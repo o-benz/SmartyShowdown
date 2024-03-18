@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { JsonQuizCheckService } from '@app/services/quiz-check/json-quiz-check.service';
+import { QuizImportService } from '@app/services/quiz-import/quiz-import.service';
 
 @Component({
     selector: 'app-import-quiz',
@@ -7,7 +7,7 @@ import { JsonQuizCheckService } from '@app/services/quiz-check/json-quiz-check.s
     styleUrls: ['./import-quiz.component.scss'],
 })
 export class ImportQuizComponent {
-    constructor(private checker: JsonQuizCheckService) {}
+    constructor(private checker: QuizImportService) {}
 
     onFileChange(event: Event) {
         const file = (event.target as HTMLInputElement).files;

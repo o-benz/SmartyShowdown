@@ -1,18 +1,21 @@
-import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
 import { Choice, Question } from '@app/interfaces/quiz-model';
 import { GameService } from '@app/services/game/game.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Subscription } from 'rxjs';
+
+const EVENT_KEY_BASE = 10;
+const INDEX_NOT_FOUND = -1;
 
 @Component({
     selector: 'app-answer-zone',
     templateUrl: './answer-zone.component.html',
     styleUrls: ['./answer-zone.component.scss'],
 })
-export class AnswerZoneComponent implements OnChanges, OnDestroy {
-    @Input() roundEndedQuestionPackage: { isRoundEnded: boolean; question: Question; questionIndex: number };
+export class AnswerZoneComponent implements OnChanges, OnDestroy, OnInit {
+    @Input() roundEndedQuestionPackage: { isRoundEnded: boolean; question: Question; questionIndex: number; mode: string };
     @Output() qcmFinishedEvent: EventEmitter<boolean> = new EventEmitter<boolean>();
-    @Output() qrlFinishedEvent: EventEmitter<boolean> = new EventEmitter<boolean>();
+    @Output() nextQuestionEvent: EventEmitter<boolean> = new EventEmitter<boolean>();
     choices: Choice[] = [];
     textAnswer: string = '';
     // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-magic-numbers
@@ -23,15 +26,23 @@ export class AnswerZoneComponent implements OnChanges, OnDestroy {
         private gameService: GameService,
         private socketService: SocketCommunicationService,
     ) {}
+
     @HostListener('window:keydown', ['$event'])
     buttonDetect(event: KeyboardEvent) {
         if (event.key === 'Enter') {
             this.lockAnswer();
-        }
-        if (event.key >= '1' && event.key <= '4') {
-            this.chooseChoice(parseInt(event.key, this.EVENT_KEY_BASE) - 1);
+        } else if (event.key >= '1' && event.key <= '4') {
+            this.chooseChoice(parseInt(event.key, EVENT_KEY_BASE) - 1);
         }
     }
+
+    ngOnInit(): void {
+        this.socketService.onFinalizeAnswers(() => {
+            this.gameService.isChoiceFinal = true;
+            this.socketService.confirmAnswer(this.roundEndedQuestionPackage.questionIndex);
+        });
+    }
+
     ngOnChanges(): void {
         if (this.roundEndedQuestionPackage.question) {
             this.initQuestion();
@@ -48,11 +59,10 @@ export class AnswerZoneComponent implements OnChanges, OnDestroy {
         this.gameSubscription?.unsubscribe();
     }
     chooseChoice(index: number) {
-        this.socketService.addAnswer(index - 1, this.roundEndedQuestionPackage.questionIndex);
         if (!this.gameService.isChoiceFinal) {
-            const indexNotFound = -1;
+            this.socketService.addAnswer(index, this.roundEndedQuestionPackage.questionIndex);
             const choiceIndex = this.gameService.currentChoices?.indexOf(this.choices[index]);
-            if (choiceIndex !== indexNotFound) {
+            if (choiceIndex !== INDEX_NOT_FOUND) {
                 this.gameService.currentChoices?.splice(choiceIndex, 1);
             } else {
                 this.gameService.currentChoices?.push(this.choices[index]);
@@ -71,12 +81,15 @@ export class AnswerZoneComponent implements OnChanges, OnDestroy {
     lockAnswer() {
         if ((this.gameService.currentChoices && this.gameService.currentChoices.length > 0) || this.textAnswer) {
             if (!this.gameService.isChoiceFinal) {
-                this.socketService.confirmAnswer();
-                this.gameSubscription = this.gameService
-                    .postCurrentChoices(this.roundEndedQuestionPackage.question.text)
-                    .subscribe((isAnswerCorrect: boolean) => {
-                        this.qcmFinishedEvent.emit(isAnswerCorrect);
-                    });
+                this.socketService.confirmAnswer(this.roundEndedQuestionPackage.questionIndex);
+                this.gameService.isChoiceFinal = true;
+                if (this.roundEndedQuestionPackage.mode === 'test')
+                    this.gameSubscription = this.gameService
+                        .postCurrentChoices(this.roundEndedQuestionPackage.question.text)
+                        .subscribe((isAnswerCorrect: boolean) => {
+                            this.qcmFinishedEvent.emit(isAnswerCorrect);
+                            this.nextQuestionEvent.emit(true);
+                        });
             }
         }
     }

@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export interface Choice {
     text: string;
     isCorrect?: boolean | null;
@@ -21,7 +19,7 @@ export interface BaseLongAnswerQuestion extends BaseQuestion {
 
 export interface Question extends BaseQuestion {
     date: Date;
-    _id: Types.ObjectId;
+    _id: string;
 }
 
 export interface MultipleChoiceQuestion extends BaseMultipleChoiceQuestion, Question {}

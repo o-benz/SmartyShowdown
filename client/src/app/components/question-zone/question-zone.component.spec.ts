@@ -34,7 +34,7 @@ describe('QuestionZoneComponent', () => {
     });
 
     it('should start timer when ngOnChanges is called', () => {
-        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' }, isTimeOver: false };
+        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' }, isTimeOver: false, mode: '' };
         component.questionTimePackage = questionPackage;
 
         spyOn(component, 'startTimer').and.callThrough();
@@ -46,7 +46,7 @@ describe('QuestionZoneComponent', () => {
     });
 
     it('should only change score when ngOnChanges is called when the round is ended', () => {
-        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' }, isTimeOver: true };
+        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' }, isTimeOver: true, mode: '' };
         component.questionTimePackage = questionPackage;
         spyOn(component, 'startTimer').and.callThrough();
 
@@ -56,7 +56,7 @@ describe('QuestionZoneComponent', () => {
     });
 
     it('should set component properties when ngOnChanges is called with valid question package', () => {
-        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' }, isTimeOver: false };
+        const questionPackage = { time: 10, question: { text: 'Question', points: 10, type: 'Type' }, isTimeOver: false, mode: '' };
         component.questionTimePackage = questionPackage;
 
         component.ngOnChanges();

@@ -123,7 +123,10 @@ export class NewQuestionFormComponent implements OnInit {
     }
 
     protected checkErrors(control: AbstractControl, controlName: string): void {
-        this.questionBankService.checkErrors(control, controlName);
+        const formError = this.questionBankService.checkErrors(control, controlName);
+        if (formError) {
+            this.dialogErrorService.openErrorDialog(formError);
+        }
     }
 
     private handleInvalidForm(controls: Control[]): void {

@@ -6,7 +6,6 @@ import { BaseMultipleChoiceQuestion, Choice, MultipleChoiceQuestion, TypeEnum } 
 import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { QuestionBankService } from '@app/services/question-bank/question-bank.service';
 import { QuestionService } from '@app/services/question/question.service';
-import { Types } from 'mongoose';
 import { of } from 'rxjs';
 import { NewQuestionFormComponent } from './new-question-form.component';
 
@@ -148,6 +147,18 @@ describe('NewQuestionFormComponent', () => {
         expect(mockQuestionBankService.checkErrors).toHaveBeenCalled();
     });
 
+    it('checkErrors should call openErrorDialog with formError when formError is not null', () => {
+        mockQuestionBankService.checkErrors.and.returnValue('test est nécessaire');
+        component['checkErrors'](abstractControl, 'test');
+        expect(mockDialogError.openErrorDialog).toHaveBeenCalledWith('test est nécessaire');
+    });
+
+    it('checkErrors should not call openErrorDialog when formError is null', () => {
+        mockQuestionBankService.checkErrors.and.returnValue(null);
+        component['checkErrors'](abstractControl, 'test');
+        expect(mockDialogError.openErrorDialog).not.toHaveBeenCalled();
+    });
+
     it('cancel should close the dialog', () => {
         component.cancel();
         expect(mockMatDialogRef.close).toHaveBeenCalled();
@@ -193,7 +204,7 @@ const generateMockQuestion = (type: TypeEnum): MultipleChoiceQuestion => {
         text: getRandomString(),
         points: getRandomNumber(),
         date: new Date(),
-        _id: new Types.ObjectId(),
+        _id: getRandomId(),
         choices: [generateMockChoice()],
     };
 };
@@ -207,6 +218,9 @@ const generateMockChoice = () => {
 const BASE_36 = 36;
 const BOOLEAN_PROBABILITY = 0.5;
 const MULTIPLE_IDENTIFIER = 10;
+const MILLIS_IN_SECOND = 1000;
+const HEX_BASE = 16;
 const getRandomNumber = (): number => Math.floor(Math.random() * (MULTIPLE_IDENTIFIER + 1)) * MULTIPLE_IDENTIFIER;
 const getRandomString = (): string => (Math.random() + 1).toString(BASE_36).substring(2);
 const getRandomBoolean = (): boolean => Math.random() < BOOLEAN_PROBABILITY;
+const getRandomId = (): string => Math.floor(Date.now() / MILLIS_IN_SECOND).toString(HEX_BASE);

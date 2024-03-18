@@ -14,15 +14,19 @@ export class ResultPageComponent implements OnInit {
     protected gameStats: GameStats;
     protected playerSubject: Observable<PlayerInfo[]>;
     protected selectedQuestion = new Subject<QuestionStats>();
-    private questionIndex: number;
+    private questionIndex: number = 0;
     private subscription: Subscription;
 
-    constructor(private socketService: SocketCommunicationService) {}
+    constructor(
+        private socketService: SocketCommunicationService,
+        private gameService: GameService,
+    ) {}
 
     ngOnInit(): void {
         this.subscription = this.socketService.getStats().subscribe({
             next: (value) => {
                 this.gameStats = value;
+                this.gameStats.users = this.sortPlayerByPoints(this.gameStats.users);
                 this.playerSubject = of(StatService.sortPlayerByPoints(this.gameStats.users));
                 this.selectedQuestion.next(this.gameStats.questions[0]);
             },
@@ -33,7 +37,17 @@ export class ResultPageComponent implements OnInit {
     }
 
     changeDiagram(direction: number) {
-        if (GameService.staysInInterval(this.gameStats.questions.length, this.questionIndex + direction))
+        if (this.gameService.staysInInterval(this.gameStats.questions.length, this.questionIndex + direction)) {
+            this.questionIndex += direction;
             this.selectedQuestion.next(this.gameStats.questions[this.questionIndex]);
+        }
+    }
+
+    sortPlayerByPoints(users: PlayerInfo[]): PlayerInfo[] {
+        return users.sort((a, b) => {
+            if ((a.score ?? 0) > (b.score ?? 0)) return -1;
+            if ((a.score ?? 0) < (b.score ?? 0)) return 1;
+            return a.name.localeCompare(b.name);
+        });
     }
 }

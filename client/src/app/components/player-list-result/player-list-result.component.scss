@@ -2,13 +2,35 @@
 
 .player-list-container {
     box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
-    display: flex;
-    flex-direction: column;
     background-color: $chat-area-container;
-    border-radius: 16px;
-    overflow: hidden;
-    margin-top: 5px;
-    margin-left: 10px;
-    margin-right: 10px;
-    animation: crownAppear 0.6s ease forwards;
-}
+    border: none;
+    border-radius: 5px;
+    padding: 20px;
+  }
+  
+  .player-list-container .left {
+    opacity: 0.6;
+    text-decoration: line-through;
+    }
+  
+  .player-list-container h4 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0;
+    padding: 10px 0;
+    font-size: 3vmin;
+    color: $white;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .player-list-container span {
+    font-weight: bold;
+  }
+  
+  .player-list-container span.score {
+    color: #0552a3
+  }
+  
+  .player-list-container span.bonus {
+    color: #1b9a39;
+  }

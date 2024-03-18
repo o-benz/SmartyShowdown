@@ -13,7 +13,7 @@ export class QuizController {
         description: 'Return list of quiz',
     })
     async allQuiz() {
-        return await this.quizService.getAllQuiz();
+        return this.quizService.getAllQuiz();
     }
 
     @Get('/:id')
@@ -39,7 +39,7 @@ export class QuizController {
         description: 'Question is not valid',
     })
     async addQuestionToQuiz(@Body() question: Question) {
-        return await this.quizService.checkQuestion(question);
+        return this.quizService.checkQuestion(question);
     }
 
     @Post('/')
@@ -50,7 +50,7 @@ export class QuizController {
         description: 'Quiz not valid',
     })
     async addQuiz(@Body() quiz: Quiz) {
-        return await this.quizService.addQuiz(quiz);
+        return this.quizService.addQuiz(quiz);
     }
 
     @Put('/:id')
@@ -65,7 +65,7 @@ export class QuizController {
         if (!quiz) {
             throw new NotFoundException('Quiz not found');
         }
-        return await this.quizService.updateQuizVisibility(id);
+        return this.quizService.updateQuizVisibility(id);
     }
 
     @Delete('/:id')

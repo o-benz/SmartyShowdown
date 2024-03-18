@@ -8,10 +8,4 @@
             <button (click)="confirmCode()">Confirmer</button>
         </div>
     </div>
-
-    <ng-template #dialogTemplate>
-        <h3>Salle: {{roomCode}}</h3>
-        <input placeholder="Nom d'utilisateur" class="room-id" (keydown.enter)="login()" type="text" [(ngModel)]="username">
-        <button class="dialog" (click)="login()">Rejoindre!</button>
-    </ng-template>
 </body>

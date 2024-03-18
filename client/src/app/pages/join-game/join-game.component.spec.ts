@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NavigationStart, Router } from '@angular/router';
 import { HeaderComponent } from '@app/components/header/header.component';
 import { SocketAnswer } from '@app/interfaces/socket-model';
@@ -42,6 +42,7 @@ describe('JoinGameComponent', () => {
         TestBed.configureTestingModule({
             declarations: [JoinGameComponent, HeaderComponent],
             providers: [
+                { provide: MatDialogRef, useValue: {} },
                 { provide: MatDialog, useValue: dialogSpy },
                 { provide: SocketCommunicationService, useValue: socketServiceSpy },
                 { provide: Router, useValue: mockRouter },
@@ -58,19 +59,6 @@ describe('JoinGameComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('should navigate to game lobby on successful login', fakeAsync(() => {
-        socketServiceSpy.login.and.returnValue(of({ joined: true }));
-        component.login();
-        tick();
-        expect(mockRouter.navigateSpy).toHaveBeenCalledWith(['/game/lobby']);
-    }));
-
-    it('should handle failed login', () => {
-        socketServiceSpy.login.and.returnValue(of({ joined: false }));
-        component.login();
-        expect(mockRouter.navigateSpy).not.toHaveBeenCalled();
-    });
-
     it('should open dialog on successful room join', () => {
         socketServiceSpy.joinRoom.and.returnValue(of({ joined: true }));
         component.confirmCode();
@@ -82,29 +70,6 @@ describe('JoinGameComponent', () => {
         component.confirmCode();
         expect(dialogSpy.open).not.toHaveBeenCalled();
     });
-
-    it('should open error dialog on login failure with error message', fakeAsync(() => {
-        const socketResponse: SocketAnswer = { joined: false, message: 'Error' };
-        socketServiceSpy.login.and.returnValue(of(socketResponse));
-        dialogSpy.closeAll.calls.reset();
-
-        component.login();
-        tick();
-
-        expect(dialogSpy.closeAll).not.toHaveBeenCalled();
-        expect(dialogServiceSpy.openErrorDialog).toHaveBeenCalledWith(socketResponse.message || '');
-    }));
-
-    it('should unsubscribe after login observable completes', fakeAsync(() => {
-        const socketResponse: SocketAnswer = { joined: true };
-        socketServiceSpy.login.and.returnValue(of(socketResponse));
-        component['socketSubscription'] = new Subscription();
-
-        component.login();
-        tick();
-
-        expect(component['socketSubscription'].closed).toBeTrue();
-    }));
 
     it('should open error dialog on unsuccessful room join with error message', fakeAsync(() => {
         const socketResponse: SocketAnswer = { joined: false, message: 'Error' };

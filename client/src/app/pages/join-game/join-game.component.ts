@@ -1,6 +1,7 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { NavigationStart, Router } from '@angular/router';
+import { UsernamePickerComponent } from '@app/components/username-picker/username-picker.component';
 import { Naviguation, SocketAnswer } from '@app/interfaces/socket-model';
 import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
@@ -11,12 +12,13 @@ import { Subscription } from 'rxjs';
     templateUrl: './join-game.component.html',
     styleUrls: ['./join-game.component.scss'],
 })
-export class JoinGameComponent implements OnInit {
+export class JoinGameComponent implements OnInit, OnDestroy {
     @ViewChild('dialogTemplate') dialogTemplate: TemplateRef<unknown>;
     protected roomCode: string;
     protected username: string;
     private socketSubscription: Subscription;
 
+    // On utilise eslint-disable ici car on a trop de params
     /* eslint-disable max-params */
     constructor(
         private socketService: SocketCommunicationService,
@@ -31,12 +33,12 @@ export class JoinGameComponent implements OnInit {
         });
     }
 
-    login(): void {
-        this.socketSubscription = this.socketService.login(this.username).subscribe({
+    confirmCode(): void {
+        this.socketService.connect();
+        this.socketSubscription = this.socketService.joinRoom(this.roomCode).subscribe({
             next: (res: SocketAnswer) => {
                 if (res.joined) {
-                    this.closeDialog();
-                    this.router.navigate(['/game/lobby']);
+                    this.dialog.open(UsernamePickerComponent, { data: { roomCode: this.roomCode } });
                 } else if (res.message) this.dialogService.openErrorDialog(res.message);
             },
             complete: () => {
@@ -45,27 +47,7 @@ export class JoinGameComponent implements OnInit {
         });
     }
 
-    closeDialog(): void {
-        this.dialog.closeAll();
-    }
-
-    openDialog(): void {
-        this.dialog.open(this.dialogTemplate, {
-            width: '500px',
-            data: { roomCode: this.roomCode },
-        });
-    }
-
-    confirmCode(): void {
-        this.socketService.connect();
-        this.socketSubscription = this.socketService.joinRoom(this.roomCode).subscribe({
-            next: (res: SocketAnswer) => {
-                if (res.joined) this.openDialog();
-                else if (res.message) this.dialogService.openErrorDialog(res.message);
-            },
-            complete: () => {
-                if (this.socketSubscription) this.socketSubscription.unsubscribe();
-            },
-        });
+    ngOnDestroy(): void {
+        if (this.socketSubscription) this.socketSubscription.unsubscribe();
     }
 }

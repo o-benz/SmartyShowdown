@@ -1,0 +1,14 @@
+<div class="popup-container">
+    <div class="popup-content" [ngClass]="{'correct': pointsGained !== 0, 'incorrect': pointsGained === 0}">
+        <div>
+            {{ pointsGained !== 0 ? 'Bonne Réponse' : 'Mauvaise Réponse' }}
+        </div>
+        <div>
+            La bonne réponse était :
+        </div>
+        <div *ngFor="let answer of answerArray">
+            <div>&#8226; {{ answer }}</div>
+        </div>
+        <div>{{ errorMessage }}</div>
+    </div>
+</div>

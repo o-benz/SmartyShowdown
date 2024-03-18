@@ -5,6 +5,7 @@ export interface GameStats {
     duration: number;
     questions: QuestionStats[];
     users: UserSocket[];
+    name: string;
 }
 
 export interface QuestionStats {
@@ -12,6 +13,7 @@ export interface QuestionStats {
     statLines: StatsLine[];
     type: string;
     points: number;
+    timeFinished?: boolean;
 }
 
 export interface StatsLine {
@@ -19,6 +21,3 @@ export interface StatsLine {
     users: string[];
     isCorrect?: boolean;
 }
-export const FAKE_STAT_LINE: StatsLine = { label: '', users: [] };
-export const FAKE_QUESTION_STAT: QuestionStats = { title: 'string', statLines: [FAKE_STAT_LINE], type: '', points: 10 };
-export const FAKE_GAME_STAT: GameStats = { id: '123', duration: 30, questions: [], users: [] };

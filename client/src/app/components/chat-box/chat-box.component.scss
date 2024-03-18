@@ -31,7 +31,8 @@
     word-wrap: break-word;
     flex-grow: 1;
     overflow-y: scroll;
-    padding: 20px;
+    padding-left: 20px;
+    padding-right: 10px;
 }
 
 .chat-history::-webkit-scrollbar {
@@ -69,14 +70,14 @@
 }
 .message-box.sent {
     background-color: $message-sent;
-    align-self: flex-end;
     border-bottom-right-radius: 0;
+    margin-left: 10px;
 }
 
 .message-box.received {
     background-color: $message-received;
-    align-self: flex-start;
     border-bottom-left-radius: 0;
+    margin-right: 10px;
 }
 
 .chat-input {

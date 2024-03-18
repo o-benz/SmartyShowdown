@@ -1,3 +1,4 @@
+import { ComponentType } from '@angular/cdk/portal';
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogErrorComponent } from '@app/components/dialog-error/dialog-error.component';
@@ -6,23 +7,49 @@ import { DialogErrorComponent } from '@app/components/dialog-error/dialog-error.
     providedIn: 'root',
 })
 export class DialogErrorService {
-    private _errorMessage: string;
+    private errorMessage: string;
+    private pointsGained: number;
+    private answerArray: string[];
 
     constructor(private dialog: MatDialog) {}
 
-    get errorMessage(): string {
-        // eslint-disable-next-line no-underscore-dangle
-        return this._errorMessage;
+    getErrorMessage(): string {
+        return this.errorMessage;
     }
 
-    set errorMessage(message: string) {
-        // eslint-disable-next-line no-underscore-dangle
-        this._errorMessage = message;
+    getAnswerArray(): string[] {
+        return this.answerArray;
+    }
+
+    getPointsGained(): number {
+        return this.pointsGained;
+    }
+
+    setErrorMessage(message: string): void {
+        this.errorMessage = message;
+    }
+
+    setAnswerArray(message: string[]): void {
+        this.answerArray = message;
+    }
+
+    setPointsGained(points: number): void {
+        this.pointsGained = points;
     }
 
     openErrorDialog(message: string): void {
-        // eslint-disable-next-line no-underscore-dangle
-        this._errorMessage = message;
+        this.errorMessage = message;
         this.dialog.open(DialogErrorComponent);
+    }
+
+    closeErrorDialog(): void {
+        this.dialog.closeAll();
+    }
+
+    openCustomDialog<T>(message: string[], dialogComponent: ComponentType<T>, points: number, score: number): void {
+        this.answerArray = message;
+        this.pointsGained = points;
+        this.errorMessage = `+${points} points. Votre score est ${score}!`;
+        this.dialog.open(dialogComponent);
     }
 }

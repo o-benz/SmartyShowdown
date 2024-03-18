@@ -23,20 +23,33 @@ export class WaitingRoomListComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
+        this.getListUsers();
+        this.getUser();
+        this.onUserListUpdated();
+        this.onUserLeft();
+    }
+
+    getListUsers(): void {
         this.socketSubscription = this.socketService.getListUsers().subscribe((users: User[]) => {
             this.userList = this.userList.concat(users);
         });
+    }
 
+    getUser(): void {
         this.socketService.getUser().subscribe((user: User) => {
             this.user = user;
         });
+    }
 
+    onUserListUpdated(): void {
         this.socketService.onUserListUpdated((user: User) => {
             this.userList.push(user);
         });
+    }
 
+    onUserLeft(): void {
         this.socketService.onUserLeft((username: string) => {
-            this.userList = this.userList.filter((user) => user.username !== username);
+            this.userList = this.waitingRoomService.filterBannedUsers(this.userList, username);
             if (this.waitingRoomService.isBannable(username, this.user)) {
                 this.router.navigate(['/']);
             }

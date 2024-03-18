@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { GameStats, ServerStats } from '@app/interfaces/game-stats';
+import { GameStats, QuestionStats, QuestionStatsServer, ServerStats, UserSocket } from '@app/interfaces/game-stats';
+import { Answer, Answers } from '@app/interfaces/quiz-model';
 import { SocketAnswer, User } from '@app/interfaces/socket-model';
 import { Observable } from 'rxjs';
 import { Socket, io } from 'socket.io-client';
@@ -11,6 +12,7 @@ import { SOCKET_EVENTS } from './socket-communication.constants';
 })
 export class SocketCommunicationService {
     socket: Socket;
+
     constructor() {
         this.connect();
     }
@@ -48,8 +50,11 @@ export class SocketCommunicationService {
         this.on(SOCKET_EVENTS.getStats, action);
     }
 
-    onAnswerChange(action: () => void): void {
-        this.on(SOCKET_EVENTS.answerChange, action);
+    onAnswerChange(action: (stats: QuestionStats) => void): void {
+        this.on(SOCKET_EVENTS.answerChange, (serverStats: QuestionStatsServer) => {
+            const stats = this.adaptServerQuestionStat(serverStats);
+            action(stats);
+        });
     }
 
     onUserListUpdated(action: (users: User) => void): void {
@@ -61,7 +66,9 @@ export class SocketCommunicationService {
     }
 
     onRoomClosed(action: () => void): void {
-        this.on(SOCKET_EVENTS.roomClosed, action);
+        this.on(SOCKET_EVENTS.roomClosed, () => {
+            action();
+        });
     }
 
     getUser(): Observable<User> {
@@ -128,16 +135,27 @@ export class SocketCommunicationService {
         this.on(SOCKET_EVENTS.finalizeAnswers, action);
     }
 
-    roundOver(): void {
-        this.send(SOCKET_EVENTS.roundOver);
+    roundOver(questionIndex: number): void {
+        this.send(SOCKET_EVENTS.roundOver, questionIndex.toString());
     }
-    confirmAnswer(): void {
-        this.send(SOCKET_EVENTS.confirmAnswer);
+
+    confirmAnswer(questionIndex: number): void {
+        this.send(SOCKET_EVENTS.confirmAnswer, questionIndex.toString());
     }
 
     onEndRound(action: () => void): void {
         this.on(SOCKET_EVENTS.endRound, action);
     }
+
+    isAnswerValid(answer: Answers): Observable<boolean> {
+        return new Observable<boolean>((subscriber) => {
+            this.send(SOCKET_EVENTS.isAnswerValid, answer, (res: boolean) => {
+                subscriber.next(res);
+                subscriber.complete();
+            });
+        });
+    }
+
     updateUsers(): Observable<string[]> {
         return new Observable<string[]>((subscriber) => {
             this.send(SOCKET_EVENTS.updateUsers, null, (response: string[]) => {
@@ -148,7 +166,7 @@ export class SocketCommunicationService {
     }
 
     addAnswer(answer: number, questionIndex: number): void {
-        this.send(SOCKET_EVENTS.addAnswer, { answer, questionIndex });
+        this.send<Answer>(SOCKET_EVENTS.addAnswer, { answer, questionIndex });
     }
 
     getListUsers(): Observable<User[]> {
@@ -203,20 +221,29 @@ export class SocketCommunicationService {
     }
 
     private adaptServerStats(serverStats: ServerStats): GameStats {
-        const statsOut: GameStats = { id: serverStats.id, duration: serverStats.duration, questions: [], users: [] };
-        statsOut.users = serverStats.users.map((usersocket) => {
-            return { name: usersocket.username, score: usersocket.score, bonusCount: usersocket.bonus };
-        });
-        statsOut.questions = serverStats.questions.map((question) => {
+        const statsOut: GameStats = { id: serverStats.id, duration: serverStats.duration, questions: [], users: [], name: serverStats.name };
+        statsOut.users = serverStats.users.map((usersocket: UserSocket) => {
             return {
-                title: question.title,
-                type: question.type,
-                points: question.points,
-                statLines: question.statLines.map((line) => {
-                    return { label: line.label, nbrOfSelection: line.users.length, isCorrect: line.isCorrect };
-                }),
+                name: usersocket.data.username,
+                score: usersocket.data.score,
+                bonusCount: usersocket.data.bonus,
+                hasLeft: usersocket.data.hasLeft,
             };
         });
+        statsOut.questions = serverStats.questions.map((question) => {
+            return this.adaptServerQuestionStat(question);
+        });
         return statsOut;
+    }
+
+    private adaptServerQuestionStat(serverQuestion: QuestionStatsServer): QuestionStats {
+        return {
+            title: serverQuestion.title,
+            type: serverQuestion.type,
+            points: serverQuestion.points,
+            statLines: serverQuestion.statLines.map((line) => {
+                return { label: line.label, nbrOfSelection: line.users.length, isCorrect: line.isCorrect };
+            }),
+        };
     }
 }

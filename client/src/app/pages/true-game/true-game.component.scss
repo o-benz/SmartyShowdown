@@ -1,20 +1,28 @@
 .content-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-gap: 10px;
 }
 
 .question-container {
     grid-column: 1 / span 3;
 }
 
+.app-header {
+    grid-column: 1 / span 4; 
+}
+
+.organizer-container {
+    grid-column: 1 / span 3;
+}
+
 .chat-box {
     grid-column: 4;
-    max-height: 100%;
-    height: 100%;
 }
 
 @media (max-width: 900px) {
+    .organizer-container {
+        grid-column: 1 / span 4; 
+    }
     .question-container {
         grid-column: 1 / span 4;
     }

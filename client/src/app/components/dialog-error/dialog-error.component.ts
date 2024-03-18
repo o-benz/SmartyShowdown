@@ -10,6 +10,6 @@ export class DialogErrorComponent {
     constructor(private dialogService: DialogErrorService) {}
 
     get errorMessage(): string {
-        return this.dialogService.errorMessage;
+        return this.dialogService.getErrorMessage();
     }
 }

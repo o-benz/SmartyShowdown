@@ -1,21 +1,83 @@
 @import '../../../styles.scss';
 
+.stats{
+    grid-row: 1;
+    grid-column: 1 / span 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.results {
+    grid-row: 1;
+    grid-column: 3 / span 4;
+    height: 100%;
+}
+
+.start-container {
+    margin-top: 5px;
+    margin-left: 10px;
+    margin-right: 1%;
+    grid-column: 1 / span 3;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 10px;
+}
+
+h3 {
+    margin-block-start: 0;
+    margin-block-end: 0;
+    color: $white;
+    font-size: 5vmin;
+}
+
+h2 {
+    user-select: none;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    font-weight: bold;
+    font-size: 4vmin;
+    text-shadow: 0 0 10px $text-shadow;
+    color: $white;
+}
+
+p {
+    user-select: none;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    font-weight: bold;
+    font-size: 4vmin;
+    text-shadow: 0 0 10px $text-shadow;
+    color: $white;
+}
+
 .content-container {
     display: grid;
-    grid-template-columns: 4fr 4fr 3fr;
+    grid-template-columns: repeat(4, 1fr);
     grid-gap: 10px;
     height: 100%;
 }
 
-.arrow-button{
+.arrow-button {
     box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
     text-align:center;
-    color:white;
+    color:$white;
     background-color: $chat-area-container;
     border-radius: 5px;
 }
 
 .chat-box {
-    grid-column: 3;
+    grid-column: 4;
     height: 100%;
 }
+
+
+@media (max-width: 900px) {
+    .start-container {
+        grid-column: 1 / span 4;
+    }
+    .chat-box {
+        display: none;
+    }
+  }

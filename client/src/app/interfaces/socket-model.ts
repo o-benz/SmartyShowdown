@@ -9,6 +9,9 @@ export interface User {
     room?: string;
     score?: number;
     bonus?: number;
+    answered: boolean;
+    firstToAnswer?: boolean;
+    hasLeft?: boolean;
 }
 
 export enum Naviguation {

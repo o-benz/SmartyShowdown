@@ -4,7 +4,7 @@
     <div class="new-quiz-wrapper">
         <div class="new-quiz-form">
             <div>
-                <label for="title">Title</label>
+                <label for="title">Titre</label>
                 <input id="title" type="text" [(ngModel)]="quizModified.title" placeholder="Titre">
             </div>
 
@@ -14,7 +14,7 @@
             </div>
 
             <div>
-                <label for="duration">Duration</label>
+                <label for="duration">Durée</label>
                 <input id="duration" type="range" [(ngModel)]="quizModified.duration" min="10" max="60">
                 <span>{{ quizModified.duration }} secondes</span>
             </div>
@@ -29,7 +29,7 @@
                 <h3>Ajouter une Question Choix Multiple :</h3>
                 <app-new-qcm [quizModified]="quizModified"></app-new-qcm>
             </div>
-            
+
             <div class="confirm-button">
                 <button type="submit" (click)="onSubmit()">Confirmer</button>
             </div>

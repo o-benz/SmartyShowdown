@@ -1,4 +1,5 @@
 import { Question, Quiz, QuizEnum } from '@app/model/quiz/quiz.schema';
+import { Answers } from '@app/model/socket/socket.schema';
 import { GameStats } from '@app/model/stats/stats.schema';
 import { FileManagerService } from '@app/services/file-manager/file-manager.service';
 import { SocketService } from '@app/services/socket/socket.service';
@@ -7,7 +8,7 @@ import { join } from 'path';
 import { Server, Socket } from 'socket.io';
 
 const NOTFOUND = -1;
-const QUIZ_DEFAULT_PATH = '/../../../../../assets/quiz-example.json';
+const QUIZ_DEFAULT_PATH = '/../../../../assets/quiz-example.json';
 
 @Injectable()
 export class QuizService {
@@ -54,7 +55,7 @@ export class QuizService {
 
         quiz.lastModification = new Date().toISOString();
 
-        if (validate && alreadyExist !== undefined) {
+        if (validate && alreadyExist) {
             const index = quizList.findIndex((item) => item.id === quiz.id);
             quizList[index] = quiz;
             await this.fileManager.writeCustomFile(this.path, JSON.stringify(quizList, null, 2));
@@ -70,9 +71,16 @@ export class QuizService {
     }
 
     async populateGameStats(server: Server, socket: Socket, quizID: string): Promise<GameStats> {
-        const stats: GameStats = { id: quizID, duration: 0, questions: [], users: await this.socket.getSocketsInRoom(socket.data.room, server) };
+        const stats: GameStats = {
+            id: quizID,
+            duration: 0,
+            questions: [],
+            users: [],
+            name: '',
+        };
         this.getQuizById(quizID).then((quiz) => {
             stats.duration = quiz.duration;
+            stats.name = quiz.title;
             quiz.questions.forEach((question) => {
                 stats.questions.push({
                     title: question.text,
@@ -136,5 +144,15 @@ export class QuizService {
         }
 
         await this.fileManager.writeCustomFile(this.path, JSON.stringify(quizList, null, 2));
+    }
+
+    validateAnswer(socket: Socket, answer: Answers, gameStats: GameStats): boolean {
+        const correctStatLines = gameStats.questions[answer.questionIndex].statLines;
+        correctStatLines.forEach((line) => {
+            if (line.isCorrect && !answer.answers.find((choice) => choice.text === line.label)) {
+                return false;
+            }
+        });
+        return true;
     }
 }

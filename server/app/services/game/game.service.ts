@@ -14,7 +14,7 @@ export class GameService {
     }
 
     findCorrectChoices(choices: Choice[], question: Question): boolean {
-        const correctChoices = question.choices ? question.choices.filter((choice) => choice.isCorrect === true) : [];
+        const correctChoices = question.choices ? question.choices.filter((choice) => choice.isCorrect) : [];
         if (correctChoices.length !== choices.length) return false;
         for (const correctChoice of correctChoices) {
             if (!choices.find((choice) => choice.text === correctChoice.text)) {

@@ -6,4 +6,10 @@ export enum ErrorMessages {
     UpdateQuestionError = 'Erreur lors de la modification de la question. Veuillez réessayer.',
     AddQuestionError = "Erreur lors de l'ajout de la question. Veuillez réessayer.",
     InvalidForm = 'Formulaire invalide',
+    NotLockRoom = 'La salle doit etre verrouiller',
+    NoPlayer = 'Aucun joueur avec qui jouer 😔',
+    QuitRoom = "Tout les joueurs ont quitté, la salle c'est fermé.",
+    ClosedRoom = "La salle c'est fermée, vous avez été redirigé vers la page d'accueil.",
+    RefusedAccess = 'Accès refusé.',
+    ConnectionError = 'Erreur de connexion. Veuillez réessayer.',
 }

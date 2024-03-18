@@ -94,9 +94,37 @@ header {
 
 .css-king:hover::before {
     content: $css-king;
-    top: -1130px;
-    left: -930px;
-    transform: scale(0.09);
+    top: -475px;
+    left: -250px;
+    transform: scale(0.3);
+    position: absolute;
+    opacity: 0;
+    animation: crownAppear 4s forwards;
+}
+
+.scout-king {
+    position: relative;
+}
+
+.scout-king:hover::before {
+    content: $scout-king;
+    top: -380px;
+    left: -250px;
+    transform: scale(0.4);
+    position: absolute;
+    opacity: 0;
+    animation: crownAppear 4s forwards;
+}
+
+.carry-king {
+    position: relative;
+}
+
+.carry-king:hover::before {
+    content: $carry-king;
+    top: -475px;
+    left: -265px;
+    transform: scale(0.3);
     position: absolute;
     opacity: 0;
     animation: crownAppear 4s forwards;

@@ -49,9 +49,9 @@ export class QuizListComponent implements OnInit, OnDestroy {
         this.router.navigate(['/createquiz']);
     }
 
-    delete(quizId: string): void {
+    async delete(quizId: string): Promise<void> {
         if (confirm('Êtes-vous sûr de vouloir supprimer ce quiz ?')) {
-            this.adminQuizHandler.delete(quizId).subscribe({
+            await this.adminQuizHandler.delete(quizId).subscribe({
                 next: () => {
                     QuizListComponent.quizzes = QuizListComponent.quizzes.filter((quiz) => quiz.id !== quizId);
                 },
@@ -62,7 +62,7 @@ export class QuizListComponent implements OnInit, OnDestroy {
         }
     }
 
-    hide(quiz: Quiz): void {
+    async hide(quiz: Quiz) {
         this.adminQuizHandler.toggleQuizVisibility(quiz.id).subscribe({
             next: (updatedQuiz) => {
                 const index = this.quizzes.findIndex((q) => q.id === updatedQuiz.id);

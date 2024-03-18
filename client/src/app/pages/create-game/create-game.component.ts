@@ -14,24 +14,21 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./create-game.component.scss'],
 })
 export class CreateGameComponent implements OnInit, OnDestroy {
-    dialogRef: MatDialogRef<unknown>;
-
     // eslint-disable-next-line @typescript-eslint/member-ordering
     @ViewChild('dialogTemplate') dialogTemplate: TemplateRef<unknown>;
+    dialogRef: MatDialogRef<unknown>;
     selectedQuiz: Quiz;
     quizList: Quiz[];
     private quizSubscription: Subscription;
 
-    /* eslint-disable */
+    // eslint-disable-next-line max-params
     constructor(
         public dialog: MatDialog,
-        private quizService: QuizService, // removing the warning for constructor params limit
+        private quizService: QuizService,
         private router: Router,
         private dialogService: DialogErrorService,
         private socketCommunicationService: SocketCommunicationService,
-
     ) {}
-    /* eslint-enabled */
 
     ngOnInit(): void {
         this.quizSubscription = this.quizService.getAllQuiz().subscribe((quizzes: Quiz[]) => {
@@ -50,7 +47,7 @@ export class CreateGameComponent implements OnInit, OnDestroy {
 
     validateBeforeClosing(): void {
         this.quizSubscription = this.quizService.getQuizById(this.selectedQuiz.id).subscribe((quiz: Quiz) => {
-            if (quiz && this.dialogRef && quiz.visible !== false) {
+            if (quiz && this.dialogRef && quiz.visible) {
                 this.router.navigate(['/game/test', quiz.id]);
             } else {
                 this.dialogService.openErrorDialog(ErrorMessages.QuizNotAvailable);
@@ -65,11 +62,11 @@ export class CreateGameComponent implements OnInit, OnDestroy {
             next: (roomCode) => {
                 localStorage.setItem('roomCode', roomCode);
                 this.router.navigate(['/game/lobby']);
-                this.closeDialog(); 
+                this.closeDialog();
             },
         });
     }
-    
+
     closeDialog(): void {
         this.dialogRef.close();
     }

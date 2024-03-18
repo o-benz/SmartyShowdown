@@ -107,68 +107,55 @@ describe('QuestionBankService', () => {
         expect(choices.at(1).value).toEqual(secondChoice);
     });
 
-    it('checkErrors should alert if control is required and not provided', () => {
+    it('checkErrors should return appropriate message if control is required and not provided', () => {
         abstractControl.setValidators(Validators.required);
-        spyOn(window, 'alert');
         abstractControl.setValue(null);
-        service.checkErrors(abstractControl, 'test');
-        expect(window.alert).toHaveBeenCalledWith('test est nécessaire');
+        expect(service.checkErrors(abstractControl, 'test')).toBe('test est nécessaire');
     });
 
-    it('checkErrors should alert if control is less than min', () => {
+    it('checkErrors should return appropriate message if control is less than min', () => {
         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         abstractControl.setValidators(Validators.min(10));
-        spyOn(window, 'alert');
         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         abstractControl.setValue(5);
-        service.checkErrors(abstractControl, 'test');
-        expect(window.alert).toHaveBeenCalledWith('test doit être au moins 10');
+        expect(service.checkErrors(abstractControl, 'test')).toBe('test doit être au moins 10');
     });
 
-    it('checkErrors should alert if control is more than max', () => {
+    it('checkErrors should return appropriate message if control is more than max', () => {
         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         abstractControl.setValidators(Validators.max(100));
-        spyOn(window, 'alert');
         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         abstractControl.setValue(110);
-        service.checkErrors(abstractControl, 'test');
-        expect(window.alert).toHaveBeenCalledWith('test doit être au maximum 100');
+        expect(service.checkErrors(abstractControl, 'test')).toBe('test doit être au maximum 100');
     });
 
-    it('checkErrors should alert if control is less than minlength', () => {
+    it('checkErrors should return appropriate message if control is less than minlength', () => {
         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         abstractControl.setValidators(Validators.minLength(2));
-        spyOn(window, 'alert');
         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         abstractControl.setValue(new Array(1));
-        service.checkErrors(abstractControl, 'test');
-        expect(window.alert).toHaveBeenCalledWith('test doit avoir au moins 2 choix');
+        expect(service.checkErrors(abstractControl, 'test')).toBe('test doit avoir au moins 2 choix');
     });
 
-    it('checkErrors should alert if control is more than maxlength', () => {
+    it('checkErrors should return appropriate message if control is more than maxlength', () => {
         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         abstractControl.setValidators(Validators.maxLength(4));
-        spyOn(window, 'alert');
         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         abstractControl.setValue(new Array(5));
-        service.checkErrors(abstractControl, 'test');
-        expect(window.alert).toHaveBeenCalledWith('test doit avoir au maximum 4 choix');
+        expect(service.checkErrors(abstractControl, 'test')).toBe('test doit avoir au maximum 4 choix');
     });
 
-    it('checkErrors should alert if control is not a multiple of 10', () => {
+    it('checkErrors should return appropriate message if control is not a multiple of 10', () => {
         const testComponent = new TestableNewQuestionFormComponent(fb, dialogRef, questionService, service, dialogErrorService, data);
         abstractControl.setValidators(testComponent.isMultipleOf10);
         abstractControl.setValue('value causing custom error');
         spyOn(window, 'alert');
-        service.checkErrors(abstractControl, 'test');
-        expect(window.alert).toHaveBeenCalledWith('test doit être un multiple de 10');
+        expect(service.checkErrors(abstractControl, 'test')).toBe('test doit être un multiple de 10');
     });
 
-    it('checkErrors should not alert if control is valid', () => {
-        spyOn(window, 'alert');
+    it('checkErrors should return null if control is valid', () => {
         abstractControl.setErrors(null);
-        service.checkErrors(abstractControl, 'test');
-        expect(window.alert).not.toHaveBeenCalled();
+        expect(service.checkErrors(abstractControl, 'test')).toBe(null);
     });
 });
 

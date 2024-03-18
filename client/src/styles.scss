@@ -2,6 +2,25 @@
 @include mat.core();
 
 /* Animations */
+@keyframes rotateIn {
+    from {
+        transform: rotateY(0deg);
+    }
+    to {
+        transform: rotateY(180deg);
+    }
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+        backface-visibility: visible;
+    }
+}
+
 @keyframes dropIn {
     0% {
         transform: translateY(-100%);
@@ -57,11 +76,12 @@ $orange: #ee9b00;
 $hover-orange: #8b5e15;
 $dark-green: #2b6e34;
 $darker-green: #1c4622;
-$correct-green: #32CD32;
-$incorrect-red: #FF6347;
+$correct-green: #30b830;
+$incorrect-red: #c0361e;
 $grey: #666;
 $button-blue: #007bff;
 $hover-button-blue: #0259b7;
+$lavender: #d4d4f1;
 
 /* Shadows */
 $text-shadow: #ffffff80;
@@ -105,8 +125,10 @@ $chat-disabled-bg: #ccc;
 $chat-disabled-c: #666;
 
 /* Images */
-$background: url('/assets/background.jpg');
-$css-king: url('/assets/css-king.png');
+$background: url('./assets/background.jpg');
+$css-king: url('./assets/css-king.png');
+$scout-king: url('./assets/scout-king.png');
+$carry-king: url('./assets/carry-king.png');
 
 /* Tags */
 html,
@@ -170,7 +192,93 @@ app-root{
 
 ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
     user-select: none;
-    padding: 10px !important;
+    padding: 0px !important;
     border-radius: 15px !important;
     display: block !important;
+}
+
+/* Abandon/Panic Button */
+.button-82-pushable {
+    position: relative;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    outline-offset: 4px;
+    transition: filter 250ms;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.button-82-shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    background: hsl(0deg 0% 0% / 0.25);
+    will-change: transform;
+    transform: translateY(2px);
+    transition: transform 600ms cubic-bezier(.3, .7, .4, 1);
+}
+
+.button-82-edge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    background: linear-gradient(
+    to left,
+    hsl(340deg 100% 16%) 0%,
+    hsl(340deg 100% 32%) 8%,
+    hsl(340deg 100% 32%) 92%,
+    hsl(340deg 100% 16%) 100%
+);
+}
+
+.button-82-front {
+    display: block;
+    position: relative;
+    padding: 9px 30px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: $white;
+    background: hsl(345deg 100% 47%);
+    will-change: transform;
+    transform: translateY(-4px);
+    transition: transform 600ms cubic-bezier(.3, .7, .4, 1);
+}
+
+.button-82-pushable:hover {
+    filter: brightness(110%);
+    -webkit-filter: brightness(110%);
+}
+
+.button-82-pushable:hover .button-82-front {
+    transform: translateY(-6px);
+    transition: transform 250ms cubic-bezier(.3, .7, .4, 1.5);
+}
+
+.button-82-pushable:active .button-82-front {
+    transform: translateY(-2px);
+    transition: transform 34ms;
+}
+
+.button-82-pushable:hover .button-82-shadow {
+    transform: translateY(4px);
+    transition:transform 250ms cubic-bezier(.3, .7, .4, 1.5);
+}
+
+.button-82-pushable:active .button-82-shadow {
+    transform: translateY(1px);
+    transition: transform 34ms;
+}
+
+.button-82-pushable:focus:not(:focus-visible) {
+    outline: none;
 }

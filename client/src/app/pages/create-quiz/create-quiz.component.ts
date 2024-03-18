@@ -14,14 +14,14 @@ export class CreateQuizComponent implements OnInit {
     protected quizModified: Quiz;
     protected modify: boolean;
 
-    /* eslint-disable */
+    // eslint-disable-next-line max-params
     constructor(
         private route: ActivatedRoute,
-        private quizService: QuizService, // removing the warning for constructor params limit
+        private quizService: QuizService,
         private router: Router,
         private dialogService: DialogErrorService,
     ) {}
-    /* eslint-enable */
+
     ngOnInit(): void {
         this.route.queryParams.subscribe((params) => {
             const routeID = params['id'];

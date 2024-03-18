@@ -16,7 +16,17 @@
                 <button class="start-button" (click)="startGame()">Start Game</button>
             </div>
         </div>
-        
+
+        <div *ngIf="countdownValue > 0 && gameStarted" class="modal-background">
+            <div class="room-timer-display">
+                Le jeu commence dans 
+                <div class="timer">
+                    {{ countdownValue }}
+                </div>
+                Nom du Quiz : {{ quizName }}
+            </div>
+        </div>
+
         <app-chat-box class="chat-box"></app-chat-box>
     </div>
 </body>

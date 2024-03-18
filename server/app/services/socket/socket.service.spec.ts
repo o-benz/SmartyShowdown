@@ -1,5 +1,4 @@
 import { Room, UserSocket } from '@app/model/socket/socket.schema';
-import { FAKE_GAME_STAT } from '@app/model/stats/stats.schema';
 import { Server, Socket } from 'socket.io';
 import { SocketService } from './socket.service';
 

@@ -1,5 +1,3 @@
-import { DateController } from '@app/controllers/date/date.controller';
-import { DateService } from '@app/services/date/date.service';
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -18,6 +16,7 @@ import { GameService } from './services/game/game.service';
 import { AdminService } from './services/login/authentication.service';
 import { MultipleChoiceQuestionService } from './services/question-mcq/question-mcq.service';
 import { QuizService } from './services/quiz/quiz.service';
+import { SocketGameManagerService } from './services/socket-game-manager/socket-game-manager.service';
 import { SocketService } from './services/socket/socket.service';
 
 @Module({
@@ -37,10 +36,8 @@ import { SocketService } from './services/socket/socket.service';
         }),
         MongooseModule.forFeature([{ name: MultipleChoiceQuestion.name, schema: multipleChoiceQuestionSchema }]),
     ],
-    controllers: [DateController, QuizController, AuthenticationController, GameController, MultipleChoiceQuestionController],
+    controllers: [QuizController, AuthenticationController, GameController, MultipleChoiceQuestionController],
     providers: [
-        // ChatGateway,
-        DateService,
         GameService,
         Logger,
         QuizService,
@@ -50,6 +47,7 @@ import { SocketService } from './services/socket/socket.service';
         MultipleChoiceQuestionService,
         GameGateway,
         SocketService,
+        SocketGameManagerService,
     ],
 })
 export class AppModule {}

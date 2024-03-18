@@ -1,4 +1,4 @@
-import { GameStats, PlayerInfo, QuestionStats } from '@app/interfaces/game-stats';
+import { PlayerInfo, QuestionStats } from '@app/interfaces/game-stats';
 import { Range } from '@app/interfaces/range';
 
 export const LIMIT_MESSAGES_CHARACTERS = 200;
@@ -65,10 +65,4 @@ export const PLACEHOLDER_PLAYER_STATS: PlayerInfo[] = [
     { name: 'joueur 6', score: 10, bonusCount: 4 },
     { name: 'joueur 7', score: 2, bonusCount: 1 },
 ];
-export const PLACEHOLDER_GAME_STATS: GameStats = {
-    id: '123456',
-    duration: 10,
-    questions: PLACEHOLDER_QUESTIONS_STATS,
-    users: PLACEHOLDER_PLAYER_STATS,
-};
 export const QUIZ_EXPORT_TYPE = 'json';

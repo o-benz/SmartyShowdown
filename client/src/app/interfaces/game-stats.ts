@@ -5,6 +5,7 @@ export interface GameStats {
     duration: number;
     questions: QuestionStats[];
     users: PlayerInfo[];
+    name: string;
 }
 
 export interface QuestionStats {
@@ -24,6 +25,7 @@ export interface PlayerInfo {
     name: string;
     score?: number;
     bonusCount?: number;
+    hasLeft?: boolean;
 }
 
 export interface ServerStats {
@@ -31,6 +33,7 @@ export interface ServerStats {
     duration: number;
     questions: QuestionStatsServer[];
     users: UserSocket[];
+    name: string;
 }
 
 export interface QuestionStatsServer {
@@ -47,11 +50,16 @@ export interface StatsLineServer {
 }
 
 export interface UserSocket {
-    id?: string;
-    username: string;
-    room?: string;
-    score?: number;
-    bonus?: number;
+    data: {
+        id?: string;
+        username: string;
+        room?: string;
+        score?: number;
+        bonus?: number;
+        answered: boolean;
+        firstToAnswer?: boolean;
+        hasLeft?: boolean;
+    };
 }
 
 export interface TimePackage {

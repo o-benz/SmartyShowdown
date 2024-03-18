@@ -9,8 +9,6 @@ import { LoginFormComponent } from '@app/components/login-form/login-form.compon
 })
 export class MainPageComponent {
     constructor(private dialog: MatDialog) {}
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    joinGameParty(): void {}
 
     manageGames(): void {
         this.dialog.open(LoginFormComponent);

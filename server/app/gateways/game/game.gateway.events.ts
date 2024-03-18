@@ -21,6 +21,7 @@ export enum GameEvents {
     ConfirmAnswer = 'confirmAnswer',
     SendMessage = 'sendMessage',
     GetAllMessages = 'getAllMessages',
+    IsAnswerValid = 'isAnswerValid',
 }
 
 export enum GameClientEvents {
@@ -33,6 +34,9 @@ export enum GameClientEvents {
     FinalizeAnswers = 'finalizeAnswers',
     ShowResults = 'showResults',
     EndRound = 'endRound',
+    AnswerChange = 'answerChange',
+    GameStarted = 'gameStarted',
+    GameStartResponse = 'gameStartResponse',
 }
 
 export enum GameEnum {
@@ -41,4 +45,7 @@ export enum GameEnum {
     ErrorMessage = "La salle n'existe pas ou est fermée",
     UserNotValidMessage = "Ce nom d'utilisateur n'est pas valide",
     RoomDoesNotExistMessage = "La salle n'existe pas",
+    CantStartGame = 'Impossible de démarrer le jeu.',
+    OnlyOrganizerCanStart = "Seul l'organisateur peut démarrer le jeu.",
+    RoomLockedOrEmpty = 'Assurez-vous que la salle est verrouillée et non vide.',
 }

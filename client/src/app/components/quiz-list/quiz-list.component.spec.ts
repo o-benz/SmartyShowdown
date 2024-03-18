@@ -7,7 +7,7 @@ import { ImportQuizComponent } from '@app/components/import-quiz/import-quiz.com
 import { Quiz } from '@app/interfaces/quiz-model';
 import { AdminQuizHandler } from '@app/services/admin-quiz-handler/admin-quiz-handler.service';
 import { QuizService } from '@app/services/quiz/quiz.service';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { QuizListComponent } from './quiz-list.component';
 
 describe('QuizListComponent', () => {
@@ -44,6 +44,7 @@ describe('QuizListComponent', () => {
                 { id: '000001', visible: false },
                 { id: '000002', visible: true },
                 { id: '000003', visible: true },
+                { id: '000004', visible: false },
             ] as Quiz[]),
         );
 
@@ -81,21 +82,21 @@ describe('QuizListComponent', () => {
         expect(spy).toHaveBeenCalledWith(['/questionbank']);
     });
 
-    it('delete quiz should remove quiz from list if the service return true', () => {
+    it('delete quiz should throw error if deleted is unsucessful', async () => {
         const id = '000001';
-        const handlerSpy = spyOn(adminQuizHandlerSpy, 'delete').and.returnValue(of());
+        const handlerSpy = spyOn(adminQuizHandlerSpy, 'delete').and.returnValue(throwError(() => new Error('{status: 404}')));
         spyOn(window, 'confirm').and.returnValue(true);
 
-        component.delete(id);
+        await component.delete(id);
 
         expect(handlerSpy).toHaveBeenCalledWith(id);
-        expect(component.quizzes).not.toContain({ id } as Quiz);
+        expect(component.quizzes).toContain({ id, visible: false } as Quiz);
     });
 
-    it('hide quiz should change visibility of quiz on list', () => {
+    it('hide quiz should throw error if hide is unsucessful', async () => {
         const id = '000001';
         const quiz: Quiz = component.quizzes[0];
-        const handlerSpy = spyOn(adminQuizHandlerSpy, 'toggleQuizVisibility').and.returnValue(of({ id, visible: false } as Quiz));
+        const handlerSpy = spyOn(adminQuizHandlerSpy, 'toggleQuizVisibility').and.returnValue(throwError(() => new Error('{status: 404}')));
 
         component.hide(quiz);
 

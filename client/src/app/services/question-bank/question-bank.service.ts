@@ -40,7 +40,7 @@ export class QuestionBankService {
         }
     }
 
-    checkErrors(control: AbstractControl, controlName: string): void {
+    checkErrors(control: AbstractControl, controlName: string): string | null {
         const errorMessages: { [key: string]: string } = {
             required: `${controlName} est nécessaire`,
             min: `${controlName} doit être au moins ${control?.errors?.min?.min}`,
@@ -51,8 +51,7 @@ export class QuestionBankService {
         };
 
         const errorKey = Object.keys(control.errors || {}).find((key) => control.getError(key));
-        if (errorKey) {
-            window.alert(errorMessages[errorKey]);
-        }
+
+        return errorKey ? errorMessages[errorKey] : null;
     }
 }

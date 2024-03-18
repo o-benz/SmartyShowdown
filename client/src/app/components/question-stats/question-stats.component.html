@@ -1,3 +1,14 @@
-<div>
-    <canvasjs-chart [options]="chartOptions" (chartInstance)="getChartInstance($event)"></canvasjs-chart>
+<div class="histogram-container">
+  <div class="histogram">
+      <div *ngFor="let dataPoint of dataPoints" class="bar-container">
+        <div class="bar" [style.height]="(dataPoint.y / maxValue) * 100 + '%'"></div>
+        <div class="bar-info">
+          <span class="label">{{ dataPoint.label }}
+            <p>{{ dataPoint.y }}</p>
+            <p *ngIf="dataPoint.isCorrect">&#10003;</p>
+            <p *ngIf="!dataPoint.isCorrect">&#10007;</p>
+          </span>
+        </div>
+      </div>
+  </div>
 </div>
