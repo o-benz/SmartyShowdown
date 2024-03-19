@@ -34,7 +34,6 @@ Here are SmartyShowdown's various pages:
 ![MainPage](/doc/main-page.png)
 
 - **Admin view**: This is where you can create, modify, delete, export, or import quizzes. You can also manage the question bank and the quiz history.
-![Login](/doc/login.png)
 ![QuizList](/doc/admin-quiz-list.png)
 ![QuestionList](/doc/admin-quiz-question-list.png)
 
