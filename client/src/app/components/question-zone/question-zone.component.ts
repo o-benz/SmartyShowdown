@@ -1,12 +1,12 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
+import { RightAnswerPopupComponent } from '@app/components/right-answer-popup/right-answer-popup.component';
 import { Question } from '@app/interfaces/quiz-model';
 import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { GameService } from '@app/services/game/game.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { TimeService } from '@app/services/time/time.service';
 import { Subscription } from 'rxjs';
-import { RightAnswerPopupComponent } from '../right-answer-popup/right-answer-popup.component';
 
 @Component({
     selector: 'app-question-zone',
@@ -14,7 +14,7 @@ import { RightAnswerPopupComponent } from '../right-answer-popup/right-answer-po
     styleUrls: ['./question-zone.component.scss'],
     providers: [TimeService],
 })
-export class QuestionZoneComponent implements OnChanges, OnInit {
+export class QuestionZoneComponent implements OnChanges, OnInit, OnDestroy {
     @Input() questionTimePackage: { time: number; question: Question; isTimeOver: boolean; mode: string; isOrganizer?: boolean };
     @Output() endTimerEvent: EventEmitter<boolean> = new EventEmitter<boolean>();
     duration: number;
@@ -23,6 +23,9 @@ export class QuestionZoneComponent implements OnChanges, OnInit {
     score = 0;
     previousScore = 0;
     timerSubscription: Subscription | undefined;
+    private gameSubscription: Subscription | undefined;
+
+    // eslint-disable-next-line max-params
     constructor(
         private timeService: TimeService,
         public router: Router,
@@ -47,6 +50,7 @@ export class QuestionZoneComponent implements OnChanges, OnInit {
                             RightAnswerPopupComponent,
                             this.score - this.previousScore,
                             this.score,
+                            this.questionTimePackage.question.points,
                         );
                     }
                 },
@@ -64,8 +68,17 @@ export class QuestionZoneComponent implements OnChanges, OnInit {
                 this.points = this.questionTimePackage.question.points;
                 this.timeService.stopTimer();
                 this.startTimer();
-            }
+                if (this.questionTimePackage.mode === 'test') {
+                    this.timerSubscription = this.timeService.timerEvent.subscribe(() => {
+                        this.lockAnswer();
+                    });
+                }
+            } else this.score = this.gameService.score;
         }
+    }
+    ngOnDestroy(): void {
+        if (this.timerSubscription) this.timerSubscription.unsubscribe();
+        this.gameSubscription?.unsubscribe();
     }
     startTimer() {
         this.timeService.startTimer(this.duration);
@@ -73,5 +86,10 @@ export class QuestionZoneComponent implements OnChanges, OnInit {
     navigateHome() {
         this.socketService.disconnect();
         this.router.navigate(['/home']);
+    }
+    lockAnswer() {
+        this.gameSubscription = this.gameService.postCurrentChoices(this.questionTimePackage.question.text).subscribe((isAnswerCorrect: boolean) => {
+            this.endTimerEvent.emit(isAnswerCorrect);
+        });
     }
 }

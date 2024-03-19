@@ -28,4 +28,5 @@ export const SOCKET_EVENTS = {
     getAllMessages: 'getAllMessages',
     getUser: 'getUserInfo',
     isAnswerValid: 'isAnswerValid',
+    tick: 'tick',
 };

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { take } from 'rxjs';
 import { CountdownService } from './countdown.service';
 
 const DURATION = 1000;
@@ -17,6 +18,22 @@ describe('CountdownService', () => {
 
     it('should be created', () => {
         expect(service).toBeTruthy();
+    });
+
+    it('should start countdown and emit countdownTick', async () => {
+        const duration = 3;
+        let tickCount = 0;
+
+        service.countdownTick.subscribe({
+            next: (value: number) => {
+                expect(value).toBe(duration - tickCount);
+                tickCount++;
+            },
+        });
+
+        service.startCountdown(duration);
+
+        service.countdownTick.pipe(take(duration)).subscribe();
     });
 
     it('should emit countdownEnded when countdown finishes', (done) => {

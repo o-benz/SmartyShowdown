@@ -33,6 +33,10 @@ export class SocketCommunicationService {
         this.socket.emit(event, ...[data, callback].filter((x) => x));
     }
 
+    onTick(action: () => void): void {
+        this.on(SOCKET_EVENTS.tick, action);
+    }
+
     onMessageReceived(action: (message: string) => void): void {
         this.on(SOCKET_EVENTS.receiveMessage, action);
     }
@@ -222,12 +226,12 @@ export class SocketCommunicationService {
 
     private adaptServerStats(serverStats: ServerStats): GameStats {
         const statsOut: GameStats = { id: serverStats.id, duration: serverStats.duration, questions: [], users: [], name: serverStats.name };
-        statsOut.users = serverStats.users.map((usersocket: UserSocket) => {
+        statsOut.users = serverStats.users.map((userSocket: UserSocket) => {
             return {
-                name: usersocket.data.username,
-                score: usersocket.data.score,
-                bonusCount: usersocket.data.bonus,
-                hasLeft: usersocket.data.hasLeft,
+                name: userSocket.data.username,
+                score: userSocket.data.score,
+                bonusCount: userSocket.data.bonus,
+                hasLeft: userSocket.data.hasLeft,
             };
         });
         statsOut.questions = serverStats.questions.map((question) => {

@@ -15,7 +15,6 @@
                             </ng-template>
                         </div>
                         {{ choice.text }}
-                        <!-- <ng-container *ngIf="roundEndedQuestionPackage.isRoundEnded">{{ choice.isCorrect }} ?</ng-container> -->
                         <div class="choice-number2" [attr.data-number]="choiceId + 1">
                             <ng-container *ngIf="!isChoiceSelected(choice); else selectedChoice">
                                 <div>{{ choiceId + 1 }}</div>
@@ -29,7 +28,7 @@
                     </div>
                 </div>
                 <div class="back">
-                    <img src="../../../assets/logo.png" alt="Card Image">
+                    <img src="./assets/logo.png" alt="Card Image">
                 </div>
             </button>
         </div>

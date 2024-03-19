@@ -1,7 +1,20 @@
 import { TestBed } from '@angular/core/testing';
+import {
+    GameStats,
+    PlayerInfo,
+    QuestionStats,
+    QuestionStatsServer,
+    ServerStats,
+    StatsLine,
+    StatsLineServer,
+    UserSocket,
+} from '@app/interfaces/game-stats';
+import { SocketAnswer } from '@app/interfaces/socket-model';
 import { Socket } from 'socket.io-client';
 import { SOCKET_EVENTS } from './socket-communication.constants';
 import { SocketCommunicationService } from './socket-communication.service';
+
+/* eslint-disable max-lines */
 
 class MockSocket {
     emit = jasmine.createSpy('emit');
@@ -38,18 +51,16 @@ describe('SocketCommunicationService', () => {
 
     it('should handle socket on method', () => {
         const spy = spyOn(service.socket, 'on');
-        const callback = () => {
-            /* Do nothing */
-        };
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        const callback = () => {};
         service.on('testEvent', callback);
         expect(spy).toHaveBeenCalledWith('testEvent', callback);
     });
 
     it('should handle socket send method', () => {
         const spy = spyOn(service.socket, 'emit');
-        const callback = () => {
-            /* Do nothing */
-        };
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        const callback = () => {};
         service.send('testEvent', 'testData', callback);
         expect(spy).toHaveBeenCalledWith('testEvent', 'testData', callback);
     });
@@ -93,32 +104,25 @@ describe('SocketCommunicationService', () => {
     it('should set up listener for room closed and leave room', () => {
         const action = jasmine.createSpy('action');
         const onSpy = spyOn(service.socket, 'on');
-
         service.onRoomClosed(action);
-
-        expect(onSpy).toHaveBeenCalledWith(SOCKET_EVENTS.roomClosed, action);
+        expect(onSpy).toHaveBeenCalledWith(SOCKET_EVENTS.roomClosed, jasmine.any(Function));
     });
 
     it('should send ban user event with username', () => {
         const testUsername = 'testUser';
         const sendSpy = spyOn(service, 'send');
-
         service.banUser(testUsername);
-
         expect(sendSpy).toHaveBeenCalledWith(SOCKET_EVENTS.banUser, testUsername);
     });
 
     it('should send logout event when leaving room', () => {
         const sendSpy = spyOn(service, 'send');
-
         service.leaveRoom();
-
         expect(sendSpy).toHaveBeenCalledWith(SOCKET_EVENTS.logout);
     });
     it('should set up an event listener for user list updates', () => {
         const userUpdateAction = jasmine.createSpy('userUpdateAction');
         spyOn(service.socket, 'on');
-
         service.onUserListUpdated(userUpdateAction);
         expect(service.socket.on).toHaveBeenCalledWith(SOCKET_EVENTS.joinedRoom, userUpdateAction);
     });
@@ -126,7 +130,6 @@ describe('SocketCommunicationService', () => {
     it('should set up an event listener for user leaving', () => {
         const userLeftAction = jasmine.createSpy('userLeftAction');
         spyOn(service.socket, 'on');
-
         service.onUserLeft(userLeftAction);
         expect(service.socket.on).toHaveBeenCalledWith(SOCKET_EVENTS.leftRoom, userLeftAction);
     });
@@ -134,38 +137,298 @@ describe('SocketCommunicationService', () => {
     it('should emit lockRoom event with room code', () => {
         const roomCode = 'testRoomCode';
         const emitSpy = spyOn(service.socket, 'emit');
-
         service.lockRoom(roomCode);
-
         expect(emitSpy).toHaveBeenCalledWith(SOCKET_EVENTS.lockRoom, { roomCode });
     });
 
     it('should emit unlockRoom event with room code', () => {
         const roomCode = 'testRoomCode';
         const emitSpy = spyOn(service.socket, 'emit');
-
         service.unlockRoom(roomCode);
-
         expect(emitSpy).toHaveBeenCalledWith(SOCKET_EVENTS.unlockRoom, { roomCode });
     });
 
     describe('onGameStarted', () => {
         it('should set up an event listener for game started and call provided action', () => {
-            // Arrange
             const action = jasmine.createSpy('action');
-            const onSpy = spyOn(service.socket, 'on').and.callFake((event, callback) => {
+            const onSpy = spyOn(service.socket, 'on').and.callFake((event: string, callback: () => void) => {
                 if (event === 'gameStarted') {
-                    callback(); // Simulate the event being emitted
+                    callback();
                 }
                 return service.socket;
             });
-
-            // Act
             service.onGameStarted(action);
-
-            // Assert
             expect(onSpy).toHaveBeenCalledWith('gameStarted', jasmine.any(Function));
             expect(action).toHaveBeenCalled();
+        });
+    });
+
+    it('onMessageReceived should call action when receiveMessage event is emitted', () => {
+        const action = jasmine.createSpy('action');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const onSpy = spyOn(service, 'on').and.callFake((event, callback: (data: any) => void) => {
+            if (event === SOCKET_EVENTS.receiveMessage) {
+                callback('Test message'); // Simulate the event being emitted
+            }
+        });
+        service.onMessageReceived(action);
+        expect(onSpy).toHaveBeenCalledWith(SOCKET_EVENTS.receiveMessage, jasmine.any(Function));
+        expect(action).toHaveBeenCalledWith('Test message');
+    });
+
+    it('getAllMessages should return all messages', (done) => {
+        const messages = ['message1', 'message2', 'message3'];
+        const sendSpy = spyOn(service, 'send').and.callFake((event, data, callback: (data: string[]) => void) => {
+            if (event === SOCKET_EVENTS.getAllMessages) {
+                callback(messages);
+            }
+        });
+        service.getAllMessages().subscribe((res) => {
+            expect(sendSpy).toHaveBeenCalledWith(SOCKET_EVENTS.getAllMessages, null, jasmine.any(Function));
+            expect(res).toEqual(messages);
+            done();
+        });
+    });
+
+    it('onStatsUpdated should call the action when the getStats event is emitted', () => {
+        const mockAction = jasmine.createSpy('action');
+        const mockOn = jasmine.createSpy('on').and.callFake((event, action) => {
+            action();
+        });
+        service.on = mockOn;
+
+        service.onStatsUpdated(mockAction);
+
+        expect(mockOn).toHaveBeenCalledWith(SOCKET_EVENTS.getStats, jasmine.any(Function));
+        expect(mockAction).toHaveBeenCalled();
+    });
+
+    it('onAnswerChange should call the action when the answerChange event is emitted', () => {
+        const mockAction = jasmine.createSpy('action');
+        const mockServerStats = {
+            title: 'testTitle',
+            type: 'testType',
+            points: 100,
+            statLines: [
+                {
+                    label: 'testLabel',
+                    users: ['user1', 'user2'],
+                    nbrOfSelection: 2,
+                },
+            ] as unknown as StatsLine[],
+        } as unknown as QuestionStatsServer;
+        const mockOn = jasmine.createSpy('on').and.callFake((event, action) => {
+            action(mockServerStats);
+        });
+        service.on = mockOn;
+
+        service.onAnswerChange(mockAction);
+
+        expect(mockOn).toHaveBeenCalledWith(SOCKET_EVENTS.answerChange, jasmine.any(Function));
+        expect(mockAction).toHaveBeenCalled();
+    });
+
+    it('onRoomClosed should call the action when the roomClosed event is emitted', () => {
+        const mockAction = jasmine.createSpy('action');
+        const mockOn = jasmine.createSpy('on').and.callFake((event, action) => {
+            action();
+        });
+        service.on = mockOn;
+
+        service.onRoomClosed(mockAction);
+
+        expect(mockOn).toHaveBeenCalledWith(SOCKET_EVENTS.roomClosed, jasmine.any(Function));
+        expect(mockAction).toHaveBeenCalled();
+    });
+
+    it('getUser should return the user', (done) => {
+        const mockUser = {
+            id: 'testId',
+            username: 'testUsername',
+            room: 'testRoom',
+            score: 100,
+            bonus: 10,
+            answered: true,
+            firstToAnswer: true,
+            hasLeft: false,
+        };
+        const mockSend = jasmine.createSpy('send').and.callFake((event, data, callback: (data: unknown) => void) => {
+            callback(mockUser);
+        });
+        service.send = mockSend;
+
+        service.getUser().subscribe((res) => {
+            expect(mockSend).toHaveBeenCalledWith(SOCKET_EVENTS.getUser, null, jasmine.any(Function));
+            expect(res).toEqual(mockUser);
+            done();
+        });
+    });
+
+    it('getStats should return the stats', (done) => {
+        const mockSend = jasmine.createSpy('send').and.callFake((event, data, callback: (data: unknown) => void) => {
+            callback('testStats');
+        });
+        const mockAdaptServerStats = jasmine.createSpy('adaptServerStats').and.returnValue('testStats');
+        service.send = mockSend;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (service as any).adaptServerStats = mockAdaptServerStats;
+        const mockServerStats: ServerStats = {
+            id: 'testId',
+            duration: 100,
+            questions: [],
+            users: [],
+            name: 'testName',
+        };
+        const mockGameStats: GameStats = {
+            id: 'testId',
+            duration: 100,
+            questions: [],
+            users: [],
+            name: 'testName',
+        };
+        mockSend.and.callFake((event, callback) => {
+            expect(event).toBe(SOCKET_EVENTS.getStats);
+            callback(mockServerStats);
+        });
+        mockAdaptServerStats.and.returnValue(mockGameStats);
+        service.getStats().subscribe((gameStats) => {
+            expect(gameStats).toBe(mockGameStats);
+            done();
+        });
+    });
+
+    it('getStats should get stats and adapt server stats', (done) => {
+        const mockSend = jasmine.createSpy('send').and.callFake((event, data, callback: (data: unknown) => void) => {
+            callback('testStats');
+        });
+        service.send = mockSend;
+        const mockServerStats: ServerStats = {
+            id: 'testId',
+            duration: 100,
+            questions: [
+                {
+                    title: 'testTitle',
+                    type: 'testType',
+                    points: 100,
+                    statLines: [{ label: 'testLabel', users: ['un', 'deux'], isCorrect: true }] as StatsLineServer[],
+                },
+            ],
+            users: [{ data: { username: 'testUser', score: 100, bonus: 10, hasLeft: false } } as UserSocket],
+            name: 'testName',
+        };
+        const mockGameStats: GameStats = {
+            id: 'testId',
+            duration: 100,
+            questions: [
+                { title: 'testTitle', type: 'testType', points: 100, statLines: [{ label: 'testLabel', nbrOfSelection: 2, isCorrect: true }] },
+            ] as unknown as QuestionStats[],
+            users: [{ name: 'testUser', score: 100, bonusCount: 10, hasLeft: false } as PlayerInfo],
+            name: 'testName',
+        };
+        mockSend.and.callFake((event, callback) => {
+            expect(event).toBe(SOCKET_EVENTS.getStats);
+            callback(mockServerStats);
+        });
+        service.getStats().subscribe((gameStats) => {
+            expect(gameStats).toEqual(mockGameStats);
+            done();
+        });
+    });
+
+    it('nextQuestion should emit the nextQuestion event', () => {
+        const mockEmit = jasmine.createSpy('emit');
+        service.socket.emit = mockEmit;
+        service.nextQuestion();
+        expect(mockEmit).toHaveBeenCalledWith(SOCKET_EVENTS.nextQuestion);
+    });
+
+    it('endGame should emit the endGame event', () => {
+        const mockEmit = jasmine.createSpy('emit');
+        service.socket.emit = mockEmit;
+        service.endGame();
+        expect(mockEmit).toHaveBeenCalledWith(SOCKET_EVENTS.endGame);
+    });
+
+    it('roundOver should emit the roundOver event', () => {
+        const mockEmit = jasmine.createSpy('emit');
+        service.socket.emit = mockEmit;
+        service.roundOver(0);
+        expect(mockEmit).toHaveBeenCalledWith(SOCKET_EVENTS.roundOver, '0');
+    });
+
+    it('confirmAnswer should emit the confirmAnswer event', () => {
+        const mockEmit = jasmine.createSpy('emit');
+        service.socket.emit = mockEmit;
+        service.confirmAnswer(0);
+        expect(mockEmit).toHaveBeenCalledWith(SOCKET_EVENTS.confirmAnswer, '0');
+    });
+
+    it('isAnswerValid should return an observable of the result', (done) => {
+        const mockSend = jasmine.createSpy('send').and.callFake((event, data, callback: (data: boolean) => void) => {
+            callback(true);
+        });
+        service.send = mockSend;
+        service.isAnswerValid({ answers: [{ text: 'string', isCorrect: true }], questionIndex: 0 }).subscribe((res) => {
+            expect(res).toBeTrue();
+            done();
+        });
+    });
+
+    it('updateUsers should return an observable of the updated users', (done) => {
+        const mockSend = jasmine.createSpy('send').and.callFake((event, data, callback: (data: string[]) => void) => {
+            callback(['user1', 'user2']);
+        });
+        service.send = mockSend;
+        service.updateUsers().subscribe((res) => {
+            expect(res).toEqual(['user1', 'user2']);
+            done();
+        });
+    });
+
+    it('addAnswer should emit the addAnswer event', () => {
+        const mockEmit = jasmine.createSpy('emit');
+        service.socket.emit = mockEmit;
+        service.addAnswer(0, 0);
+        expect(mockEmit).toHaveBeenCalledWith(SOCKET_EVENTS.addAnswer, { answer: 0, questionIndex: 0 });
+    });
+
+    it('getListUsers should return an observable of the list of users', (done) => {
+        const mockSend = jasmine.createSpy('send').and.callFake((event, data, callback: (data: string[]) => void) => {
+            callback(['user1', 'user2']);
+        });
+        service.send = mockSend;
+        service.getListUsers().subscribe((res) => {
+            expect(res).toEqual(jasmine.arrayContaining(['user1', 'user2']));
+            done();
+        });
+    });
+
+    it('roomMessage should return an observable of the response', (done) => {
+        const mockSend = jasmine.createSpy('send').and.callFake((event, data, callback: (data: string) => void) => {
+            callback('testResponse');
+        });
+        service.send = mockSend;
+        service.roomMessage('testMessage').subscribe((res) => {
+            expect(res).toEqual('testResponse' as unknown as SocketAnswer);
+            done();
+        });
+    });
+
+    it('attemptStartGame should return an observable of the result', (done) => {
+        const mockEmit = jasmine.createSpy('emit');
+        const mockOn = jasmine.createSpy('on').and.callFake((event, callback) => {
+            if (event === 'gameStartResponse') {
+                callback({ joined: true });
+            }
+        });
+        service.socket.emit = mockEmit;
+        service.socket.on = mockOn;
+        service.attemptStartGame('testRoomCode').subscribe({
+            next: (res) => {
+                expect(res).toBeTrue();
+                expect(mockEmit).toHaveBeenCalledWith(SOCKET_EVENTS.startGame, { roomCode: 'testRoomCode' });
+                done();
+            },
         });
     });
 });

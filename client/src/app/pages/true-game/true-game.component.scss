@@ -1,4 +1,5 @@
 .content-container {
+    height: 100%;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
 }
@@ -7,15 +8,12 @@
     grid-column: 1 / span 3;
 }
 
-.app-header {
-    grid-column: 1 / span 4; 
-}
-
 .organizer-container {
     grid-column: 1 / span 3;
 }
 
 .chat-box {
+    height: 100%;
     grid-column: 4;
 }
 

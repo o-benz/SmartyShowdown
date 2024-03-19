@@ -2,6 +2,8 @@
 
 SmartyShowdown is a web-based quiz platform that lets you create, play, and share quizzes with others. You can test your knowledge on various topics, compete with other players, and learn something new along the way.
 
+[Try it out!](http://polytechnique-montr-al.gitlab.io/log2990/20241/equipe-101/LOG2990-101/#/home)
+
 ## Table of Contents
 - [Features](#features)
 - [Installation](#installation)
@@ -39,15 +41,20 @@ Here are SmartyShowdown's various pages:
 - **Create session view**: This is where you can select a quiz and create a session for other players to join. You can also test a quiz before creating a session.
 ![CreateGame](/doc/create-game.png)
 
-- **Waiting view**: This is where you can see the players who have joined the session and chat with them. You can also lock the access to the session or start the quiz.
+- **Game Lobby**: This is where you can see the players who have joined the session and chat with them. You can also lock the access to the session or start the quiz.
+![GameLobby](/doc/lobby.png)
 
 - **Join session view**: This is where you can enter a 4-digit code to join a quiz session created by another user.
+![JoinGame](/doc/join-game.png)
 
 - **Game view**: This is where you can see the question and answer it. You can also chat with other players during the game.
 ![GameQCM](/doc/game-qcm.png)
-![GameQCM](/doc/game-qrl.png)
+
+- **Organizer view**: This is what the game's organizer sees throughout the game. He can also chat with other players during the game.
+![OrganizerView](/doc/organizer-view.png)
 
 - **Results view**: This is where you can see the scores and statistics of the quiz session. You can also rate and comment on the quiz.
+![Results](/doc/results.png)
 
 ## Development
 

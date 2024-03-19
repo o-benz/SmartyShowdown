@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Choice, Question } from '@app/interfaces/quiz-model';
+import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { SocketCommunicationService } from '../sockets-communication/socket-communication.service';
 
 @Injectable({
     providedIn: 'root',

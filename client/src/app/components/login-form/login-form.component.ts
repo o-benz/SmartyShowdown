@@ -13,9 +13,8 @@ import { Subscription } from 'rxjs';
 })
 export class LoginFormComponent implements OnDestroy {
     adminConnection: AdminConnection;
-
+    component: { closed: false };
     private loginSubscription: Subscription | null = null;
-    component: { closed: false; };
 
     constructor(
         public dialogRef: MatDialogRef<LoginFormComponent>,

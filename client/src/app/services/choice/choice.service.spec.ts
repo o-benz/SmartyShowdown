@@ -68,4 +68,38 @@ describe('ChoiceService', () => {
             expect(question.choices[question.choices.length - 1].text).toEqual('choice 3');
         }
     });
+
+    it('should not perform delete if choices are undefined', () => {
+        question.choices = undefined;
+        const choiceToDelete = { text: 'choice 1', isCorrect: true };
+        service.deleteMultipleChoice(choiceToDelete, question);
+        expect(question.choices).toBeUndefined();
+    });
+
+    it('should not move the first choice higher', () => {
+        if (question.choices) {
+            service.placeHigher(question.choices[0], question);
+            expect(question.choices[0].text).toEqual('choice 1');
+        }
+    });
+
+    it('should not move the last choice lower', () => {
+        if (question.choices) {
+            const lastChoiceIndex = question.choices.length - 1;
+            service.placeLower(question.choices[lastChoiceIndex], question);
+            expect(question.choices[lastChoiceIndex].text).toEqual('choice 3');
+        }
+    });
+
+    it('should not do anything if choices are undefined in placeHigher', () => {
+        question.choices = undefined;
+        service.placeHigher(mockChoices[0], question);
+        expect(question.choices).toBeUndefined();
+    });
+
+    it('should not do anything if choices are undefined in placeLower', () => {
+        question.choices = undefined;
+        service.placeLower(mockChoices[0], question);
+        expect(question.choices).toBeUndefined();
+    });
 });

@@ -1,7 +1,10 @@
-import { ChangeDetectorRef } from '@angular/core';
+/* eslint-disable max-classes-per-file */
+import { ChangeDetectorRef, Component, Input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
+import { HeaderComponent } from '@app/components/header/header.component';
 import { ErrorMessages } from '@app/interfaces/error-messages';
 import { GameStats } from '@app/interfaces/game-stats';
 import { User } from '@app/interfaces/socket-model';
@@ -10,6 +13,13 @@ import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-er
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Subject, Subscription, of } from 'rxjs';
 import { LobbyPageComponent } from './lobby-page.component';
+
+@Component({ standalone: true, selector: 'app-chat-box', template: '' })
+class ChatStubComponent {}
+@Component({ standalone: true, selector: 'app-waiting-room-list', template: '' })
+class WaitingRoomStubComponent {
+    @Input() isOrganisateur: boolean;
+}
 
 describe('LobbyPageComponent', () => {
     let component: LobbyPageComponent;
@@ -29,6 +39,7 @@ describe('LobbyPageComponent', () => {
             'lockRoom',
             'attemptStartGame',
             'leaveRoom',
+            'getListUsers',
         ]);
         const countdownSpy = jasmine.createSpyObj('CountdownService', ['startCountdown', 'stopCountdown']);
         const dialogErrorSpy = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog', 'closeErrorDialog']);
@@ -37,29 +48,26 @@ describe('LobbyPageComponent', () => {
         countdownSpy.countdownEnded = new Subject<void>();
 
         await TestBed.configureTestingModule({
-            declarations: [LobbyPageComponent],
-            imports: [RouterTestingModule],
+            declarations: [LobbyPageComponent, HeaderComponent],
+            imports: [RouterTestingModule, ChatStubComponent, WaitingRoomStubComponent],
             providers: [
                 { provide: SocketCommunicationService, useValue: socketSpy },
                 { provide: CountdownService, useValue: countdownSpy },
                 { provide: DialogErrorService, useValue: dialogErrorSpy },
                 { provide: ChangeDetectorRef, useValue: jasmine.createSpyObj('ChangeDetectorRef', ['detectChanges']) },
+                { provide: MatDialog, useValue: jasmine.createSpyObj('MatDialog', ['open']) },
             ],
         }).compileComponents();
 
-        socketCommunicationServiceSpy = TestBed.inject(SocketCommunicationService) as jasmine.SpyObj<SocketCommunicationService>;
-        countdownServiceSpy = TestBed.inject(CountdownService) as jasmine.SpyObj<CountdownService>;
-        dialogErrorServiceSpy = TestBed.inject(DialogErrorService) as jasmine.SpyObj<DialogErrorService>;
-        router = TestBed.inject(Router);
-    });
-
-    beforeEach(() => {
         fixture = TestBed.createComponent(LobbyPageComponent);
         component = fixture.componentInstance;
 
         component.countdownSub = new Subscription();
         component.lobbySub = new Subscription();
-
+        socketCommunicationServiceSpy = TestBed.inject(SocketCommunicationService) as jasmine.SpyObj<SocketCommunicationService>;
+        countdownServiceSpy = TestBed.inject(CountdownService) as jasmine.SpyObj<CountdownService>;
+        dialogErrorServiceSpy = TestBed.inject(DialogErrorService) as jasmine.SpyObj<DialogErrorService>;
+        router = TestBed.inject(Router);
         fixture.detectChanges();
     });
 
@@ -86,7 +94,7 @@ describe('LobbyPageComponent', () => {
     });
 
     it('should initialize component properties', () => {
-        expect(component.countdownValue).toEqual(5);
+        expect(component.countdownValue).toEqual(5); // eslint-disable-line @typescript-eslint/no-magic-numbers
         expect(component.roomCode).toBeUndefined();
         expect(component.quizName).toBeUndefined();
         expect(component.roomLocked).toBeFalsy();

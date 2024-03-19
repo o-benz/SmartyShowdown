@@ -15,7 +15,6 @@ const INDEX_NOT_FOUND = -1;
 export class AnswerZoneComponent implements OnChanges, OnDestroy, OnInit {
     @Input() roundEndedQuestionPackage: { isRoundEnded: boolean; question: Question; questionIndex: number; mode: string };
     @Output() qcmFinishedEvent: EventEmitter<boolean> = new EventEmitter<boolean>();
-    @Output() nextQuestionEvent: EventEmitter<boolean> = new EventEmitter<boolean>();
     choices: Choice[] = [];
     textAnswer: string = '';
     // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-magic-numbers
@@ -88,7 +87,6 @@ export class AnswerZoneComponent implements OnChanges, OnDestroy, OnInit {
                         .postCurrentChoices(this.roundEndedQuestionPackage.question.text)
                         .subscribe((isAnswerCorrect: boolean) => {
                             this.qcmFinishedEvent.emit(isAnswerCorrect);
-                            this.nextQuestionEvent.emit(true);
                         });
             }
         }

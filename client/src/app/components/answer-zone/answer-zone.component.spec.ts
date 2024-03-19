@@ -3,6 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Choice, Question } from '@app/interfaces/quiz-model';
 import { GameService } from '@app/services/game/game.service';
+import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { of } from 'rxjs';
 import { AnswerZoneComponent } from './answer-zone.component';
 
@@ -10,6 +11,7 @@ describe('AnswerZoneComponent', () => {
     let component: AnswerZoneComponent;
     let fixture: ComponentFixture<AnswerZoneComponent>;
     let gameServiceSpy: jasmine.SpyObj<GameService>;
+    let socketServiceSpy: jasmine.SpyObj<SocketCommunicationService>;
 
     beforeEach(async () => {
         const gameSpy = jasmine.createSpyObj('GameService', ['postCurrentChoices']);
@@ -27,11 +29,18 @@ describe('AnswerZoneComponent', () => {
                 internalCurrentChoices = value;
             }),
         });
+        socketServiceSpy = jasmine.createSpyObj('SocketCommunicationService', ['onFinalizeAnswers', 'confirmAnswer', 'addAnswer']);
         await TestBed.configureTestingModule({
             declarations: [AnswerZoneComponent],
             imports: [HttpClientTestingModule],
-            providers: [{ provide: GameService, useValue: gameSpy }],
+            providers: [
+                { provide: GameService, useValue: gameSpy },
+                { provide: SocketCommunicationService, useValue: socketServiceSpy },
+            ],
         }).compileComponents();
+        socketServiceSpy.onFinalizeAnswers.and.callFake((callback: () => void) => {
+            callback();
+        });
         fixture = TestBed.createComponent(AnswerZoneComponent);
         component = fixture.componentInstance;
         gameServiceSpy = TestBed.inject(GameService) as jasmine.SpyObj<GameService>;
@@ -83,6 +92,27 @@ describe('AnswerZoneComponent', () => {
         component.ngOnChanges();
         expect(gameServiceSpy.currentChoices).toEqual([]);
     });
+
+    it('should call onFinalizeAnswers on init and set isChoiceFinal to true', () => {
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: true,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
+        component.ngOnInit();
+
+        expect(socketServiceSpy.onFinalizeAnswers).toHaveBeenCalled();
+        expect(gameServiceSpy.isChoiceFinal).toBeTrue();
+        expect(socketServiceSpy.confirmAnswer).toHaveBeenCalledWith(mockRoundEndedQuestionPackage.questionIndex);
+    });
+
     it('should lock answer and emit qcmFinishedEvent when lockAnswer is called', () => {
         const mockQuestion: Question = {
             type: 'QCM',
@@ -99,7 +129,7 @@ describe('AnswerZoneComponent', () => {
                 choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
             },
             questionIndex: 1,
-            mode: '',
+            mode: 'test',
         };
         component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         component.textAnswer = '';
@@ -129,7 +159,7 @@ describe('AnswerZoneComponent', () => {
                 choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
             },
             questionIndex: 1,
-            mode: '',
+            mode: 'test',
         };
         component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         component.textAnswer = ' ALLO';

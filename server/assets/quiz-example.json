@@ -4,8 +4,8 @@
     "visible": true,
     "title": "Questionnaire sur le JS",
     "description": "question 1",
-    "duration": 10,
-    "lastModification": "2024-03-12T19:39:18.898Z",
+    "duration": 60,
+    "lastModification": "2024-03-18T15:05:12.354Z",
     "questions": [
       {
         "type": "QCM",
@@ -96,7 +96,7 @@
   },
   {
     "id": "1a2b3e",
-    "visible": true,
+    "visible": false,
     "title": "Questionnaire sur le JS 3",
     "description": "Questions de pratique sur le langage JavaScript",
     "duration": 60,
@@ -143,7 +143,7 @@
   },
   {
     "id": "1a2b3f",
-    "visible": true,
+    "visible": false,
     "title": "Questionnaire sur le JS 4",
     "description": "Questions de pratique sur le langage JavaScript",
     "duration": 60,
@@ -190,7 +190,7 @@
   },
   {
     "id": "1a2b3g",
-    "visible": true,
+    "visible": false,
     "title": "Questionnaire sur le JS 5",
     "description": "Questions de pratique sur le langage JavaScript",
     "duration": 60,
@@ -337,7 +337,7 @@
   },
   {
     "id": "198733",
-    "visible": true,
+    "visible": false,
     "title": "Questionnaire sur le JS 10",
     "description": "Questions de pratique sur le langage JavaScript",
     "duration": 60,
@@ -382,6 +382,246 @@
           },
           {
             "text": "Oui",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "435103",
+    "visible": true,
+    "title": "Culture Générale",
+    "description": "Le test est un quiz de culture générale comprenant dix questions à choix multiples portant sur divers sujets, avec des durées allant de 15 à 25 secondes par question.",
+    "duration": 20,
+    "lastModification": "2024-03-18T21:33:44.824Z",
+    "questions": [
+      {
+        "type": "QCM",
+        "text": "Quelle est la capitale de l'Australie ?",
+        "points": 10,
+        "choices": [
+          {
+            "text": "Sydney",
+            "isCorrect": false
+          },
+          {
+            "text": "Melbourne",
+            "isCorrect": false
+          },
+          {
+            "text": "Canberra",
+            "isCorrect": true
+          },
+          {
+            "text": "Perth",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "type": "QCM",
+        "text": "Qui a peint la Joconde ?",
+        "points": 10,
+        "choices": [
+          {
+            "text": "Vincent van Gogh",
+            "isCorrect": false
+          },
+          {
+            "text": "Leonardo da Vinci",
+            "isCorrect": true
+          },
+          {
+            "text": "Pablo Picasso",
+            "isCorrect": false
+          },
+          {
+            "text": "Michel-Ange",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "type": "QCM",
+        "text": "Quel est le plus grand océan du monde ?",
+        "points": 10,
+        "choices": [
+          {
+            "text": "L'océan Atlantique",
+            "isCorrect": false
+          },
+          {
+            "text": "L'océan Indien",
+            "isCorrect": false
+          },
+          {
+            "text": "L'océan Arctique",
+            "isCorrect": false
+          },
+          {
+            "text": "L'océan Pacifique",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "type": "QCM",
+        "text": "Quel pays est célèbre pour ses pyramides ?",
+        "points": 10,
+        "choices": [
+          {
+            "text": "Mexique",
+            "isCorrect": false
+          },
+          {
+            "text": "Brésil",
+            "isCorrect": false
+          },
+          {
+            "text": "Égypte",
+            "isCorrect": true
+          },
+          {
+            "text": "Grèce",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "type": "QCM",
+        "text": "Qui a écrit \"Roméo et Juliette\" ?",
+        "points": 10,
+        "choices": [
+          {
+            "text": "William Shakespeare",
+            "isCorrect": true
+          },
+          {
+            "text": "Charles Dickens",
+            "isCorrect": false
+          },
+          {
+            "text": "Jane Austen",
+            "isCorrect": false
+          },
+          {
+            "text": "Grèce",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "type": "QCM",
+        "text": "Quelle est la plus haute montagne du monde ?",
+        "points": 10,
+        "choices": [
+          {
+            "text": "Mont Everest",
+            "isCorrect": true
+          },
+          {
+            "text": "Mont Kilimandjaro",
+            "isCorrect": false
+          },
+          {
+            "text": "Mont Fuji",
+            "isCorrect": false
+          },
+          {
+            "text": "Mont McKinley",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "type": "QCM",
+        "text": "Quel est le plus grand désert du monde ?",
+        "points": 10,
+        "choices": [
+          {
+            "text": "Le désert du Kalahari",
+            "isCorrect": false
+          },
+          {
+            "text": "Le désert de Gobi",
+            "isCorrect": false
+          },
+          {
+            "text": "Le Sahara",
+            "isCorrect": true
+          },
+          {
+            "text": " Le désert d'Atacama",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "type": "QCM",
+        "text": "Qui a découvert la théorie de la relativité ?",
+        "points": 10,
+        "choices": [
+          {
+            "text": "Isaac Newton",
+            "isCorrect": false
+          },
+          {
+            "text": "Stephen Hawking",
+            "isCorrect": false
+          },
+          {
+            "text": "Galilée",
+            "isCorrect": false
+          },
+          {
+            "text": "Albert Einstein",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "type": "QCM",
+        "text": "Quel est l'inventeur du téléphone ?",
+        "points": 10,
+        "choices": [
+          {
+            "text": "Thomas Edison",
+            "isCorrect": false
+          },
+          {
+            "text": "Alexander Graham Bell",
+            "isCorrect": true
+          },
+          {
+            "text": "Nikola Tesla",
+            "isCorrect": false
+          },
+          {
+            "text": "Guglielmo Marconi",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "type": "QCM",
+        "text": "Quel est le plus grand animal terrestre ?",
+        "points": 10,
+        "choices": [
+          {
+            "text": "Éléphant",
+            "isCorrect": true
+          },
+          {
+            "text": "Girafe",
+            "isCorrect": false
+          },
+          {
+            "text": "Rhinocéros",
+            "isCorrect": false
+          },
+          {
+            "text": "Hippopotame",
             "isCorrect": false
           }
         ]

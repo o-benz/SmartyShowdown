@@ -2,7 +2,7 @@ import { GameClientEvents, GameEnum } from '@app/gateways/game/game.gateway.even
 import { Room, SocketAnswer, UserSocket } from '@app/model/socket/socket.schema';
 import { Injectable } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-const NOTFOUND = -1;
+
 @Injectable()
 export class SocketService {
     private server: Server;
@@ -125,7 +125,7 @@ export class SocketService {
     }
 
     findSocketUser(room: Room, username: string): UserSocket {
-        return room.gameStats.users.find((user) => user.data.username === username);
+        if (room) return room.gameStats.users.find((user) => user.data.username === username);
     }
 
     addToBannedList(room: Room, username: string): void {

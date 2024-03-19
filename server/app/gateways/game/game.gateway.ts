@@ -4,12 +4,14 @@ import { QuizService } from '@app/services/quiz/quiz.service';
 import { SocketGameManagerService } from '@app/services/socket-game-manager/socket-game-manager.service';
 import { SocketService } from '@app/services/socket/socket.service';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+
+const TICK_MS = 1000;
 
 @WebSocketGateway({ cors: true })
 @Injectable()
-export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
+export class GameGateway implements OnGatewayDisconnect, OnModuleInit, OnGatewayInit {
     @WebSocketServer() private server: Server;
 
     protected rooms = new Map<string, Room>();
@@ -178,6 +180,12 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
             if (await this.socketService.destroyRoom(socket, socket.data.room, room)) this.destroyRoom(socket);
             this.leaveRoom(socket);
         }
+    }
+
+    afterInit() {
+        setInterval(() => {
+            this.server.emit('tick', {});
+        }, TICK_MS);
     }
 
     onModuleInit() {

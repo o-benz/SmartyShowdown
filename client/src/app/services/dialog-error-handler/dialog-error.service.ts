@@ -46,10 +46,14 @@ export class DialogErrorService {
         this.dialog.closeAll();
     }
 
-    openCustomDialog<T>(message: string[], dialogComponent: ComponentType<T>, points: number, score: number): void {
+    // eslint-disable-next-line max-params
+    openCustomDialog<T>(message: string[], dialogComponent: ComponentType<T>, points: number, score: number, questionPoints: number): void {
         this.answerArray = message;
         this.pointsGained = points;
         this.errorMessage = `+${points} points. Votre score est ${score}!`;
         this.dialog.open(dialogComponent);
+        if (points > questionPoints) {
+            this.errorMessage = `+${points} points. Votre score est ${score}! Vous avez eu le bonus!`;
+        }
     }
 }

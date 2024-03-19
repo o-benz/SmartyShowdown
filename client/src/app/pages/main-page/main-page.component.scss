@@ -88,44 +88,40 @@ header {
     color: $hover-green;
 }
 
-.css-king {
+span{
     position: relative;
 }
 
-.css-king:hover::before {
+span:hover::before {
+    top: -475px;
+    transform: scale(0.3);
+    position: absolute;
+    opacity: 0;
+    animation: crownAppear 4s forwards;
+}
+
+span:nth-child(1):hover::before {
     content: $css-king;
-    top: -475px;
-    left: -250px;
-    transform: scale(0.3);
-    position: absolute;
-    opacity: 0;
-    animation: crownAppear 4s forwards;
+    left: -260px;
 }
 
-.scout-king {
-    position: relative;
-}
-
-.scout-king:hover::before {
-    content: $scout-king;
-    top: -380px;
-    left: -250px;
-    transform: scale(0.4);
-    position: absolute;
-    opacity: 0;
-    animation: crownAppear 4s forwards;
-}
-
-.carry-king {
-    position: relative;
-}
-
-.carry-king:hover::before {
+span:nth-child(5):hover::before {
     content: $carry-king;
-    top: -475px;
-    left: -265px;
-    transform: scale(0.3);
-    position: absolute;
-    opacity: 0;
-    animation: crownAppear 4s forwards;
+    left: -300px;
+}
+
+span:nth-child(6):hover::before {
+    left: -335px;
+    content: $scout-king;
+}
+
+@keyframes popIn {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }

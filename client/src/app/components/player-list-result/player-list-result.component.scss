@@ -14,6 +14,8 @@
     }
   
   .player-list-container h4 {
+    text-align: center;
+    user-select: none;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     margin: 0;

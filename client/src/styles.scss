@@ -2,39 +2,9 @@
 @include mat.core();
 
 /* Animations */
-@keyframes rotateIn {
-    from {
-        transform: rotateY(0deg);
-    }
-    to {
-        transform: rotateY(180deg);
-    }
-}
-
-@keyframes fadeInOut {
-    0% {
-        opacity: 0;
-    }
-    100% {
-        opacity: 1;
-        backface-visibility: visible;
-    }
-}
-
 @keyframes dropIn {
     0% {
         transform: translateY(-100%);
-        opacity: 0;
-    }
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes popIn {
-    0% {
-        transform: translateY(100%);
         opacity: 0;
     }
     100% {
@@ -190,6 +160,10 @@ app-root{
     height: 100%;
 }
 
+app-new-question-form {
+    width: 100%;
+}
+
 ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
     user-select: none;
     padding: 0px !important;
@@ -245,7 +219,7 @@ app-root{
     position: relative;
     padding: 9px 30px;
     border-radius: 12px;
-    font-size: 0.9rem;
+    font-size: 2vmin;
     font-weight: bold;
     color: $white;
     background: hsl(345deg 100% 47%);

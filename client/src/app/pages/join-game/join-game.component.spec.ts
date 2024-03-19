@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NavigationStart, Router } from '@angular/router';
 import { HeaderComponent } from '@app/components/header/header.component';
-import { SocketAnswer } from '@app/interfaces/socket-model';
+import { Naviguation, SocketAnswer } from '@app/interfaces/socket-model';
 import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Observable, Subscription, of } from 'rxjs';
@@ -90,4 +90,13 @@ describe('JoinGameComponent', () => {
 
         expect(component['socketSubscription'].closed).toBeTrue();
     }));
+
+    it('should disconnect socket when back navigation is detected', async () => {
+        mockRouter.events = of(new NavigationStart(0, 'some-url'));
+        component.ngOnInit();
+
+        mockRouter.events = of(new NavigationStart(1, 'some-url', Naviguation.Back));
+        component.ngOnInit();
+        expect(socketServiceSpy.disconnect).toHaveBeenCalled();
+    });
 });

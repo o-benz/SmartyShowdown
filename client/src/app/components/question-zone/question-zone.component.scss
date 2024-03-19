@@ -18,6 +18,8 @@
 }
 
 .question {
+    max-width: 100%;
+    word-wrap: break-word;
     margin-block-start: 0;
     margin-block-end: 0;
     font-size: 120%;
@@ -70,14 +72,4 @@
     justify-content: center;
     align-items: center;
     margin-top: 2%;
-}
-
-.abandon-button {
-    border-radius: 5px;
-    border: none;
-    background-color: $red;
-    color: $white;
-    display: flex;
-    font-size: 16px;
-    cursor: pointer;
 }

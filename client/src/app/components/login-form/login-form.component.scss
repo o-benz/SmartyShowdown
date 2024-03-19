@@ -3,12 +3,12 @@
 ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
   user-select: none;
   padding: 0px !important;
-  border-radius: 15px !important;
   display: block !important;
 }
 
 form {
   padding: 10px;
+  border-radius: 15px;
   background-color: $white;
 }
 

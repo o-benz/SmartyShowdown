@@ -96,4 +96,20 @@ describe('CreateQuizComponent', () => {
         expect(quizServiceSpy.addQuiz).toHaveBeenCalled();
         expect(component['router'].navigate).toHaveBeenCalled();
     });
+
+    it('should open error dialog if adding is unsucessful', () => {
+        quizServiceSpy.addQuiz.and.returnValue(of(false));
+        component['quizModified'] = {
+            id: '',
+            visible: true,
+            title: 'title',
+            description: 'description',
+            duration: 10,
+            lastModification: '',
+            questions: [],
+        };
+        component.onSubmit();
+        expect(quizServiceSpy.addQuiz).toHaveBeenCalled();
+        expect(mockDialogErrorService.openErrorDialog).toHaveBeenCalled();
+    });
 });

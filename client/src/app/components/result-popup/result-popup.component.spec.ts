@@ -1,19 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
 import { TimeService } from '@app/services/time/time.service';
 import { ResultPopupComponent } from './result-popup.component';
 
 describe('ResultPopupComponent', () => {
     let component: ResultPopupComponent;
     let fixture: ComponentFixture<ResultPopupComponent>;
+    let errorServiceSpy: jasmine.SpyObj<DialogErrorService>;
 
     beforeEach(() => {
         const timeSpy = jasmine.createSpyObj('timeServiceSpy', ['timerEvent']);
         TestBed.configureTestingModule({
             declarations: [ResultPopupComponent],
-            providers: [{ provide: TimeService, useValue: timeSpy }],
+            providers: [
+                { provide: TimeService, useValue: timeSpy },
+                { provide: DialogErrorService, useValue: jasmine.createSpyObj('DialogErrorService', ['closeErrorDialog']) },
+            ],
         }).compileComponents();
         fixture = TestBed.createComponent(ResultPopupComponent);
+        errorServiceSpy = TestBed.inject(DialogErrorService) as jasmine.SpyObj<DialogErrorService>;
+        errorServiceSpy.closeErrorDialog.and.returnValue();
         component = fixture.componentInstance;
         component.questionBooleanPackage = { isAnswerCorrect: false, question: { type: '', text: '', points: 0 } };
         fixture.detectChanges();

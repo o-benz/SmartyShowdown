@@ -37,7 +37,7 @@ export class SocketGameManagerService {
     }
 
     canConfirmAnswer(socketUser: UserSocket): boolean {
-        return socketUser && !socketUser.data.answered;
+        return Boolean(socketUser && !socketUser.data.answered);
     }
 
     finishQuestion(room: Room, questionIndex: string): void {
@@ -45,8 +45,8 @@ export class SocketGameManagerService {
     }
 
     startGame(room: Room, socket: Socket): void {
-        const sockets = room?.gameStats.users;
-        const numPlayers = sockets.length;
+        const sockets = room?.gameStats?.users;
+        const numPlayers = sockets?.length;
         const isOrganizer = socket.data.username === GameEnum.Organizer;
 
         if (room && !room.isOpen && numPlayers >= 1 && isOrganizer) {
@@ -104,7 +104,7 @@ export class SocketGameManagerService {
     }
 
     isMessageValid(message: string): boolean {
-        return message && message.trim() !== '';
+        return Boolean(message && message.trim() !== '');
     }
 
     handleRoomMessage(room: Room, message: string): void {

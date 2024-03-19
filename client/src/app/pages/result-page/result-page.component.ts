@@ -11,24 +11,32 @@ import { Observable, Subject, Subscription, of } from 'rxjs';
     styleUrls: ['./result-page.component.scss'],
 })
 export class ResultPageComponent implements OnInit {
-    protected gameStats: GameStats;
+    protected gameStats: GameStats = {
+        id: '',
+        questions: [],
+        duration: 0,
+        users: [],
+        name: '',
+    };
     protected playerSubject: Observable<PlayerInfo[]>;
     protected selectedQuestion = new Subject<QuestionStats>();
-    private questionIndex: number = 0;
+    protected totalQuestions: number;
+    protected questionIndex: number = 0;
     private subscription: Subscription;
 
     constructor(
         private socketService: SocketCommunicationService,
         private gameService: GameService,
+        private statService: StatService,
     ) {}
 
     ngOnInit(): void {
         this.subscription = this.socketService.getStats().subscribe({
             next: (value) => {
                 this.gameStats = value;
-                this.gameStats.users = this.sortPlayerByPoints(this.gameStats.users);
-                this.playerSubject = of(StatService.sortPlayerByPoints(this.gameStats.users));
+                this.playerSubject = of(this.statService.sortPlayerByPoints(this.gameStats.users));
                 this.selectedQuestion.next(this.gameStats.questions[0]);
+                this.totalQuestions = this.gameStats.questions.length;
             },
             complete: () => {
                 if (this.subscription) this.subscription.unsubscribe();
@@ -41,13 +49,5 @@ export class ResultPageComponent implements OnInit {
             this.questionIndex += direction;
             this.selectedQuestion.next(this.gameStats.questions[this.questionIndex]);
         }
-    }
-
-    sortPlayerByPoints(users: PlayerInfo[]): PlayerInfo[] {
-        return users.sort((a, b) => {
-            if ((a.score ?? 0) > (b.score ?? 0)) return -1;
-            if ((a.score ?? 0) < (b.score ?? 0)) return 1;
-            return a.name.localeCompare(b.name);
-        });
     }
 }

@@ -7,11 +7,11 @@
                 <app-question-zone
                     class="question-zone"
                     [questionTimePackage]="{ time: this.time, question: this.currentQuestion, isTimeOver: this.isTimeOver, mode: mode}"
-                    (endTimerEvent)="nextQuestion"
+                    (endTimerEvent)="calculateScore($event)"
                 ></app-question-zone>
     
                 <app-answer-zone class="answer-zone" [roundEndedQuestionPackage]="{ isRoundEnded: this.isRoundFinished, question: this.currentQuestion, questionIndex: this.questionIndex, mode: mode}" 
-                 (qcmFinishedEvent)="calculateScore($event)" (nextQuestionEvent)="changeQuestion($event)"></app-answer-zone>
+                 (qcmFinishedEvent)="calculateScore($event)"></app-answer-zone>
             </div>
         </ng-container>
         <ng-container *ngIf="this.isOrganizer">

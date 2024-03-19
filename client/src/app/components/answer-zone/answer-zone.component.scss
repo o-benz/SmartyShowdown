@@ -1,5 +1,24 @@
 @import '../../../styles.scss';
 
+@keyframes rotateIn {
+    from {
+        transform: rotateY(0deg);
+    }
+    to {
+        transform: rotateY(180deg);
+    }
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+        backface-visibility: visible;
+    }
+}
+
 .scrollable-list {
     animation: crownAppear 0.6s ease forwards;
     padding: 1%;
@@ -28,9 +47,11 @@
 
 .front {
     transform: rotateY(180deg);
+    animation: fadeInOut 1s ease forwards;
 }
 
 .back {
+    animation: fadeInOut 0.5s ease forwards reverse;
     z-index: 1;
     img {
         height: 60%;
@@ -65,56 +86,40 @@
 
 .qst {
     perspective: 1000px;
-    animation: rotateIn 0.8s ease forwards;
     transform-style: preserve-3d;
-}
-
-.qst:nth-child(1) {
     animation: rotateIn 1s ease forwards;
 }
 
+.qst:nth-child(1) {
+    animation-delay: 0.2s;
+}
+
 .qst:nth-child(2) {
-    animation: rotateIn 1.5s ease forwards;
+    animation-delay: 0.4s;
 }
 
 .qst:nth-child(3) {
-    animation: rotateIn 2s ease forwards;
+    animation-delay: 0.6s;
 }
 
 .qst:nth-child(4) {
-    animation: rotateIn 2.5s ease forwards;
+    animation-delay: 0.8s;
 }
 
-.qst:nth-child(1) .front {
-    animation: fadeInOut 1s ease forwards;
+.qst:nth-child(1) .front, .qst:nth-child(1) .back {
+    animation-delay: 0.2s;
 }
 
-.qst:nth-child(1) .back {
-    animation: fadeInOut 0.5s ease forwards reverse;
+.qst:nth-child(2) .front, .qst:nth-child(2) .back {
+    animation-delay: 0.4s;
 }
 
-.qst:nth-child(2) .front {
-    animation: fadeInOut 1.5s ease forwards;
+.qst:nth-child(3) .front, .qst:nth-child(3) .back {
+    animation-delay: 0.6s;
 }
 
-.qst:nth-child(2) .back {
-    animation: fadeInOut 0.75s ease forwards reverse;
-}
-
-.qst:nth-child(3) .front {
-    animation: fadeInOut 2s ease forwards;
-}
-
-.qst:nth-child(3) .back {
-    animation: fadeInOut 1s ease forwards reverse;
-}
-
-.qst:nth-child(4) .front {
-    animation: fadeInOut 2.5s ease forwards;
-}
-
-.qst:nth-child(4) .back {
-    animation: fadeInOut 1.25s ease forwards reverse;
+.qst:nth-child(4) .front , .qst:nth-child(4) .back{
+    animation-delay: 0.8s;
 }
 
 .choice {

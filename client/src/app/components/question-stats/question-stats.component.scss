@@ -1,7 +1,9 @@
 @import '../../../styles.scss';
 
 .label{
+    color: $white;
     display: flex;
+    text-align: center;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
@@ -22,7 +24,7 @@ p {
     display: flex;
     justify-content: space-around;
     align-items: flex-end;
-    height: 41vmin;
+    height: 39vmin;
     border: none;
     border-radius: 15px;
     padding: 10px;

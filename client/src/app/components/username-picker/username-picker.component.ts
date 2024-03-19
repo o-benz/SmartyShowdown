@@ -12,10 +12,11 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./username-picker.component.scss'],
 })
 export class UsernamePickerComponent {
-    private socketSubscription: Subscription;
     protected roomCode: string;
     protected username: string;
+    private socketSubscription: Subscription;
 
+    // eslint-disable-next-line max-params
     constructor(
         public dialogRef: MatDialogRef<UsernamePickerComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { roomCode: string },

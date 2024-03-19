@@ -1,15 +1,27 @@
-import { TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
+import { TestBed, fakeAsync } from '@angular/core/testing';
+import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { TimeService } from './time.service';
 
 describe('TimeService', () => {
     let timeService: TimeService;
-    const TIMEOUT = 5;
-    const MS_SECOND = 1000;
+    let mockSocketServiceSpy: jasmine.SpyObj<SocketCommunicationService>;
+    // J'ai besoin de Function
+    // eslint-disable-next-line
+    let tickCallback: Function;
 
     beforeEach(() => {
-        TestBed.configureTestingModule({
-            providers: [TimeService],
+        mockSocketServiceSpy = jasmine.createSpyObj('SocketCommunicationService', ['onTick']);
+
+        // J'ai besoin de Function
+        // eslint-disable-next-line
+        mockSocketServiceSpy.onTick.and.callFake((callback: Function) => {
+            tickCallback = callback;
         });
+
+        TestBed.configureTestingModule({
+            providers: [TimeService, { provide: SocketCommunicationService, useValue: mockSocketServiceSpy }],
+        });
+
         timeService = TestBed.inject(TimeService);
     });
 
@@ -17,14 +29,16 @@ describe('TimeService', () => {
         expect(timeService).toBeTruthy();
     });
 
-    it('startTimer should initialize time and decrease it every second', fakeAsync(() => {
-        timeService.startTimer(TIMEOUT);
-        expect(timeService.time).toEqual(TIMEOUT);
-        tick(MS_SECOND);
-        expect(timeService.time).toEqual(TIMEOUT - 1);
-        tick(MS_SECOND * (TIMEOUT - 1));
+    it('startTimer should initialize time and decrease it on each tick', fakeAsync(() => {
+        timeService.startTimer(3);
+        expect(timeService.time).toEqual(3);
+        tickCallback();
+        expect(timeService.time).toEqual(2);
+        tickCallback();
+        expect(timeService.time).toEqual(1);
+
+        tickCallback();
         expect(timeService.time).toEqual(0);
-        flush();
     }));
 
     it('timer should emit event when time reaches zero', fakeAsync(() => {
@@ -34,26 +48,24 @@ describe('TimeService', () => {
         });
 
         timeService.startTimer(1);
-        tick(MS_SECOND);
+        tickCallback();
         expect(timerFinished).toBeTrue();
-        flush();
     }));
 
     it('startTimer should not start a new timer if one is already running', fakeAsync(() => {
-        timeService.startTimer(TIMEOUT);
-        tick(MS_SECOND);
-        timeService.startTimer(TIMEOUT);
-        expect(timeService.time).toEqual(TIMEOUT - 1);
-        timeService.stopTimer();
-        flush();
+        const TIME = 5;
+        timeService.startTimer(3);
+        tickCallback();
+        timeService.startTimer(TIME);
+        tickCallback();
+        expect(timeService.time).toEqual(1);
     }));
 
     it('stopTimer should stop the timer', fakeAsync(() => {
-        timeService.startTimer(TIMEOUT);
-        tick(MS_SECOND * 2);
+        timeService.startTimer(3);
+        tickCallback();
         timeService.stopTimer();
-        tick(MS_SECOND * 3);
-        expect(timeService.time).toEqual(TIMEOUT - 2);
-        flush();
+        tickCallback();
+        expect(timeService.time).toEqual(2);
     }));
 });

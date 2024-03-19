@@ -1,6 +1,7 @@
 @import '../../../styles.scss';
 
 .chat-area-container {
+    height: 95%;
     box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
     display: flex;
     flex-direction: column;
@@ -48,14 +49,8 @@
     background-color: $hover-green;
 }
 
-.chat-text {
-    max-width: 270px;
-    overflow-x: auto;
-    white-space: normal;
-}
-
 .message-box {
-    max-width: 270px;
+    max-width: 250px;
     margin: 8px 0;
     padding: 12px 18px;
     border-radius: 20px;

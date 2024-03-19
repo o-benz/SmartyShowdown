@@ -61,6 +61,7 @@ export class TrueGameComponent implements OnInit, OnDestroy {
         let id;
         const url = this.route.snapshot.url.toString();
         if (url.includes('test')) {
+            this.socketService.connect();
             this.mode = 'test';
             id = this.route.snapshot.paramMap.get('id');
 
@@ -147,6 +148,9 @@ export class TrueGameComponent implements OnInit, OnDestroy {
     }
 
     calculateScore(isAnswerCorrect: boolean) {
+        if (this.mode === 'test') {
+            this.isRoundFinished = true;
+        }
         if (isAnswerCorrect) {
             if (this.mode === 'test') {
                 this.gameService.score += this.currentQuestion.points * this.bonus;
@@ -158,9 +162,5 @@ export class TrueGameComponent implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.gameSubscription?.unsubscribe();
-    }
-
-    changeQuestion(isRoundFinished: boolean): void {
-        this.isRoundFinished = isRoundFinished;
     }
 }
