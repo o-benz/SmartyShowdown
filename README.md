@@ -35,7 +35,7 @@ Here are SmartyShowdown's various pages:
 
 - **Admin view**: This is where you can create, modify, delete, export, or import quizzes. You can also manage the question bank and the quiz history.
 ![QuizList](/doc/admin-quiz-list.png)
-![QuestionList](/doc/admin-quiz-question-list.png)
+![QuestionList](/doc/admin-quiz-list.png)
 
 - **Create session view**: This is where you can select a quiz and create a session for other players to join. You can also test a quiz before creating a session.
 ![CreateGame](/doc/create-game.png)
