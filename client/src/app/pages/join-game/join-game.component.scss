@@ -24,7 +24,7 @@ h1{
   background-color: $background-purple;
   padding: 5vmin;
   border-radius: 15px;
-  box-shadow: 0 0 10px $chat-input-shadow;
+  box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
 }
 
 input {

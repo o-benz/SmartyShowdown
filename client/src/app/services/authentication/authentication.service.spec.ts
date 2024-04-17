@@ -57,18 +57,4 @@ describe('AuthenticationService', () => {
         const req = httpTestingController.expectOne(`${environment.serverUrl}/auth/login`);
         req.flush(mockResponse);
     });
-
-    it('#attemptLogin should alert on failure', () => {
-        const testPassword = 'testPassword';
-        const alertSpy = spyOn(window, 'alert');
-
-        service.attemptLogin(testPassword).subscribe({
-            error: () => {
-                expect(alertSpy).toHaveBeenCalledWith('Accès refusé');
-            },
-        });
-
-        const req = httpTestingController.expectOne(`${environment.serverUrl}/auth/login`);
-        req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
-    });
 });

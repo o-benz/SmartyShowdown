@@ -4,17 +4,10 @@ export interface Choice {
 }
 
 export interface BaseQuestion {
-    type: TypeEnum;
+    type: string;
     text: string;
     points: number;
-}
-
-export interface BaseMultipleChoiceQuestion extends BaseQuestion {
-    choices: Choice[];
-}
-
-export interface BaseLongAnswerQuestion extends BaseQuestion {
-    answer: string;
+    choices?: Choice[];
 }
 
 export interface Question extends BaseQuestion {
@@ -22,13 +15,8 @@ export interface Question extends BaseQuestion {
     _id: string;
 }
 
-export interface MultipleChoiceQuestion extends BaseMultipleChoiceQuestion, Question {}
-
-export interface LongAnswerQuestion extends BaseLongAnswerQuestion, Question {}
-
-export type QuestionModel = MultipleChoiceQuestion | LongAnswerQuestion;
-
 export enum TypeEnum {
     QCM = 'QCM',
     QRL = 'QRL',
+    ALL = 'ALL',
 }

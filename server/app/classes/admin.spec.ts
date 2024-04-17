@@ -20,9 +20,17 @@ describe('Admin', () => {
 
         expect(isPasswordCorrect).toBeTruthy();
     });
+
     it('should throw an error if initialize is called more than once', () => {
         Admin.initialize(initialPassword);
         expect(() => Admin.initialize(initialPassword)).toThrow("L'instance Admin a déjà été initialisée.");
+    });
+
+    it('should reset the instance when resetInstance is called', () => {
+        global.gc = jest.fn();
+        Admin.initialize(initialPassword);
+        Admin.resetInstance();
+        expect(global.gc).toHaveBeenCalled();
     });
 
     it('should throw an error if getInstance is called before initialize', () => {

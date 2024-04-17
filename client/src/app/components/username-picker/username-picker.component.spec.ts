@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NavigationStart, Router } from '@angular/router';
 import { SocketAnswer } from '@app/interfaces/socket-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Observable, Subscription, of } from 'rxjs';
 import { UsernamePickerComponent } from './username-picker.component';
@@ -12,7 +12,7 @@ describe('UsernamePickerComponent', () => {
     let component: UsernamePickerComponent;
     let fixture: ComponentFixture<UsernamePickerComponent>;
     let socketServiceSpy: jasmine.SpyObj<SocketCommunicationService>;
-    let dialogServiceSpy: jasmine.SpyObj<DialogErrorService>;
+    let dialogServiceSpy: jasmine.SpyObj<DialogAlertService>;
     let dialogSpy: jasmine.SpyObj<MatDialog>;
 
     class MockRouter {
@@ -36,7 +36,7 @@ describe('UsernamePickerComponent', () => {
             'connect',
             'disconnect',
         ]);
-        dialogServiceSpy = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog']);
+        dialogServiceSpy = jasmine.createSpyObj('DialogAlertService', ['openErrorDialog']);
 
         TestBed.configureTestingModule({
             declarations: [UsernamePickerComponent],
@@ -46,7 +46,7 @@ describe('UsernamePickerComponent', () => {
                 { provide: MAT_DIALOG_DATA, useValue: {} },
                 { provide: SocketCommunicationService, useValue: socketServiceSpy },
                 { provide: Router, useValue: mockRouter },
-                { provide: DialogErrorService, useValue: dialogServiceSpy },
+                { provide: DialogAlertService, useValue: dialogServiceSpy },
             ],
             imports: [FormsModule],
         });

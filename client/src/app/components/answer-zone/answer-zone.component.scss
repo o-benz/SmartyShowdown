@@ -19,6 +19,18 @@
     }
 }
 
+.remaining-chars {
+    color: $white;
+    text-shadow:
+    0px 0px 1px $white,
+    0px 1px 1px $white,
+    1px 0px 1px $white,
+    1px 1px 1px $white;
+    font-family: $chalk-font;
+    font-size: 2vmin;
+    margin-top: -1%;
+}
+
 .scrollable-list {
     animation: crownAppear 0.6s ease forwards;
     padding: 1%;
@@ -42,7 +54,6 @@
     left: 0;
     right: 0;
     bottom: 0;
-    backface-visibility: hidden;
 }
 
 .front {

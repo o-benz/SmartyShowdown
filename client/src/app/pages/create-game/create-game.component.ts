@@ -1,9 +1,9 @@
 import { Component, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { ErrorMessages } from '@app/interfaces/error-messages';
+import { ErrorMessages } from '@app/interfaces/alert-messages';
 import { Quiz } from '@app/interfaces/quiz-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { QuizService } from '@app/services/quiz/quiz.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Subscription } from 'rxjs';
@@ -14,11 +14,11 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./create-game.component.scss'],
 })
 export class CreateGameComponent implements OnInit, OnDestroy {
-    // eslint-disable-next-line @typescript-eslint/member-ordering
     @ViewChild('dialogTemplate') dialogTemplate: TemplateRef<unknown>;
     dialogRef: MatDialogRef<unknown>;
     selectedQuiz: Quiz;
     quizList: Quiz[];
+    isRandom: boolean = false;
     private quizSubscription: Subscription;
 
     // eslint-disable-next-line max-params
@@ -26,18 +26,19 @@ export class CreateGameComponent implements OnInit, OnDestroy {
         public dialog: MatDialog,
         private quizService: QuizService,
         private router: Router,
-        private dialogService: DialogErrorService,
+        private dialogService: DialogAlertService,
         private socketCommunicationService: SocketCommunicationService,
     ) {}
 
     ngOnInit(): void {
-        this.quizSubscription = this.quizService.getAllQuiz().subscribe((quizzes: Quiz[]) => {
-            this.quizList = this.quizService.generateRandomQuiz(quizzes);
+        this.quizSubscription = this.quizService.getAllQuiz().subscribe(async (quizzes: Quiz[]) => {
+            this.quizList = this.quizService.addQuizToList(await this.quizService.generateRandomQuiz(), quizzes);
         });
     }
 
     openDialog(quiz: Quiz): void {
         this.selectedQuiz = quiz;
+        this.isRandom = this.selectedQuiz.title === 'Mode Aléatoire';
         setTimeout(() => {
             this.dialogRef = this.dialog.open(this.dialogTemplate, {
                 width: '50%',
@@ -58,7 +59,11 @@ export class CreateGameComponent implements OnInit, OnDestroy {
 
     createGameRoom(): void {
         this.socketCommunicationService.connect();
-        this.socketCommunicationService.createRoom(this.selectedQuiz.id).subscribe({
+        const createRoomMethod = this.isRandom
+            ? this.socketCommunicationService.createRandomRoom(this.selectedQuiz)
+            : this.socketCommunicationService.createRoom(this.selectedQuiz.id);
+
+        createRoomMethod.subscribe({
             next: (roomCode) => {
                 localStorage.setItem('roomCode', roomCode);
                 this.router.navigate(['/game/lobby']);

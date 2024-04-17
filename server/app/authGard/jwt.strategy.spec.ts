@@ -19,10 +19,16 @@ describe('JwtStrategy', () => {
     describe('validate', () => {
         it('should return a user object with role', async () => {
             const mockPayload = { role: 'admin' };
-            jest.spyOn(jwtStrategy, 'validate').mockImplementation(async () => mockPayload);
 
             const result = await jwtStrategy.validate(mockPayload);
             expect(result).toEqual({ role: 'admin' });
+        });
+
+        it('should return a user object with different role', async () => {
+            const mockPayload = { role: 'user' };
+
+            const result = await jwtStrategy.validate(mockPayload);
+            expect(result).toEqual({ role: 'user' });
         });
 
         it('should throw an error if payload is invalid', async () => {

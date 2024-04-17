@@ -1,5 +1,5 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
-import { Choice, Question } from '@app/interfaces/quiz-model';
+import { BaseQuestion, Choice } from '@app/interfaces/question-model';
 import { GameService } from '@app/services/game/game.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Subscription } from 'rxjs';
@@ -13,12 +13,12 @@ const INDEX_NOT_FOUND = -1;
     styleUrls: ['./answer-zone.component.scss'],
 })
 export class AnswerZoneComponent implements OnChanges, OnDestroy, OnInit {
-    @Input() roundEndedQuestionPackage: { isRoundEnded: boolean; question: Question; questionIndex: number; mode: string };
+    @Input() roundEndedQuestionPackage: { isRoundEnded: boolean; question: BaseQuestion; questionIndex: number; mode: string };
     @Output() qcmFinishedEvent: EventEmitter<boolean> = new EventEmitter<boolean>();
+    @Input() isRandom: boolean;
     choices: Choice[] = [];
     textAnswer: string = '';
-    // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-magic-numbers
-    EVENT_KEY_BASE = 10;
+    username: string;
     private gameSubscription: Subscription | undefined;
 
     constructor(
@@ -28,23 +28,41 @@ export class AnswerZoneComponent implements OnChanges, OnDestroy, OnInit {
 
     @HostListener('window:keydown', ['$event'])
     buttonDetect(event: KeyboardEvent) {
-        if (event.key === 'Enter') {
-            this.lockAnswer();
-        } else if (event.key >= '1' && event.key <= '4') {
-            this.chooseChoice(parseInt(event.key, EVENT_KEY_BASE) - 1);
+        if (this.roundEndedQuestionPackage.question.type === 'QCM') {
+            if (event.key === 'Enter') {
+                this.lockAnswer();
+            } else if (event.key >= '1' && event.key <= '4') {
+                this.chooseChoice(parseInt(event.key, EVENT_KEY_BASE) - 1);
+            }
+        } else if (this.roundEndedQuestionPackage.question.type === 'QRL') {
+            this.socketService.makeUserActive(this.roundEndedQuestionPackage.questionIndex);
         }
     }
 
     ngOnInit(): void {
+        this.socketService.getUser().subscribe({
+            next: (value) => {
+                this.username = value.username;
+            },
+        });
         this.socketService.onFinalizeAnswers(() => {
-            this.gameService.isChoiceFinal = true;
-            this.socketService.confirmAnswer(this.roundEndedQuestionPackage.questionIndex);
+            if ((this.username !== 'organisateur' || this.isRandom) && !this.gameService.isChoiceFinal) {
+                this.gameService.isChoiceFinal = true;
+
+                if (this.roundEndedQuestionPackage.question.type === 'QCM') {
+                    this.socketService.confirmAnswer(this.roundEndedQuestionPackage.questionIndex);
+                } else if (this.roundEndedQuestionPackage.question.type === 'QRL') {
+                    this.socketService.sendTextAnswer(this.textAnswer);
+                    this.socketService.confirmAnswer(this.roundEndedQuestionPackage.questionIndex);
+                }
+            }
         });
     }
 
     ngOnChanges(): void {
         if (this.roundEndedQuestionPackage.question) {
-            this.initQuestion();
+            if (this.roundEndedQuestionPackage.question.type === 'QCM')
+                this.choices = this.roundEndedQuestionPackage.question.choices ? this.roundEndedQuestionPackage.question.choices : [];
             this.gameService.currentChoices = [];
             this.gameService.isChoiceFinal = false;
             this.textAnswer = '';
@@ -68,29 +86,33 @@ export class AnswerZoneComponent implements OnChanges, OnDestroy, OnInit {
             }
         }
     }
-    initQuestion() {
-        if (
-            this.roundEndedQuestionPackage.question &&
-            this.roundEndedQuestionPackage.question.choices &&
-            this.roundEndedQuestionPackage.question.type === 'QCM'
-        ) {
-            this.choices = this.roundEndedQuestionPackage.question.choices;
-        }
-    }
+
     lockAnswer() {
-        if ((this.gameService.currentChoices && this.gameService.currentChoices.length > 0) || this.textAnswer) {
-            if (!this.gameService.isChoiceFinal) {
+        if (this.canAnswerBeSubmitted()) {
+            if (this.roundEndedQuestionPackage.question.type === 'QCM') {
                 this.socketService.confirmAnswer(this.roundEndedQuestionPackage.questionIndex);
                 this.gameService.isChoiceFinal = true;
-                if (this.roundEndedQuestionPackage.mode === 'test')
-                    this.gameSubscription = this.gameService
-                        .postCurrentChoices(this.roundEndedQuestionPackage.question.text)
-                        .subscribe((isAnswerCorrect: boolean) => {
-                            this.qcmFinishedEvent.emit(isAnswerCorrect);
-                        });
+            } else if (this.roundEndedQuestionPackage.question.type === 'QRL') {
+                this.gameService.isChoiceFinal = true;
+                this.socketService.sendTextAnswer(this.textAnswer);
+                this.socketService.confirmAnswer(this.roundEndedQuestionPackage.questionIndex);
             }
+            if (this.roundEndedQuestionPackage.mode === 'test')
+                this.gameSubscription = this.gameService
+                    .postCurrentChoices(this.roundEndedQuestionPackage.question.text)
+                    .subscribe((isAnswerCorrect: boolean) => {
+                        this.qcmFinishedEvent.emit(isAnswerCorrect);
+                    });
         }
     }
+
+    canAnswerBeSubmitted(): boolean {
+        if (((this.gameService.currentChoices && this.gameService.currentChoices.length > 0) || this.textAnswer) && !this.gameService.isChoiceFinal) {
+            return true;
+        }
+        return false;
+    }
+
     isChoiceSelected(choice: Choice): boolean {
         return !!this.gameService.currentChoices && this.gameService.currentChoices.includes(choice);
     }

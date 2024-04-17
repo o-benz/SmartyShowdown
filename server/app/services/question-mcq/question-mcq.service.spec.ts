@@ -1,5 +1,9 @@
-import { MultipleChoiceQuestion, MultipleChoiceQuestionDocument, multipleChoiceQuestionSchema } from '@app/model/database/question-mcq';
-import { Logger } from '@nestjs/common';
+import {
+    MultipleChoiceQuestion,
+    MultipleChoiceQuestionDocument,
+    multipleChoiceQuestionSchema,
+} from '@app/model/database/question-mcq-database.schema';
+import { QuestionService } from '@app/services/question/question.service';
 import { MongooseModule, getConnectionToken, getModelToken } from '@nestjs/mongoose';
 import { Test } from '@nestjs/testing';
 import { MongoMemoryServer } from 'mongodb-memory-server';
@@ -8,34 +12,39 @@ import { MultipleChoiceQuestionService } from './question-mcq.service';
 
 /* eslint-disable no-underscore-dangle */
 
-const DELAY_BEFORE_CLOSING_CONNECTION = 500;
+const DELAY_BEFORE_CLOSING_CONNECTION = 200;
 
 describe('MultipleChoiceQuestionServiceEndToEnd', () => {
     let service: MultipleChoiceQuestionService;
     let multipleChoiceQuestionModel: Model<MultipleChoiceQuestionDocument>;
     let mongoServer: MongoMemoryServer;
     let connection: Connection;
+    const mockQuestionService = {
+        isQuestionTextInUse: jest.fn(),
+    };
 
     beforeEach(async () => {
         mongoServer = await MongoMemoryServer.create();
         const module = await Test.createTestingModule({
             imports: [
                 MongooseModule.forRootAsync({
+                    connectionName: 'questions',
                     useFactory: () => ({
                         uri: mongoServer.getUri(),
                     }),
                 }),
-                MongooseModule.forFeature([{ name: MultipleChoiceQuestion.name, schema: multipleChoiceQuestionSchema }]),
+                MongooseModule.forFeature([{ name: MultipleChoiceQuestion.name, schema: multipleChoiceQuestionSchema }], 'questions'),
             ],
-            providers: [MultipleChoiceQuestionService, Logger],
+            providers: [MultipleChoiceQuestionService, { provide: QuestionService, useValue: mockQuestionService }],
         }).compile();
 
         service = module.get<MultipleChoiceQuestionService>(MultipleChoiceQuestionService);
-        multipleChoiceQuestionModel = module.get<Model<MultipleChoiceQuestionDocument>>(getModelToken(MultipleChoiceQuestion.name));
-        connection = module.get(getConnectionToken());
+        multipleChoiceQuestionModel = module.get<Model<MultipleChoiceQuestionDocument>>(getModelToken(MultipleChoiceQuestion.name, 'questions'));
+        connection = module.get(getConnectionToken('questions'));
     });
 
     afterEach((done) => {
+        jest.clearAllMocks();
         setTimeout(async () => {
             await connection.close();
             await mongoServer.stop();
@@ -117,8 +126,9 @@ describe('MultipleChoiceQuestionServiceEndToEnd', () => {
     it('addMultipleChoiceQuestion() should fail if question already exists', async () => {
         const question = getFakeMultipleChoiceQuestion();
         await multipleChoiceQuestionModel.create(question);
-        question._id = new Types.ObjectId();
-        await expect(service.addMultipleChoiceQuestion(question)).rejects.toBeTruthy();
+        mockQuestionService.isQuestionTextInUse.mockResolvedValue(question);
+        const questionClone = { ...question, _id: new Types.ObjectId() };
+        await expect(service.addMultipleChoiceQuestion(questionClone)).rejects.toBeTruthy();
         try {
             await service.addMultipleChoiceQuestion(question);
         } catch (e) {
@@ -127,15 +137,16 @@ describe('MultipleChoiceQuestionServiceEndToEnd', () => {
     });
 
     it('addMultipleChoiceQuestion() should handle error', async () => {
-        const mockError = new Error('Mock Error');
+        const mockError = new Error('Question already exists');
         const question = getFakeMultipleChoiceQuestion();
+        mockQuestionService.isQuestionTextInUse.mockReturnValue(null);
         jest.spyOn(service.multipleChoiceQuestionModel, 'create').mockImplementation(() => {
             throw mockError;
         });
         try {
             await service.addMultipleChoiceQuestion(question);
         } catch (e) {
-            expect(e).toBe(`Failed to add question: ${mockError}`);
+            expect(e).toBe(`invalid question: ${mockError}`);
         }
     });
 
@@ -144,6 +155,20 @@ describe('MultipleChoiceQuestionServiceEndToEnd', () => {
         jest.spyOn(multipleChoiceQuestionModel, 'create').mockRejectedValue(async () => Promise.reject(''));
         const question = getFakeMultipleChoiceQuestion();
         await expect(service.addMultipleChoiceQuestion(question)).rejects.toBeTruthy();
+    });
+
+    it('addMultipleChoiceQuestion() should handle error not related to invalid format or question already exists', async () => {
+        const mockError = new Error('Mock Error');
+        const question = getFakeMultipleChoiceQuestion();
+        mockQuestionService.isQuestionTextInUse.mockReturnValue(null);
+        jest.spyOn(service.multipleChoiceQuestionModel, 'create').mockImplementation(() => {
+            throw mockError;
+        });
+        try {
+            await service.addMultipleChoiceQuestion(question);
+        } catch (e) {
+            expect(e).toBe(`Failed to add question: ${mockError}`);
+        }
     });
 
     it('deleteMultipleChoiceQuestion() should delete a question from the DB', async () => {
@@ -199,7 +224,8 @@ describe('MultipleChoiceQuestionServiceEndToEnd', () => {
         await multipleChoiceQuestionModel.create(question);
         const newQuestion = getFakeMultipleChoiceQuestion();
         await multipleChoiceQuestionModel.create(newQuestion);
-        question.question = newQuestion.question;
+        mockQuestionService.isQuestionTextInUse.mockResolvedValue(newQuestion);
+        question.text = newQuestion.text;
         await expect(service.updateMultipleChoiceQuestion(question._id, question)).rejects.toBeTruthy();
     });
 
@@ -282,7 +308,7 @@ describe('MultipleChoiceQuestionServiceEndToEnd', () => {
 const getFakeMultipleChoiceQuestion = (): MultipleChoiceQuestion => ({
     date: new Date(),
     type: 'QCM',
-    question: getRandomString(),
+    text: getRandomString(),
     points: getRandomNumber(),
     choices: [
         {
@@ -300,7 +326,7 @@ const getFakeMultipleChoiceQuestion = (): MultipleChoiceQuestion => ({
 const validateMultipleChoiceQuestionInfo = (result: MultipleChoiceQuestion, question: MultipleChoiceQuestion): boolean => {
     expect(result.date.getTime()).toBeGreaterThanOrEqual(question.date.getTime());
     expect(result.type).toEqual(question.type);
-    expect(result.question).toEqual(question.question);
+    expect(result.text).toEqual(question.text);
     expect(result.points).toEqual(question.points);
     expect(result.choices.map((choice) => choice.text)).toEqual(question.choices.map((choice) => choice.text));
     expect(result.choices.map((choice) => choice.isCorrect)).toEqual(question.choices.map((choice) => choice.isCorrect));

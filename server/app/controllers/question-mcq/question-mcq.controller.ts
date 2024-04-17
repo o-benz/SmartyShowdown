@@ -1,6 +1,6 @@
-import { MultipleChoiceQuestion } from '@app/model/database/question-mcq';
-import { CreateMultipleChoiceQuestionDto } from '@app/model/dto/question-mcq/create-question-mcq.dto';
-import { UpdateMultipleChoiceQuestionDto } from '@app/model/dto/question-mcq/update-question-mcq.dto';
+import { MultipleChoiceQuestion } from '@app/model/database/question-mcq-database.schema';
+import { CreateMultipleChoiceQuestionDto } from '@app/model/question-mcq/dto/create-question-mcq.dto';
+import { UpdateMultipleChoiceQuestionDto } from '@app/model/question-mcq/dto/update-question-mcq.dto';
 import { MultipleChoiceQuestionService } from '@app/services/question-mcq/question-mcq.service';
 import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Res } from '@nestjs/common';
 import { ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -26,7 +26,7 @@ export class MultipleChoiceQuestionController {
             const allMultipleChoiceQuestions = await this.multipleChoiceQuestionService.getAllMultipleChoiceQuestions();
             response.status(HttpStatus.OK).json(allMultipleChoiceQuestions);
         } catch (error) {
-            response.status(HttpStatus.NOT_FOUND).send(error.message);
+            response.status(HttpStatus.NOT_FOUND).send(error);
         }
     }
 
@@ -44,7 +44,7 @@ export class MultipleChoiceQuestionController {
             const course = await this.multipleChoiceQuestionService.getMultipleChoiceQuestion(id);
             response.status(HttpStatus.OK).json(course);
         } catch (error) {
-            response.status(HttpStatus.NOT_FOUND).send(error.message);
+            response.status(HttpStatus.NOT_FOUND).send(error);
         }
     }
 
@@ -60,7 +60,7 @@ export class MultipleChoiceQuestionController {
             await this.multipleChoiceQuestionService.addMultipleChoiceQuestion(questionDto);
             response.status(HttpStatus.CREATED).send();
         } catch (error) {
-            response.status(HttpStatus.BAD_REQUEST).send(error.message);
+            response.status(HttpStatus.BAD_REQUEST).send(error);
         }
     }
 
@@ -77,7 +77,7 @@ export class MultipleChoiceQuestionController {
             await this.multipleChoiceQuestionService.deleteMultipleChoiceQuestion(id);
             response.status(HttpStatus.OK).send();
         } catch (error) {
-            response.status(HttpStatus.BAD_REQUEST).send(error.message);
+            response.status(HttpStatus.BAD_REQUEST).send(error);
         }
     }
 
@@ -96,7 +96,7 @@ export class MultipleChoiceQuestionController {
             await this.multipleChoiceQuestionService.updateMultipleChoiceQuestion(questionDto._id, questionDto);
             response.status(HttpStatus.OK).send();
         } catch (error) {
-            response.status(HttpStatus.BAD_REQUEST).send(error.message);
+            response.status(HttpStatus.BAD_REQUEST).send(error);
         }
     }
 
@@ -114,7 +114,7 @@ export class MultipleChoiceQuestionController {
             const choices = await this.multipleChoiceQuestionService.getMultipleChoiceQuestionChoices(id);
             response.status(HttpStatus.OK).json(choices);
         } catch (error) {
-            response.status(HttpStatus.NOT_FOUND).send(error.message);
+            response.status(HttpStatus.NOT_FOUND).send(error);
         }
     }
 
@@ -132,7 +132,7 @@ export class MultipleChoiceQuestionController {
             const points = await this.multipleChoiceQuestionService.getMultipleChoiceQuestionPoints(id);
             response.status(HttpStatus.OK).json(points);
         } catch (error) {
-            response.status(HttpStatus.NOT_FOUND).send(error.message);
+            response.status(HttpStatus.NOT_FOUND).send(error);
         }
     }
 
@@ -150,7 +150,7 @@ export class MultipleChoiceQuestionController {
             const type = await this.multipleChoiceQuestionService.getMultipleChoiceQuestionType(id);
             response.status(HttpStatus.OK).json(type);
         } catch (error) {
-            response.status(HttpStatus.NOT_FOUND).send(error.message);
+            response.status(HttpStatus.NOT_FOUND).send(error);
         }
     }
 
@@ -168,7 +168,7 @@ export class MultipleChoiceQuestionController {
             const date = await this.multipleChoiceQuestionService.getMultipleChoiceQuestionDate(id);
             response.status(HttpStatus.OK).json(date);
         } catch (error) {
-            response.status(HttpStatus.NOT_FOUND).send(error.message);
+            response.status(HttpStatus.NOT_FOUND).send(error);
         }
     }
 }

@@ -2,29 +2,37 @@
     <app-header></app-header>
 
     <div class="content-container">
-        <ng-container *ngIf="!this.isOrganizer">
+        <ng-container *ngIf="!this.isOrganizer || this.isRandom">
             <div class="question-container">
                 <app-question-zone
                     class="question-zone"
-                    [questionTimePackage]="{ time: this.time, question: this.currentQuestion, isTimeOver: this.isTimeOver, mode: mode}"
+                    [questionTimePackage]="{ time: this.time, question: this.currentQuestion, isTimeOver: this.isTimeOver, mode: mode, currentQuestionIndex: this.questionIndex}"
+                    [isRandom]="isRandom"
                     (endTimerEvent)="calculateScore($event)"
                 ></app-question-zone>
     
                 <app-answer-zone class="answer-zone" [roundEndedQuestionPackage]="{ isRoundEnded: this.isRoundFinished, question: this.currentQuestion, questionIndex: this.questionIndex, mode: mode}" 
-                 (qcmFinishedEvent)="calculateScore($event)"></app-answer-zone>
+                 (qcmFinishedEvent)="calculateScore($event)" [isRandom]="isRandom"></app-answer-zone>
             </div>
         </ng-container>
-        <ng-container *ngIf="this.isOrganizer">
+        <ng-container *ngIf="this.isOrganizer && !this.isRandom">
             <div class="organizer-container">
-                <app-organizer-view [questionTimePackage]="{ time: this.time, question: this.currentQuestion, currentQuestionIndex: this.questionIndex}"></app-organizer-view>
+                <app-organizer-view 
+                [questionTimePackage]="{ time: this.time, question: this.currentQuestion, currentQuestionIndex: this.questionIndex}"
+                ></app-organizer-view>
             </div>
         </ng-container>
         <app-chat-box class="chat-box"></app-chat-box>
         
         <app-result-popup 
             *ngIf="isRoundFinished"
-            [questionBooleanPackage]="{ isAnswerCorrect: isAnswerCorrect, question: this.currentQuestion }" 
+            [questionBooleanPackage]="{ 
+                isAnswerCorrect: isAnswerCorrect, 
+                question: this.currentQuestion, 
+                isLastQuestion: this.questionIndex === this.questions.length - 1,
+            }" 
             [mode]="mode"
+            [isRandom]="isRandom"
             (nextQuestionEvent)="nextQuestion($event)"
         ></app-result-popup>
     </div>

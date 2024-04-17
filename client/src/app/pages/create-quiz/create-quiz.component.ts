@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ErrorMessages } from '@app/interfaces/error-messages';
+import { ErrorMessages } from '@app/interfaces/alert-messages';
 import { Quiz, defaultQuiz } from '@app/interfaces/quiz-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { QuizService } from '@app/services/quiz/quiz.service';
 
 @Component({
@@ -19,7 +19,7 @@ export class CreateQuizComponent implements OnInit {
         private route: ActivatedRoute,
         private quizService: QuizService,
         private router: Router,
-        private dialogService: DialogErrorService,
+        private dialogService: DialogAlertService,
     ) {}
 
     ngOnInit(): void {

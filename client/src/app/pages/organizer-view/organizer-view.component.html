@@ -1,49 +1,68 @@
 <div class="content-zone">
-    <div class="question-zone">
-        <div class="blackboard">
-            <p class="question">{{ text }}</p>
-            <div class="info">
-                <p>Temps restant: {{ time }}</p>
-                <p>( {{ points }} points )</p>
+    <ng-container *ngIf="!this.isQrlCorrection">
+        <div class="question-zone">
+            <div class="blackboard">
+                <p class="question">{{ text }}</p>
+                <div class="info">
+                    <p>Temps restant: {{ time }}</p>
+                    <p>( {{ points }} points )</p>
+                </div>
             </div>
-        </div>
-        <div class="abandon">
-            <button (click)="navigateHome()" class="button-82-pushable" role="button">
+            <div class="abandon">
+                <button (click)="navigateHome()" class="button-82-pushable" role="button">
+                    <span class="button-82-shadow"></span>
+                    <span class="button-82-edge"></span>
+                    <span class="button-82-front text">
+                      Abandonner
+                    </span>
+              </button>
+                <button (click)="pauseTimer()" class="button-82-pushable" role="button" [class.btndisabled]="disableBtns" id="pause">
                 <span class="button-82-shadow"></span>
                 <span class="button-82-edge"></span>
                 <span class="button-82-front text">
-                  Abandonner
+                    {{ isPaused ? 'Reprendre' : 'Pause' }}
                 </span>
-              </button>
+            </button>
+            <button (click)="paniqueMode()" class="button-82-pushable" role="button" [class.btndisabled]="isPanic || disableBtns" id="panic">
+                <span class="button-82-shadow"></span>
+                <span class="button-82-edge"></span>
+                <span class="button-82-front text">
+                    Mode Panique
+                </span>
+            </button>
         </div>
-    </div>
+        </div>
 
     <div class="organizer-zone">
         <app-question-stats class="stats" [stats]="questionStats"></app-question-stats>
-        <div class="users">
-            <table>
-                <tr>
-                    <th>Utilisateur</th>
-                    <th>Score</th>
-                </tr>
-                <ng-container *ngFor="let user of users">
-                    <tr [class.leftUser]="user.hasLeft">
-                        <td>{{ user.name }}</td>
-                        <td>{{ user.score }}</td>
-                    </tr>
-                </ng-container>
-            </table>
-        </div>
+        <app-player-list-organiser class="players" [players]="users"></app-player-list-organiser>
     </div>
 
-    <div class="confirm">
-        <ng-container *ngIf="this.isRoundOver">
-            <ng-container *ngIf="this.questionTimePackage.currentQuestionIndex === this.gameStats.questions.length - 1"> 
-                <button class="confirmbtn" (click)="showResults()">Montrer les résultats</button>
+        <div class="confirm">
+            <ng-container *ngIf="this.isRoundOver">
+                <ng-container *ngIf="this.questionTimePackage.currentQuestionIndex === this.gameStats.questions.length - 1"> 
+                    <button class="confirmbtn" (click)="showResults()">Montrer les résultats</button>
+                </ng-container>
+                <ng-container *ngIf="this.questionTimePackage.currentQuestionIndex < this.gameStats.questions.length - 1"> 
+                    <button class="confirmbtn" (click)="nextQuestion()">Question suivante</button>
+                </ng-container>
             </ng-container>
-            <ng-container *ngIf="this.questionTimePackage.currentQuestionIndex < this.gameStats.questions.length - 1"> 
-                <button class="confirmbtn" (click)="nextQuestion()">Question suivante</button>
-            </ng-container>
-        </ng-container>
-    </div>
+        </div>
+    </ng-container>
+    <ng-container *ngIf="this.isQrlCorrection">
+        <div class="question-zone">
+            <div class="blackboard">
+                <p>La réponse de: {{ usersAnswer[answerIndex].name }}</p>
+                <p class="question">{{ usersAnswer[answerIndex].textAnswer }}</p>
+            </div>
+        </div>
+
+        <div class="confirm">
+
+            <button class="confirmbtn" (click)="givePoints(0, '0%')">0%</button>
+            <button class="confirmbtn" (click)="givePoints(0.5, '50%')">50%</button>
+            <button class="confirmbtn" (click)="givePoints(1, '100%')">100%</button>
+
+        </div>
+    </ng-container>
 </div>

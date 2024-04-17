@@ -1,7 +1,12 @@
 <h1>Banque de questions</h1>
+<div class="sort">
+  <button class="sort-button" [ngClass]="{'active': filterState === typeEnum.QRL}" (click)="setFilterState(typeEnum.QRL)">QRL</button>
+  <button class="sort-button" [ngClass]="{'active': filterState === typeEnum.QCM}" (click)="setFilterState(typeEnum.QCM)">QCM</button>
+  <button class="sort-button" [ngClass]="{'active': filterState === typeEnum.ALL}" (click)="setFilterState(typeEnum.ALL)">TOUT</button>
+</div>
 <div class="scrollable-list">
   <div *ngFor="let question of questions" class="qst">
-    <div class="question">
+    <div class="question" [ngClass]="{'oeq': question.type === 'QRL', 'mcq': question.type === 'QCM'}">
       <div class="front">
         <div class="question-info">
           <span class="question-title">
@@ -25,8 +30,8 @@
       <div class="back">
         <div class="question-info">
             <span class="question-choice">
-                <h3>Choix de réponse:</h3>
                 <div *ngIf="isMultipleChoiceQuestion(question)">
+                  <h3>Choix de réponse:</h3>
                     <div *ngFor="let choice of question.choices" class="choice">
                         <h2>{{ choice.text }}</h2>
                         <h2>{{ choice.isCorrect ? 'Vrai' : 'Faux' }}</h2>
@@ -35,7 +40,7 @@
             </span>
             <div class="question-options">
                 <button (click)="modifyQuestion(question._id)">Modifier</button>
-                <button (click)="deleteQuestion(question._id)">Supprimer</button>
+                <button (click)="deleteQuestion(question)">Supprimer</button>
             </div>
         </div>
       </div>

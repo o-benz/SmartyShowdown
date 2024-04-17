@@ -22,9 +22,11 @@ input.new-choice-text {
   align-items: center;
   margin-bottom: 2%;
 }
-  
+
 .truncate {
   width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 button {

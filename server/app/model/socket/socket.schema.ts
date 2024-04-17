@@ -1,6 +1,5 @@
 import { GameEnum } from '@app/gateways/game/game.gateway.events';
-import { Choice } from '@app/model/quiz/quiz.schema';
-import { GameStats } from '@app/model/stats/stats.schema';
+import { GameStats, PlayerState } from '@app/model/stats/stats.schema';
 
 export interface UserSocket {
     data: {
@@ -12,6 +11,9 @@ export interface UserSocket {
         answered: boolean;
         firstToAnswer?: boolean;
         hasLeft?: boolean;
+        textAnswer?: string;
+        state?: PlayerState;
+        isMuted?: boolean;
     };
 }
 
@@ -27,6 +29,12 @@ export interface Room {
     bannedUsers: string[];
     gameStats: GameStats;
     isStarted: boolean;
+    isPaused: boolean;
+    delayTick: number;
+    timer: unknown;
+    startingTime: string;
+    socketTimers: Map<string, NodeJS.Timeout>;
+    isRandom?: boolean;
 }
 
 export interface SocketAnswer {
@@ -40,7 +48,14 @@ export interface Answer {
     questionIndex: number;
 }
 
-export interface Answers {
-    answers: Choice[];
+export interface GameInfo {
+    questionIndex: number;
+    timeLeft: number;
+}
+
+export interface GivePointsInfo {
+    pointsGiven: number;
+    username: string;
+    percentageGiven: string;
     questionIndex: number;
 }

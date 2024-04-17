@@ -1,14 +1,4 @@
-export interface Choice {
-    text: string;
-    isCorrect?: boolean | null;
-}
-
-export interface Question {
-    type: string;
-    text: string;
-    points: number;
-    choices?: Choice[];
-}
+import { BaseQuestion, Choice } from './question-model';
 
 export interface Quiz {
     id: string;
@@ -17,15 +7,7 @@ export interface Quiz {
     description: string;
     duration: number;
     lastModification: string;
-    questions: Question[];
-}
-
-export class MultipleChoiceQuestion {
-    date: Date;
-    type: string;
-    question: string;
-    points: number;
-    choices: Choice[];
+    questions: BaseQuestion[];
 }
 
 export enum QuizEnum {
@@ -40,7 +22,6 @@ export enum QuizComponentEnum {
     MAXDURATION = 100,
     MINDURATION = 10,
     MAXCHOICES = 4,
-    NOTFOUND = -1,
 }
 
 export const defaultQuiz: Quiz = {

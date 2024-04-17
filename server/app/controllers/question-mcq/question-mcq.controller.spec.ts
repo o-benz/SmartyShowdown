@@ -1,4 +1,4 @@
-import { MultipleChoiceQuestion } from '@app/model/database/question-mcq';
+import { MultipleChoiceQuestion } from '@app/model/database/question-mcq-database.schema';
 import { MultipleChoiceQuestionService } from '@app/services/question-mcq/question-mcq.service';
 import { HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';

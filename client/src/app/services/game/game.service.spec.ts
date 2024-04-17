@@ -1,8 +1,8 @@
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Choice, Question } from '@app/interfaces/quiz-model';
+import { GameStats } from '@app/interfaces/game-stats';
+import { BaseQuestion, Choice } from '@app/interfaces/question-model';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
-import { of } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { GameService } from './game.service';
 
@@ -10,7 +10,7 @@ describe('GameService', () => {
     let service: GameService;
     let mockChoices: Choice[];
     let socketServiceSpy: jasmine.SpyObj<SocketCommunicationService>;
-    let mockQuestion: Question;
+    let mockQuestion: BaseQuestion;
     let httpMock: HttpTestingController;
 
     beforeEach(() => {
@@ -90,15 +90,83 @@ describe('GameService', () => {
         expect(service.getAnswers(question)).toEqual([]);
     });
 
-    it('should return if answer is valid if calling isAnswerValid', () => {
-        mockChoices = [
-            { text: '2', isCorrect: true },
-            { text: '4', isCorrect: true },
+    it('should give user points with bonus when qcm', () => {
+        const question = {
+            text: 'tsest',
+            type: 'QCM',
+            points: 10,
+            choices: [
+                {
+                    text: '1',
+                    isCorrect: true,
+                },
+                {
+                    text: '2',
+                    isCorrect: false,
+                },
+            ],
+        };
+        service.score = 0;
+        service.giveUserPoints(question);
+        // eslint-disable-next-line
+        expect(service.score).toEqual(12);
+    });
+
+    it('should give user points without bonus when qrl', () => {
+        const question = {
+            text: 'tsest',
+            type: 'QRL',
+            points: 10,
+        };
+        service.score = 0;
+        service.giveUserPoints(question);
+        // eslint-disable-next-line
+        expect(service.score).toEqual(10);
+    });
+
+    it('should return question array if gamestats is given to gamestatsToQuestions', () => {
+        const gameStats: GameStats = {
+            id: 'test-id',
+            name: 'Test Quiz',
+            duration: 60,
+            users: [],
+            questions: [
+                {
+                    title: 'tsest',
+                    type: 'QCM',
+                    points: 10,
+                    statLines: [
+                        {
+                            label: '1',
+                            nbrOfSelection: 0,
+                            isCorrect: true,
+                        },
+                        {
+                            label: '2',
+                            nbrOfSelection: 0,
+                            isCorrect: false,
+                        },
+                    ],
+                },
+            ],
+        };
+        const questions: BaseQuestion[] = [
+            {
+                text: 'tsest',
+                type: 'QCM',
+                points: 10,
+                choices: [
+                    {
+                        text: '1',
+                        isCorrect: true,
+                    },
+                    {
+                        text: '2',
+                        isCorrect: false,
+                    },
+                ],
+            },
         ];
-        service.currentChoices = mockChoices;
-        socketServiceSpy.isAnswerValid.and.returnValue(of(true));
-        const questionIndex = 1;
-        service.isValidAnswer(questionIndex);
-        expect(socketServiceSpy.isAnswerValid).toHaveBeenCalledWith({ answers: service.currentChoices, questionIndex });
+        expect(service.gamestatsToQuestions(gameStats)).toEqual(questions);
     });
 });

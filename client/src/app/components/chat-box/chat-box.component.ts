@@ -10,23 +10,27 @@ import { SocketCommunicationService } from '@app/services/sockets-communication/
 })
 export class ChatBoxComponent implements AfterViewInit, OnInit {
     @ViewChildren('messageList', { read: ElementRef }) messageList: QueryList<ElementRef>;
-    limitMessagesCharacters = LIMIT_MESSAGES_CHARACTERS;
     roomMessages: string[] = [];
     roomMessage = '';
     isMessageTooLong: boolean = false;
-    errorMessage: string = 'Le message ne doit pas excéder 200 caractères';
+    limitMessagesCharacters = LIMIT_MESSAGES_CHARACTERS;
+    errorMessage: string = `Le message ne doit pas excéder ${LIMIT_MESSAGES_CHARACTERS} caractères`;
     protected user: User;
 
-    constructor(public chatService: SocketCommunicationService) {}
+    constructor(private chatService: SocketCommunicationService) {}
 
     get isInputDisabled(): boolean {
-        return this.roomMessage.length >= this.limitMessagesCharacters;
+        return this.roomMessage.length >= LIMIT_MESSAGES_CHARACTERS;
     }
 
     ngOnInit(): void {
         this.receiveMessage();
         this.getAllMessages();
         this.getUserInfo();
+        this.chatService.onPlayerMuted(() => {
+            this.user.isMuted = !this.user.isMuted;
+            if (this.roomMessages) this.roomMessages.push(this.user.isMuted ? 'vous etes muet' : 'vous pouvez parler');
+        });
     }
 
     getUserInfo(): void {
@@ -44,7 +48,7 @@ export class ChatBoxComponent implements AfterViewInit, OnInit {
     }
 
     shouldDisableButton(): boolean {
-        return this.isMessageTooLong;
+        return this.isMessageTooLong || (this.user.isMuted ?? false);
     }
 
     scrollToBottomAfterViewChecked(): void {
@@ -88,9 +92,9 @@ export class ChatBoxComponent implements AfterViewInit, OnInit {
     }
 
     limitMessageLength(): void {
-        this.isMessageTooLong = this.roomMessage.length >= this.limitMessagesCharacters;
+        this.isMessageTooLong = this.roomMessage.length >= LIMIT_MESSAGES_CHARACTERS;
         if (this.isMessageTooLong) {
-            this.roomMessage = this.roomMessage.slice(0, this.limitMessagesCharacters);
+            this.roomMessage = this.roomMessage.slice(0, LIMIT_MESSAGES_CHARACTERS);
         }
     }
 

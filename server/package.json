@@ -91,7 +91,11 @@
         "collectCoverageFrom": [
             "app/**/*.(t|j)s",
             "!app/app.module.ts",
-            "!app/index.ts"
+            "!app/index.ts",
+            "!app/**/*.dto.constants.ts",
+            "!app/**/*.dto.ts",
+            "!app/**/*-dto.ts",
+            "!app/**/*.schema.ts"
         ],
         "coverageDirectory": "./coverage",
         "testEnvironment": "node",

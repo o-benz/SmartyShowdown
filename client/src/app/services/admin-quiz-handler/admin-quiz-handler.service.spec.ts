@@ -27,14 +27,8 @@ describe('AdminQuizHandlerService', () => {
 
     it('export should download to computer', () => {
         const quiz: Quiz = games[0];
-        const spyObj = jasmine.createSpyObj('a', ['click']);
-        spyOn(document, 'createElement').and.returnValue(spyObj);
-
-        service.export(quiz);
-
-        expect(spyObj.href).toContain('data:text/json;charset=utf-8,');
-        expect(spyObj.download).toContain(quiz.title);
-        expect(spyObj.click).toHaveBeenCalled();
+        const result = service.export(quiz);
+        expect(result).toBe('data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(games[0])));
     });
 
     it('delete should call an http delete with the right arguments', () => {

@@ -9,6 +9,7 @@ SmartyShowdown is a web-based quiz platform that lets you create, play, and shar
 - [Installation](#installation)
 - [Usage](#usage)
 - [Development](#development)
+- [Creators](#creators)
 
 ## Features
 
@@ -70,3 +71,13 @@ SmartyShowdown has been meticulously developed, leveraging a range of tools and 
 - **Socket.IO**: Integrated for enabling real-time communication between the web client and the dynamic server, ensuring seamless multiplayer quiz experiences.
 - **GitLab Pages and AWS EC2**: Leveraged for deploying the web client and dynamic server respectively, enabling efficient hosting and scalability.
 - **MongoDB Atlas**: Utilized for hosting the MongoDB database in the cloud, ensuring reliability, scalability, and ease of management.
+
+## Creators
+
+SmartyShowdown is the result of the collaborative effort of:
+- Omar Benzekri
+- Charles DESROSIERS
+- Hugo LEFEBVRE
+- Thomas ROULEAU
+- Yassine SEDDAOUI
+- Éloi VINCENT-LÉGARÉ

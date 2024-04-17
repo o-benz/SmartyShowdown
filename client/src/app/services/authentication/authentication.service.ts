@@ -2,10 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginToken } from '@app/interfaces/admin-connection';
-import { Observable, catchError, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-
-const UNAUTHORIZED = 401;
 
 @Injectable({
     providedIn: 'root',
@@ -26,17 +24,7 @@ export class AuthenticationService {
                 if (response && response.accessToken) {
                     localStorage.setItem('accessToken', response.accessToken);
                     this.router.navigate(['/admin']);
-                } else {
-                    alert('Accès refusé');
                 }
-            }),
-            catchError((error) => {
-                let errorMessage = 'Erreur de connexion';
-                if (error.status === UNAUTHORIZED) {
-                    errorMessage = 'Accès refusé';
-                }
-                alert(errorMessage);
-                throw error;
             }),
         );
     }

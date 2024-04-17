@@ -1,7 +1,8 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { BaseQuestion, Choice } from '@app/interfaces/question-model';
 import { games } from '@app/interfaces/quiz';
-import { Choice, Question, Quiz } from '@app/interfaces/quiz-model';
+import { Quiz } from '@app/interfaces/quiz-model';
 import { IErrorDetail } from 'ts-interface-checker';
 import { QuizValueCheckService } from './quiz-value-check.service';
 
@@ -63,14 +64,14 @@ describe('QuizValueCheckService', () => {
     });
 
     it('checkQCM should detect when not enough answers are true or false', () => {
-        const badQuestion: Question[] = [
+        const badQuestion: BaseQuestion[] = [
             {
                 type: 'QCM',
                 text: "Est-ce qu'on le code suivant lance une erreur : const a = 1/NaN; ? ",
                 points: 24,
                 choices: [{ text: 'Non' }, { text: 'Oui' }, { text: 'Oui', isCorrect: null }, { text: 'Oui', isCorrect: null }],
             },
-        ] as Question[];
+        ] as BaseQuestion[];
         service['checkQuestions'](badQuestion);
         expect(service.errors).toContain('Erreur: il doit y avoir au moins 1 mauvais et 1 bon choix');
     });
@@ -84,7 +85,7 @@ describe('QuizValueCheckService', () => {
     });
 
     it('checkQuestion should call "checkChoices" for every choice', () => {
-        const goodQuestions: Question[] = games[0].questions;
+        const goodQuestions: BaseQuestion[] = games[0].questions;
         const spy = spyOn<any>(service, 'checkChoice');                     //eslint-disable-line
         service['checkQuestions'](goodQuestions);
         let numberOfChoice = 0;
@@ -93,7 +94,7 @@ describe('QuizValueCheckService', () => {
     });
 
     it('checkQuestions should return error message when wrong points and wrong number of questions', () => {
-        const badQuestion: Question[] = [
+        const badQuestion: BaseQuestion[] = [
             {
                 type: 'QCM',
                 text: "Est-ce qu'on le code suivant lance une erreur : const a = 1/NaN; ? ",
@@ -106,33 +107,33 @@ describe('QuizValueCheckService', () => {
                     { text: 'Oui', isCorrect: null },
                 ],
             },
-        ] as Question[];
+        ] as BaseQuestion[];
         service['checkQuestions'](badQuestion);
         expect(service.errors).toContain('Erreur: la question a choix multiple doit avoir de 2 à 4 choix\n');
         expect(service.errors).toContain('Erreur: les points doivent etre entre 10 et 100 en multiple de 10\n');
     });
 
     it('checkQuestions should return error message when wrong points and wrong type', () => {
-        const badQuestion: Question[] = [
+        const badQuestion: BaseQuestion[] = [
             {
                 type: 'erreur',
                 text: "Est-ce qu'on le code suivant lance une erreur : const a = 1/NaN; ? ",
                 points: 24,
             },
-        ] as Question[];
+        ] as BaseQuestion[];
         service['checkQuestions'](badQuestion);
         expect(service.errors).toContain('Erreur: le type de question doit être QCM ou QRL\n');
     });
 
     it('checkQuestions should return error message when wrong points and wrong number of questions', () => {
-        const badQuestion: Question[] = [
+        const badQuestion: BaseQuestion[] = [
             {
                 type: 'QRL',
                 text: "Est-ce qu'on le code suivant lance une erreur : const a = 1/NaN; ? ",
                 points: 24,
                 choices: [{ text: 'Non' }],
             },
-        ] as Question[];
+        ] as BaseQuestion[];
         service['checkQuestions'](badQuestion);
         expect(service.errors).toContain('Erreur: une question à réponse longue ne peut pas avoir de choix\n');
     });
@@ -149,8 +150,8 @@ describe('QuizValueCheckService', () => {
         } as unknown as Quiz;
         service.checkQuiz(badQuiz);
         const message: string = service.errors;
-        expect(message).toContain("Erreur: le quiz n'a pas de questions\n");
         expect(message).toContain("Erreur: la duree du quiz n'est pas dans l'intervale [10,60]\n");
+        expect(message).toContain("Erreur: le quiz n'a pas de questions");
     });
 
     it('checkQuiz should should call "checkQuestions" with question list', () => {
@@ -160,8 +161,23 @@ describe('QuizValueCheckService', () => {
         expect(spy).toHaveBeenCalledWith(games[0].questions);
     });
 
+    it('checkQuiz should return early if strictValidation return is not null', () => {
+        const badQuiz: Quiz = {
+            id: '1a2b3d',
+            visible: true,
+            description: 'Questions de pratique sur le langage JavaScript',
+            duration: 65,
+            lastModification: '2018-11-13T20:20:39+00:00',
+            questions: [],
+        } as unknown as Quiz;
+        service.result = null;
+        service.errors = '';
+        service.checkQuiz(badQuiz);
+        expect(service.errors).toEqual('');
+    });
+
     it('getSanitizedQuiz should return the sanitized quiz', () => {
-        service._sanitizedQuiz = {} as Quiz; // eslint-disable-line no-underscore-dangle
+        service['sanitizedQuizValue'] = {} as Quiz; // eslint-disable-line no-underscore-dangle
         expect(service.sanitizedQuiz).toEqual({} as Quiz);
     });
 
@@ -177,7 +193,6 @@ describe('QuizValueCheckService', () => {
             { path: 'path2', message: 'is not a', nested: undefined },
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = service['resultToString'](errors);
 
         expect(result).toEqual("path1 est manquant,\npath2 n'est pas de type,\n");

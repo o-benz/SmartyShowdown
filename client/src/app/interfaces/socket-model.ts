@@ -12,6 +12,7 @@ export interface User {
     answered: boolean;
     firstToAnswer?: boolean;
     hasLeft?: boolean;
+    isMuted?: boolean;
 }
 
 export enum Naviguation {

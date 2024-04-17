@@ -10,11 +10,9 @@ import { environment } from 'src/environments/environment';
 export class AdminQuizHandler {
     constructor(private http: HttpClient) {}
 
-    export(quiz: Quiz): void {
-        const downloader = document.createElement('a');
-        downloader.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(quiz));
-        downloader.download = quiz.title + '.json';
-        downloader.click();
+    export(quiz: Quiz): string {
+        const dataUri = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(quiz));
+        return dataUri;
     }
 
     delete(id: string): Observable<void> {

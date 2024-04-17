@@ -1,11 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-
-import { Choice, Question } from '@app/interfaces/quiz-model';
+import { BaseQuestion, Choice } from '@app/interfaces/question-model';
 import { ChoiceService } from './choice.service';
 
 describe('ChoiceService', () => {
     let service: ChoiceService;
-    let question: Question;
+    let question: BaseQuestion;
     let mockChoices: Choice[];
     beforeEach(() => {
         mockChoices = [

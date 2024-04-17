@@ -2,30 +2,35 @@ import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Question } from '@app/interfaces/quiz-model';
+import { ErrorMessages, SuccessMessages } from '@app/interfaces/alert-messages';
+import { Question } from '@app/interfaces/question-model';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { QuestionService } from '@app/services/question/question.service';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { QuestionModificationComponent } from './question-modification.component';
 import SpyObj = jasmine.SpyObj;
 
 describe('QuestionModificationComponent', () => {
     let component: QuestionModificationComponent;
     let fixture: ComponentFixture<QuestionModificationComponent>;
-    let dialogSpy: SpyObj<MatDialog>;
-    const dialogRefSpyObj = jasmine.createSpyObj({ close: null });
+    let mockMatDialog: jasmine.SpyObj<MatDialog>;
     let questionServiceSpy: SpyObj<QuestionService>;
+    let mockDialogAlertService: jasmine.SpyObj<DialogAlertService>;
 
     beforeEach(() => {
-        dialogSpy = jasmine.createSpyObj('MatDialog', ['open', 'close']);
-
-        dialogSpy.open.and.returnValue(dialogRefSpyObj);
         questionServiceSpy = jasmine.createSpyObj('QuestionService', [
             'addMultipleChoice',
-            'deleteQuestion',
+            'deleteQuizQuestion',
             'placeHigher',
             'placeLower',
+            'addQuestionToBank',
             'checkValidity',
         ]);
+        mockDialogAlertService = jasmine.createSpyObj('DialogAlertService', ['openSuccessDialog', 'openErrorDialog']);
+        mockMatDialog = jasmine.createSpyObj('MatDialog', ['open']);
+        const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed'], ['confirm']);
+        mockDialogRef.afterClosed.and.returnValue(of(true));
+        mockMatDialog.open.and.returnValue(mockDialogRef);
 
         questionServiceSpy.checkValidity.and.returnValue(of(true));
 
@@ -33,8 +38,9 @@ describe('QuestionModificationComponent', () => {
             declarations: [QuestionModificationComponent],
             imports: [MatDialogModule, HttpClientModule, FormsModule],
             providers: [
-                { provide: MatDialog, useValue: dialogSpy },
+                { provide: MatDialog, useValue: mockMatDialog },
                 { provide: QuestionService, useValue: questionServiceSpy },
+                { provide: DialogAlertService, useValue: mockDialogAlertService },
             ],
         }).compileComponents();
 
@@ -46,8 +52,6 @@ describe('QuestionModificationComponent', () => {
             points: 1,
             choices: [],
         };
-
-        component.dialogRef = dialogRefSpyObj;
         fixture.detectChanges();
     });
 
@@ -59,14 +63,9 @@ describe('QuestionModificationComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('should call addMultipleChoice', () => {
-        component.addMultipleChoice('text', true);
-        expect(questionServiceSpy.addMultipleChoice).toHaveBeenCalled();
-    });
-
     it('should call deleteQuestion', () => {
-        component.deleteQuestion();
-        expect(questionServiceSpy.deleteQuestion).toHaveBeenCalled();
+        component.deleteQuizQuestion();
+        expect(questionServiceSpy.deleteQuizQuestion).toHaveBeenCalled();
     });
 
     it('should call placeQuestionHigher', () => {
@@ -79,36 +78,73 @@ describe('QuestionModificationComponent', () => {
         expect(questionServiceSpy.placeLower).toHaveBeenCalled();
     });
 
-    it('should call saveChanges', () => {
-        component.saveChanges();
-        expect(questionServiceSpy.checkValidity).toHaveBeenCalled();
+    it('should call addToBank', () => {
+        questionServiceSpy.addQuestionToBank.and.returnValue(of());
+        component.addToBank(component.question);
+        expect(questionServiceSpy.addQuestionToBank).toHaveBeenCalled();
     });
 
-    it('should call closeDialog', async () => {
-        component.dialogRef = dialogRefSpyObj;
-        component['previousSelectedQuestion'] = {} as Question;
-        component.question = JSON.parse(JSON.stringify({} as Question));
-        component.closeDialog();
-        expect(dialogRefSpyObj.close).toHaveBeenCalled();
+    it('addToBank should should call addQuestionToBank and openSuccessDialog on success)', () => {
+        const mockQuestion = {
+            type: 'QCM',
+            text: 'text',
+            points: 1,
+            choices: [],
+        };
+        const mockResponse = {
+            date: new Date(),
+            _id: '',
+            ...mockQuestion,
+        };
+        questionServiceSpy.addQuestionToBank.and.returnValue(of(mockResponse));
+        component.addToBank(component.question);
+        expect(questionServiceSpy.addQuestionToBank).toHaveBeenCalledWith(mockQuestion);
+        expect(mockDialogAlertService.openSuccessDialog).toHaveBeenCalledWith(SuccessMessages.QuestionBankAdded);
     });
 
-    it('should call openDialog', fakeAsync(() => {
-        component.openDialog();
-        component.question = {} as Question;
+    it('should call addQuestionToBank and openErrorDialog with QuestionAlreadyInBank', fakeAsync(() => {
+        const spy = new Subject<Question>();
+        const mockQuestion = {
+            type: 'QCM',
+            text: 'text',
+            points: 1,
+            choices: [],
+        };
+        questionServiceSpy.addQuestionToBank.and.returnValue(spy);
+        component.addToBank(mockQuestion);
+        spy.error({ error: 'Question already exists' });
         tick();
-        expect(dialogSpy.open).toHaveBeenCalled();
+        expect(questionServiceSpy.addQuestionToBank).toHaveBeenCalledWith(mockQuestion);
+        expect(mockDialogAlertService.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.QuestionAlreadyInBank);
     }));
 
-    it('should not closeDialog', async () => {
-        component['previousSelectedQuestion'] = {} as Question;
-        component.question = JSON.parse(JSON.stringify(component['previousSelectedQuestion']));
-        component.closeDialog();
-        expect(dialogRefSpyObj.close).toHaveBeenCalled();
-    });
+    it('should call addQuestionToBank and openErrorDialog with AddQuestionToBank', fakeAsync(() => {
+        const spy = new Subject<Question>();
+        const mockQuestion = {
+            type: 'QCM',
+            text: 'text',
+            points: 1,
+            choices: [],
+        };
+        questionServiceSpy.addQuestionToBank.and.returnValue(spy);
+        component.addToBank(mockQuestion);
+        spy.error({ error: 'error' });
+        tick();
+        expect(questionServiceSpy.addQuestionToBank).toHaveBeenCalledWith(mockQuestion);
+        expect(mockDialogAlertService.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.AddQuestionToBank);
+    }));
 
-    it('should not saveChanges', () => {
-        component.question.type = 'text';
-        component.saveChanges();
-        expect(questionServiceSpy.checkValidity).not.toHaveBeenCalled();
-    });
+    it('should call modifyQuestion', fakeAsync(() => {
+        component.quizModified = {
+            id: '',
+            title: '',
+            description: '',
+            duration: 0,
+            lastModification: new Date().toISOString(),
+            questions: [],
+        };
+        component.modifyQuestion();
+        tick();
+        expect(mockMatDialog.open).toHaveBeenCalled();
+    }));
 });

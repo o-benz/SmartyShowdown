@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { AbstractControl, FormArray, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { NewQuestionFormComponent } from '@app/components/new-question-form/new-question-form.component';
-import { BaseMultipleChoiceQuestion, Choice } from '@app/interfaces/question-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { BaseQuestion, Choice } from '@app/interfaces/question-model';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { QuestionService } from '@app/services/question/question.service';
 import { QuestionBankService } from './question-bank.service';
 
@@ -13,12 +13,12 @@ describe('QuestionBankService', () => {
     let fb: FormBuilder;
     let questionService: QuestionService;
     let dialogRef: MatDialogRef<NewQuestionFormComponent, unknown>;
-    let dialogErrorService: jasmine.SpyObj<DialogErrorService>;
+    let dialogAlertService: jasmine.SpyObj<DialogAlertService>;
     let choices: FormArray;
     let choice: Choice;
     let abstractControl: AbstractControl;
     let newQuestionFormComponent: NewQuestionFormComponent;
-    let data: { baseQuestion: BaseMultipleChoiceQuestion };
+    let data: { baseQuestion: BaseQuestion };
     const MAX_CHOICES = 4;
 
     beforeEach(() => {
@@ -32,7 +32,7 @@ describe('QuestionBankService', () => {
                 { provide: NewQuestionFormComponent, useValue: newQuestionFormComponent },
                 { provide: MatDialogRef, useValue: dialogRef },
                 { provide: QuestionService, useValue: questionService },
-                { provide: DialogErrorService, useValue: dialogErrorService },
+                { provide: DialogAlertService, useValue: dialogAlertService },
             ],
         });
         service = TestBed.inject(QuestionBankService);
@@ -146,7 +146,7 @@ describe('QuestionBankService', () => {
     });
 
     it('checkErrors should return appropriate message if control is not a multiple of 10', () => {
-        const testComponent = new TestableNewQuestionFormComponent(fb, dialogRef, questionService, service, dialogErrorService, data);
+        const testComponent = new TestableNewQuestionFormComponent(fb, dialogRef, questionService, service, dialogAlertService, data);
         abstractControl.setValidators(testComponent.isMultipleOf10);
         abstractControl.setValue('value causing custom error');
         spyOn(window, 'alert');

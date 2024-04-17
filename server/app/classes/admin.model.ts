@@ -1,7 +1,6 @@
 // https://bcrypt.online/
+import { adminConst } from '@app/authGard/constants';
 import * as bcrypt from 'bcrypt';
-
-const saltRounds = 10;
 
 export class Admin {
     private static instance: Admin | null = null;
@@ -13,7 +12,7 @@ export class Admin {
 
     static initialize(password: string): void {
         if (!Admin.instance) {
-            const passwordHash = bcrypt.hashSync(password, saltRounds);
+            const passwordHash = bcrypt.hashSync(password, adminConst.saltRounds);
             Admin.instance = new Admin(passwordHash);
         } else {
             throw new Error("L'instance Admin a déjà été initialisée.");

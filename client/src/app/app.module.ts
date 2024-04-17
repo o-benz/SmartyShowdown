@@ -14,14 +14,15 @@ import { MainPageComponent } from '@app/pages/main-page/main-page.component';
 import { CanvasJSAngularChartsModule } from '@canvasjs/angular-charts';
 import { AnswerZoneComponent } from './components/answer-zone/answer-zone.component';
 import { ChatBoxComponent } from './components/chat-box/chat-box.component';
-import { ChoiceModificationComponent } from './components/choice-modification/choice-modification.component';
-import { DialogErrorComponent } from './components/dialog-error/dialog-error.component';
+import { DialogAlertComponent } from './components/dialog-alert/dialog-alert.component';
 import { HeaderComponent } from './components/header/header.component';
+import { HistoricComponent } from './components/historic/historic.component';
 import { ImportErrorComponent } from './components/import-error/import-error.component';
 import { ImportQuizComponent } from './components/import-quiz/import-quiz.component';
 import { LoginFormComponent } from './components/login-form/login-form.component';
-import { NewQcmComponent } from './components/new-qcm/new-qcm.component';
 import { NewQuestionFormComponent } from './components/new-question-form/new-question-form.component';
+import { NewQuestionComponent } from './components/new-question/new-question.component';
+import { PlayerListOrganiserComponent } from './components/player-list-organiser/player-list-organiser.component';
 import { PlayerListResultComponent } from './components/player-list-result/player-list-result.component';
 import { QuestionListComponent } from './components/question-list/question-list.component';
 import { QuestionModificationComponent } from './components/question-modification/question-modification.component';
@@ -30,7 +31,6 @@ import { QuestionZoneComponent } from './components/question-zone/question-zone.
 import { QuizListComponent } from './components/quiz-list/quiz-list.component';
 import { ResultPopupComponent } from './components/result-popup/result-popup.component';
 import { RightAnswerPopupComponent } from './components/right-answer-popup/right-answer-popup.component';
-import { StatsZoneComponent } from './components/stats-zone/stats-zone.component';
 import { UsernamePickerComponent } from './components/username-picker/username-picker.component';
 import { WaitingRoomListComponent } from './components/waiting-room-list/waiting-room-list.component';
 import { AdminPageComponent } from './pages/admin-page/admin-page.component';
@@ -39,7 +39,6 @@ import { CreateQuizComponent } from './pages/create-quiz/create-quiz.component';
 import { JoinGameComponent } from './pages/join-game/join-game.component';
 import { LobbyPageComponent } from './pages/lobby-page/lobby-page.component';
 import { OrganizerViewComponent } from './pages/organizer-view/organizer-view.component';
-import { QuestionBankComponent } from './pages/question-bank/question-bank.component';
 import { ResultPageComponent } from './pages/result-page/result-page.component';
 import { TrueGameComponent } from './pages/true-game/true-game.component';
 import { AuthInterceptor } from './services/auth-interceptor/auth.interceptor';
@@ -65,25 +64,24 @@ import { AuthInterceptor } from './services/auth-interceptor/auth.interceptor';
         AnswerZoneComponent,
         CreateQuizComponent,
         QuestionModificationComponent,
-        ChoiceModificationComponent,
         HeaderComponent,
-        NewQcmComponent,
+        NewQuestionComponent,
         ImportQuizComponent,
         ImportErrorComponent,
         ResultPopupComponent,
-        QuestionBankComponent,
         QuestionListComponent,
         NewQuestionFormComponent,
-        DialogErrorComponent,
         JoinGameComponent,
         WaitingRoomListComponent,
         ResultPageComponent,
-        StatsZoneComponent,
         QuestionStatsComponent,
         PlayerListResultComponent,
         OrganizerViewComponent,
         UsernamePickerComponent,
         RightAnswerPopupComponent,
+        PlayerListOrganiserComponent,
+        HistoricComponent,
+        DialogAlertComponent,
     ],
     imports: [
         AppMaterialModule,

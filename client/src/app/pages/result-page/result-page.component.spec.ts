@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { HeaderComponent } from '@app/components/header/header.component';
 import { PlayerListResultComponent } from '@app/components/player-list-result/player-list-result.component';
 import { QuestionStatsComponent } from '@app/components/question-stats/question-stats.component';
@@ -30,7 +31,7 @@ describe('ResultPageComponent', () => {
                 { provide: StatService, useValue: jasmine.createSpyObj('StatService', ['sortPlayerByPoints']) },
                 { provide: GameService, useValue: jasmine.createSpyObj('GameService', ['staysInInterval']) },
             ],
-            imports: [CanvasJSAngularChartsModule, ChatStubComponent],
+            imports: [CanvasJSAngularChartsModule, ChatStubComponent, FormsModule],
         });
         gameServiceSpy = TestBed.inject(GameService) as jasmine.SpyObj<GameService>;
         gameServiceSpy.staysInInterval.and.returnValue(true);

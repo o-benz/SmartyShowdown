@@ -1,7 +1,8 @@
-import { MultipleChoiceQuestion, MultipleChoiceQuestionDocument } from '@app/model/database/question-mcq';
-import { CreateMultipleChoiceQuestionDto } from '@app/model/dto/question-mcq/create-question-mcq.dto';
-import { UpdateMultipleChoiceQuestionDto } from '@app/model/dto/question-mcq/update-question-mcq.dto';
-import { Injectable, Logger } from '@nestjs/common';
+import { MultipleChoiceQuestion, MultipleChoiceQuestionDocument } from '@app/model/database/question-mcq-database.schema';
+import { CreateMultipleChoiceQuestionDto } from '@app/model/question-mcq/dto/create-question-mcq.dto';
+import { UpdateMultipleChoiceQuestionDto } from '@app/model/question-mcq/dto/update-question-mcq.dto';
+import { QuestionService } from '@app/services/question/question.service';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -16,8 +17,9 @@ import {
 @Injectable()
 export class MultipleChoiceQuestionService {
     constructor(
-        @InjectModel(MultipleChoiceQuestion.name) public multipleChoiceQuestionModel: Model<MultipleChoiceQuestionDocument>,
-        private readonly logger: Logger,
+        @InjectModel(MultipleChoiceQuestion.name, 'questions')
+        public multipleChoiceQuestionModel: Model<MultipleChoiceQuestionDocument>,
+        private questionService: QuestionService,
     ) {}
 
     async getAllMultipleChoiceQuestions(): Promise<MultipleChoiceQuestion[]> {
@@ -118,16 +120,12 @@ export class MultipleChoiceQuestionService {
         if (!this.validateMultipleChoiceQuestionFormat(question)) {
             return Promise.reject(new Error('Invalid question format'));
         }
-        const existingQuestion = await this.isQuestionInDataBase(question.question);
+        const existingQuestion = await this.questionService.isQuestionTextInUse(question.text);
         // eslint-disable-next-line no-underscore-dangle
         if (existingQuestion && !existingQuestion._id.equals(question._id)) {
             return Promise.reject(new Error('Question already exists'));
         }
         return true;
-    }
-
-    private async isQuestionInDataBase(questionText: string): Promise<MultipleChoiceQuestion> {
-        return this.multipleChoiceQuestionModel.findOne({ question: questionText });
     }
 
     private validateMultipleChoiceQuestionFormat(question: CreateMultipleChoiceQuestionDto): boolean {

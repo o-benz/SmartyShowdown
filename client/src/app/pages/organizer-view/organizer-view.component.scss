@@ -29,31 +29,6 @@
     width: 40%;
 }
 
-.users {
-    grid-column: 4;
-}
-
-.users table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.users th,
-.users td {
-    padding: 8px;
-    border: 1px solid #ddd;
-    text-align: left;
-}
-
-.users th {
-    width: 50%;
-}
-
-.users .leftUser td {
-    font-style: italic;
-    text-decoration: line-through;
-}
-
 .question-zone {
     box-shadow: 0 0 5px $main-pink, 0 0 2px $main-pink;
     user-select: none;
@@ -87,12 +62,16 @@
     margin-right: 1%;
     animation: crownAppear 0.6s ease forwards;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     grid-gap: 10px;
 }
 
 .stats {
     grid-column: 1 / span 3;
+}
+
+.players {
+    grid-column: 4 / span 5;
 }
 
 .question {
@@ -145,7 +124,7 @@
 
 .abandon {
     display: flex;
-    justify-content: center;
+    justify-content: space-evenly;
     align-items: center;
     margin-top: 2%;
 }
@@ -158,4 +137,76 @@
     display: flex;
     font-size: 16px;
     cursor: pointer;
+}
+
+button.btndisabled,
+#pause.btndisabled,
+#panic.btndisabled {
+    display: block;
+    position: relative;
+    padding: 9px 30px;
+    border-radius: 12px;
+    font-size: 2vmin;
+    font-weight: bold;
+    color: $white;
+    background-color: #ccc;
+    border: none;
+    cursor: default;
+    outline-offset: 0;
+    user-select: none;
+    touch-action: auto;
+    transition: none;
+    pointer-events: none;
+    
+    span,
+    .button-82-shadow,
+    .button-82-edge,
+    .button-82-front {
+        all: unset;
+    }
+
+    &:hover,
+    &:active,
+    &:focus:not(:focus-visible) {
+        filter: none;
+        -webkit-filter: none;
+        transform: none;
+        transition: none;
+    }
+}
+
+.button-82-pushable {
+    width: 30%;
+}
+
+#pause {
+    .button-82-edge {
+        background: linear-gradient(
+            to left,
+            hsl(120deg 100% 16%) 0%,
+            hsl(120deg 100% 32%) 8%,
+            hsl(120deg 100% 32%) 92%,
+            hsl(120deg 100% 16%) 100%
+        );
+    }
+
+    .button-82-front {
+        background: #008000;
+    }
+}
+
+#panic {
+    .button-82-edge {
+        background: linear-gradient(
+            to left,
+            hsl(220deg 100% 16%) 0%,
+            hsl(220deg 100% 32%) 8%,
+            hsl(220deg 100% 32%) 92%,
+            hsl(220deg 100% 16%) 100%
+        );
+    }
+
+    .button-82-front {
+        background: hsl(220, 100%, 50%);
+    }
 }

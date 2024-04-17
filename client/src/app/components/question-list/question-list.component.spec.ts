@@ -1,47 +1,51 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { NewQuestionFormComponent } from '@app/components/new-question-form/new-question-form.component';
-import { MultipleChoiceQuestion, QuestionModel, TypeEnum } from '@app/interfaces/question-model';
-import { Choice } from '@app/interfaces/quiz-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
-import { AdminQuestionHandlerService } from '@app/services/mcq-handler/mcq-handler.service';
+import { ErrorMessages } from '@app/interfaces/alert-messages';
+import { Choice, Question, TypeEnum } from '@app/interfaces/question-model';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
+import { QuestionService } from '@app/services/question/question.service';
 import { of, throwError } from 'rxjs';
 import { QuestionListComponent } from './question-list.component';
 
 describe('QuestionListComponent', () => {
     let component: QuestionListComponent;
     let fixture: ComponentFixture<QuestionListComponent>;
-    let mockAdminQuestionHandlerService: jasmine.SpyObj<AdminQuestionHandlerService>;
+    let mockQuestionService: jasmine.SpyObj<QuestionService>;
     let mockMatDialog: jasmine.SpyObj<MatDialog>;
-    let mockDialogError: jasmine.SpyObj<DialogErrorService>;
+    let mockDialogAlert: jasmine.SpyObj<DialogAlertService>;
     const dialogWidth = '50%';
 
     beforeEach(() => {
-        mockAdminQuestionHandlerService = jasmine.createSpyObj('AdminQuestionHandlerService', [
-            'deleteMultipleChoiceQuestion',
-            'getAllMultipleChoiceQuestions',
-            'updateMultipleChoiceQuestion',
-            'addMultipleChoiceQuestion',
+        mockQuestionService = jasmine.createSpyObj('QuestionService', [
+            'getAllQuestionsInformation',
+            'addQuestionToBank',
+            'deleteQuestionFromBank',
+            'updateQuestionInBank',
+            'getMCQQuestionsInformation',
+            'getOEQQuestionsInformation',
+            'getQuestionsByType',
         ]);
 
         mockMatDialog = jasmine.createSpyObj('MatDialog', ['open']);
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed'], ['confirm']);
         mockDialogRef.afterClosed.and.returnValue(of(true));
         mockMatDialog.open.and.returnValue(mockDialogRef);
-        mockDialogError = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog']);
+        mockDialogAlert = jasmine.createSpyObj('DialogAlertService', ['openErrorDialog', 'openSuccessDialog']);
 
         TestBed.configureTestingModule({
             declarations: [QuestionListComponent],
             providers: [
-                { provide: AdminQuestionHandlerService, useValue: mockAdminQuestionHandlerService },
+                { provide: QuestionService, useValue: mockQuestionService },
                 { provide: MatDialog, useValue: mockMatDialog },
-                { provide: DialogErrorService, useValue: mockDialogError },
+                { provide: DialogAlertService, useValue: mockDialogAlert },
             ],
         }).compileComponents();
 
         fixture = TestBed.createComponent(QuestionListComponent);
         component = fixture.componentInstance;
-        mockAdminQuestionHandlerService.getAllMultipleChoiceQuestions.and.returnValue(of([]));
+        mockQuestionService.getAllQuestionsInformation.and.returnValue(of([]));
+        mockQuestionService.getQuestionsByType.and.returnValue(of([]));
         fixture.detectChanges();
     });
 
@@ -56,68 +60,68 @@ describe('QuestionListComponent', () => {
     });
 
     it('should fetch all multiple choice questions on init', () => {
-        expect(mockAdminQuestionHandlerService.getAllMultipleChoiceQuestions).toHaveBeenCalled();
+        expect(mockQuestionService.getAllQuestionsInformation).toHaveBeenCalled();
     });
 
     it('should assign fetched questions to QuestionListComponent.questions', () => {
         const mockQuestions = [getMockQuestion(TypeEnum.QCM), getMockQuestion(TypeEnum.QCM), getMockQuestion(TypeEnum.QCM)];
-        mockAdminQuestionHandlerService.getAllMultipleChoiceQuestions.and.returnValue(of(mockQuestions as MultipleChoiceQuestion[]));
+        mockQuestionService.getAllQuestionsInformation.and.returnValue(of(mockQuestions as Question[]));
         component.ngOnInit();
-        expect(QuestionListComponent.questions).toEqual(mockQuestions as QuestionModel[]);
+        expect(QuestionListComponent.questions).toEqual(mockQuestions as Question[]);
     });
 
     it('deleteQuestion should open a window to delete a question', () => {
         spyOn(window, 'confirm').and.returnValue(true);
-        mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion.and.returnValue(of(undefined));
-        const questionId = getRandomId();
-        component.deleteQuestion(questionId);
+        mockQuestionService.deleteQuestionFromBank.and.returnValue(of(undefined));
+        const question = getMockQuestion(TypeEnum.QCM);
+        component.deleteQuestion(question);
         expect(window.confirm).toHaveBeenCalledWith('Êtes-vous sûr de vouloir supprimer cette question ?');
     });
 
     it('deleteQuestion should delete question when confirmed', () => {
         spyOn(window, 'confirm').and.returnValue(true);
-        mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion.and.returnValue(of(undefined));
-        const questionId = getRandomId();
-        component.deleteQuestion(questionId);
-        expect(mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion).toHaveBeenCalledWith(questionId);
+        mockQuestionService.deleteQuestionFromBank.and.returnValue(of(undefined));
+        const question = getMockQuestion(TypeEnum.QCM);
+        component.deleteQuestion(question);
+        expect(mockQuestionService.deleteQuestionFromBank).toHaveBeenCalledWith(question);
     });
 
     it('deleteQuestion should remove question from list when delete is successful', () => {
         spyOn(window, 'confirm').and.returnValue(true);
-        const id = getRandomId();
+        const question = getMockQuestion(TypeEnum.QCM);
         QuestionListComponent.questions = [getMockQuestion(TypeEnum.QCM), getMockQuestion(TypeEnum.QCM)];
         // eslint-disable-next-line no-underscore-dangle
-        QuestionListComponent.questions[0]._id = id;
+        QuestionListComponent.questions[0]._id = question._id;
         const deletedQuestions = QuestionListComponent.questions[0];
-        mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion.and.returnValue(of(undefined));
-        component.deleteQuestion(id);
+        mockQuestionService.deleteQuestionFromBank.and.returnValue(of(undefined));
+        component.deleteQuestion(question);
         // eslint-disable-next-line no-underscore-dangle
-        expect(mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion).toHaveBeenCalled();
+        expect(mockQuestionService.deleteQuestionFromBank).toHaveBeenCalled();
         expect(QuestionListComponent.questions).not.toContain(deletedQuestions);
     });
 
     it('deleteQuestion should send error message when delete fails', () => {
-        const mockId = getRandomId();
+        const question = getMockQuestion(TypeEnum.QCM);
         const mockErrorMessage = 'Erreur lors de la suppression de la question. Veuillez réessayer.';
 
         spyOn(window, 'confirm').and.returnValue(true);
-        mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion.and.returnValue(throwError(() => new Error('error')));
-        component.deleteQuestion(mockId);
+        mockQuestionService.deleteQuestionFromBank.and.returnValue(throwError(() => new Error('error')));
+        component.deleteQuestion(question);
 
-        expect(mockDialogError.openErrorDialog).toHaveBeenCalledWith(mockErrorMessage); // Change access modifier to public
+        expect(mockDialogAlert.openErrorDialog).toHaveBeenCalledWith(mockErrorMessage);
     });
 
     it('deleteQuestion should not delete question when not confirmed', () => {
         spyOn(window, 'confirm').and.returnValue(false);
-        const questionId = getRandomId();
-        component.deleteQuestion(questionId);
-        expect(mockAdminQuestionHandlerService.deleteMultipleChoiceQuestion).not.toHaveBeenCalled();
+        const question = getMockQuestion(TypeEnum.QCM);
+        component.deleteQuestion(question);
+        expect(mockQuestionService.deleteQuestionFromBank).not.toHaveBeenCalled();
     });
 
     it('modifyQuestion should open a dialog window to modify a question', () => {
         const questionId = getRandomId();
         const mockQuestion = getMockQuestion(TypeEnum.QCM);
-        mockAdminQuestionHandlerService.updateMultipleChoiceQuestion.and.returnValue(of(mockQuestion as MultipleChoiceQuestion));
+        mockQuestionService.updateQuestionInBank.and.returnValue(of(mockQuestion as Question));
         component.modifyQuestion(questionId);
         expect(mockMatDialog.open).toHaveBeenCalled();
     });
@@ -140,10 +144,10 @@ describe('QuestionListComponent', () => {
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
         mockMatDialog.open.and.returnValue(mockDialogRef);
-        mockAdminQuestionHandlerService.updateMultipleChoiceQuestion.and.returnValue(of(mockQuestion as MultipleChoiceQuestion));
+        mockQuestionService.updateQuestionInBank.and.returnValue(of(mockQuestion as Question));
         component.modifyQuestion(questionId);
-        expect(mockAdminQuestionHandlerService.updateMultipleChoiceQuestion).toHaveBeenCalledWith({
-            ...(mockQuestion as MultipleChoiceQuestion),
+        expect(mockQuestionService.updateQuestionInBank).toHaveBeenCalledWith({
+            ...(mockQuestion as Question),
             _id: questionId,
         });
     });
@@ -154,20 +158,20 @@ describe('QuestionListComponent', () => {
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
         mockMatDialog.open.and.returnValue(mockDialogRef);
-        mockAdminQuestionHandlerService.updateMultipleChoiceQuestion.and.returnValue(throwError(() => new Error('Error message')));
+        mockQuestionService.updateQuestionInBank.and.returnValue(throwError(() => new Error('Error message')));
         component.modifyQuestion(questionId);
-        expect(mockDialogError.openErrorDialog).toHaveBeenCalledWith('Erreur lors de la modification de la question. Veuillez réessayer.');
+        expect(mockDialogAlert.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.UpdateQuestionError);
     });
 
-    it('modifyQuestion should not do anything if question type is not QCM', () => {
+    it('modifyQuestion should not do anything if question type is not QCM or QRL', () => {
         const questionId = getRandomId();
-        const mockQuestion = getMockQuestion(TypeEnum.QRL);
+        const mockQuestion = getMockQuestion('test' as TypeEnum);
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
         mockMatDialog.open.and.returnValue(mockDialogRef);
-        mockAdminQuestionHandlerService.updateMultipleChoiceQuestion.and.returnValue(of(mockQuestion as MultipleChoiceQuestion));
+        mockQuestionService.updateQuestionInBank.and.returnValue(of(mockQuestion as Question));
         component.modifyQuestion(questionId);
-        expect(mockAdminQuestionHandlerService.updateMultipleChoiceQuestion).not.toHaveBeenCalled();
+        expect(mockQuestionService.updateQuestionInBank).not.toHaveBeenCalled();
     });
 
     it('addQuestion should open a dialog with the correct data', () => {
@@ -184,10 +188,10 @@ describe('QuestionListComponent', () => {
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
         mockMatDialog.open.and.returnValue(mockDialogRef);
-        mockAdminQuestionHandlerService.addMultipleChoiceQuestion.and.returnValue(of(mockQuestion as MultipleChoiceQuestion));
+        mockQuestionService.addQuestionToBank.and.returnValue(of(mockQuestion as Question));
         component.createQuestion();
-        expect(mockAdminQuestionHandlerService.addMultipleChoiceQuestion).toHaveBeenCalledWith({
-            ...(mockQuestion as MultipleChoiceQuestion),
+        expect(mockQuestionService.addQuestionToBank).toHaveBeenCalledWith({
+            ...(mockQuestion as Question),
         });
     });
 
@@ -196,23 +200,62 @@ describe('QuestionListComponent', () => {
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
         mockMatDialog.open.and.returnValue(mockDialogRef);
-        mockAdminQuestionHandlerService.addMultipleChoiceQuestion.and.returnValue(throwError(() => new Error('Error message')));
+        mockQuestionService.addQuestionToBank.and.returnValue(throwError(() => new Error('Error message')));
         component.createQuestion();
-        expect(mockDialogError.openErrorDialog).toHaveBeenCalledWith("Erreur lors de l'ajout de la question. Veuillez réessayer.");
+        expect(mockDialogAlert.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.AddQuestionToBank);
     });
 
-    it('addQuestion should not do anything if question type is not QCM', () => {
-        const mockQuestion = getMockQuestion(TypeEnum.QRL);
+    it('addQuestion should send error message when question already exists', () => {
+        const mockError = { error: 'Question already exists' };
+        const mockQuestion = getMockQuestion(TypeEnum.QCM);
         const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
         mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
         mockMatDialog.open.and.returnValue(mockDialogRef);
-        mockAdminQuestionHandlerService.addMultipleChoiceQuestion.and.returnValue(of(mockQuestion as MultipleChoiceQuestion));
+        mockQuestionService.addQuestionToBank.and.returnValue(throwError(() => mockError));
         component.createQuestion();
-        expect(mockAdminQuestionHandlerService.addMultipleChoiceQuestion).not.toHaveBeenCalled();
+        expect(mockDialogAlert.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.QuestionAlreadyInBank);
+    });
+
+    it('addQuestion should not do anything if question type is not QCM or QRL', () => {
+        const mockQuestion = getMockQuestion('test' as TypeEnum);
+        const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
+        mockDialogRef.afterClosed.and.returnValue(of(mockQuestion));
+        mockMatDialog.open.and.returnValue(mockDialogRef);
+        mockQuestionService.addQuestionToBank.and.returnValue(of(mockQuestion as Question));
+        component.createQuestion();
+        expect(mockQuestionService.addQuestionToBank).not.toHaveBeenCalled();
+    });
+
+    it('setFilterState should update the filter state', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        spyOn<any>(component, 'updateQuestionsList');
+
+        component['setFilterState'](TypeEnum.QCM);
+
+        expect(component['filterState']).toEqual(TypeEnum.QCM);
+        expect(component['updateQuestionsList']).toHaveBeenCalled();
+    });
+
+    it('updateQuestion should call openErrorDialog on error', () => {
+        const mockQuestion = getMockQuestion(TypeEnum.QCM);
+        const mockId = getRandomId();
+        const mockError = new Error('error');
+        mockQuestionService.updateQuestionInBank.and.returnValue(throwError(() => mockError));
+        component['updateQuestion'](mockQuestion, mockId);
+        expect(mockDialogAlert.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.UpdateQuestionError);
+    });
+
+    it('updateQuestion should call Question already exists error message', () => {
+        const mockError = { error: 'Question already exists' };
+        const mockQuestion = getMockQuestion(TypeEnum.QCM);
+        const mockId = getRandomId();
+        mockQuestionService.updateQuestionInBank.and.returnValue(throwError(() => mockError));
+        component['updateQuestion'](mockQuestion, mockId);
+        expect(mockDialogAlert.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.QuestionAlreadyInBank);
     });
 });
 
-const getMockQuestion = (type: TypeEnum): QuestionModel => {
+const getMockQuestion = (type: TypeEnum): Question => {
     return {
         type,
         text: getRandomString(),

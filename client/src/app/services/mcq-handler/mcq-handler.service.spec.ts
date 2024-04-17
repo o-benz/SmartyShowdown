@@ -1,20 +1,20 @@
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Choice, MultipleChoiceQuestion, TypeEnum } from '@app/interfaces/question-model';
+import { Choice, Question, TypeEnum } from '@app/interfaces/question-model';
 import { environment } from 'src/environments/environment';
-import { AdminQuestionHandlerService } from './mcq-handler.service';
+import { McqHandlerService } from './mcq-handler.service';
 
 /* eslint-disable no-underscore-dangle */
-describe('AdminQuestionHandlerService', () => {
-    let service: AdminQuestionHandlerService;
+describe('McqHandlerService', () => {
+    let service: McqHandlerService;
     let httpMock: HttpTestingController;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [HttpClientTestingModule],
-            providers: [AdminQuestionHandlerService],
+            providers: [McqHandlerService],
         });
-        service = TestBed.inject(AdminQuestionHandlerService);
+        service = TestBed.inject(McqHandlerService);
         httpMock = TestBed.inject(HttpTestingController);
     });
 
@@ -27,7 +27,7 @@ describe('AdminQuestionHandlerService', () => {
     });
 
     it('should get all multiple choice questions', () => {
-        const mockMCQs = [generateMockMCQ(), generateMockMCQ()] as MultipleChoiceQuestion[];
+        const mockMCQs = [generateMockMCQ(), generateMockMCQ()] as Question[];
 
         service.getAllMultipleChoiceQuestions().subscribe((questions) => {
             const expectedQuestions = [
@@ -38,7 +38,7 @@ describe('AdminQuestionHandlerService', () => {
                     choices: mockMCQs[0].choices,
                     _id: mockMCQs[0]._id,
                     date: mockMCQs[0].date,
-                } as MultipleChoiceQuestion,
+                } as Question,
                 {
                     type: mockMCQs[1].type,
                     text: mockMCQs[1].text,
@@ -46,7 +46,7 @@ describe('AdminQuestionHandlerService', () => {
                     choices: mockMCQs[1].choices,
                     _id: mockMCQs[1]._id,
                     date: mockMCQs[1].date,
-                } as MultipleChoiceQuestion,
+                } as Question,
             ];
             expect(questions.length).toBe(expectedQuestions.length);
             for (let i = 0; i < questions.length; i++) {
@@ -158,7 +158,7 @@ describe('AdminQuestionHandlerService', () => {
     });
 });
 
-const generateMockMCQ = (): MultipleChoiceQuestion => {
+const generateMockMCQ = (): Question => {
     return {
         type: TypeEnum.QCM,
         text: getRandomString(),

@@ -1,13 +1,13 @@
 <div class="chat-area-container">
     <h1 class="chat-area">
         Chat
-        {{ user.username }}
+        {{ (user)? user.username:'' }}
     </h1>
     <div class="chat-history">
         <div
             #messageList
             class="message-box"
-            *ngFor="let message of roomMessages" 
+            *ngFor="let message of roomMessages"
             [class.sent]="isSent(message)"
             [class.received]="!isSent(message)"
         >
@@ -15,8 +15,8 @@
         </div>
     </div>
     <div class="chat-input">
-        <input 
-            type="text" 
+        <input
+            type="text"
             placeholder="Entrez votre message..."
             [(ngModel)]="roomMessage"
             (keydown)="handleKeydown($event)"
