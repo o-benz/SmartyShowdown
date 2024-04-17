@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Question, Quiz, QuizEnum } from '@app/interfaces/quiz-model';
-import { DEFAULT_DURATION, LENGTH_ID, MIN_QUIZ_AMOUNT, RANDOM_OFFSET, SMALLEST_INDEX } from '@app/services/constants';
+import { BaseQuestion } from '@app/interfaces/question-model';
+import { Quiz, QuizEnum } from '@app/interfaces/quiz-model';
+import { DEFAULT_DURATION, LENGTH_ID, MIN_QUIZ_AMOUNT, RANDOM_OFFSET } from '@app/services/constants';
 import { QuestionService } from '@app/services/question/question.service';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -27,38 +28,35 @@ export class QuizService {
         return this.http.post<boolean>(`${environment.serverUrl}/quiz`, quiz);
     }
 
-    fetchQuestions(callback: (questions: Question[]) => void): void {
-        this.questionService.getAllQuestions().subscribe((qcm) => {
-            callback(qcm);
-        });
+    async generateRandomQuiz(): Promise<Quiz> {
+        const questions = await this.generateQuestions();
+        const randomQuiz = {
+            id: this.generateRandomID(LENGTH_ID),
+            visible: true,
+            title: QuizEnum.RANDOMMODE,
+            description: QuizEnum.RANDOMDESCRIPTION,
+            duration: DEFAULT_DURATION,
+            lastModification: new Date().toLocaleDateString(undefined, { timeZone: 'UTC' }),
+            questions,
+        };
+        return randomQuiz;
     }
 
-    generateRandomQuiz(quizList: Quiz[]): Quiz[] {
-        const questionsRandom: Question[] = [];
-        const newQuizList = [...quizList];
-        let qcmList: Question[] = [];
-        this.fetchQuestions((questions) => {
-            qcmList = questions;
-            if (qcmList.length >= MIN_QUIZ_AMOUNT) {
-                const randomQuiz = {
-                    id: this.generateRandomID(LENGTH_ID),
-                    visible: true,
-                    title: QuizEnum.RANDOMMODE,
-                    description: QuizEnum.RANDOMDESCRIPTION,
-                    duration: DEFAULT_DURATION,
-                    lastModification: new Date().toLocaleDateString(undefined, { timeZone: 'UTC' }),
-                    questions: this.generateQuestions(questionsRandom),
-                };
-                const randomQuizIndex = newQuizList.findIndex((quiz) => quiz.title === QuizEnum.RANDOMMODE);
-                if (randomQuizIndex !== SMALLEST_INDEX) newQuizList[randomQuizIndex] = randomQuiz;
-                else newQuizList.push(randomQuiz);
-            }
-        });
-        return newQuizList;
+    addQuizToList(quiz: Quiz, quizList: Quiz[]): Quiz[] {
+        quizList.unshift(quiz);
+        return quizList;
     }
 
-    generateQuestions(questionsRandom: Question[]) {
-        return questionsRandom.sort(() => RANDOM_OFFSET - Math.random()).slice(0, MIN_QUIZ_AMOUNT);
+    async generateQuestions(): Promise<BaseQuestion[]> {
+        return new Promise((resolve, reject) => {
+            this.fetchQuestions((questions) => {
+                if (questions.length === 0) {
+                    reject('Failed to fetch questions');
+                } else {
+                    resolve(questions.sort(() => RANDOM_OFFSET - Math.random()).slice(0, MIN_QUIZ_AMOUNT));
+                }
+            });
+        });
     }
 
     generateRandomID(len: number) {
@@ -67,5 +65,11 @@ export class QuizService {
             output += QuizEnum.IDHEX.charAt(Math.floor(Math.random() * QuizEnum.IDHEX.length));
         }
         return output;
+    }
+
+    private fetchQuestions(callback: (questions: BaseQuestion[]) => void): void {
+        this.questionService.getAllMultipleChoiceQuestions().subscribe((qcm) => {
+            callback(qcm);
+        });
     }
 }

@@ -7,7 +7,7 @@
                 Code d'accès: {{ roomCode }}
             </h1>
     
-            <app-waiting-room-list class="waiting-list" [isOrganisateur]="isOrganizer"></app-waiting-room-list>
+            <app-waiting-room-list class="waiting-list" [isOrganizer]="isOrganizer"></app-waiting-room-list>
             
             <div class="centered-item" *ngIf="isOrganizer">
                 <button class="lock-button" (click)="toggleRoomLock()">

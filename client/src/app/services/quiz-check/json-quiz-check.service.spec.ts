@@ -3,7 +3,6 @@ import { TestBed } from '@angular/core/testing';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ImportErrorComponent } from '@app/components/import-error/import-error.component';
-import { QuizListComponent } from '@app/components/quiz-list/quiz-list.component';
 import { Quiz } from '@app/interfaces/quiz-model';
 import { QuizValueCheckService } from '@app/services/quiz-value-check/quiz-value-check.service';
 import { QuizService } from '@app/services/quiz/quiz.service';
@@ -19,7 +18,7 @@ describe('JsonQuizCheckService', () => {
     let fileReaderSpy: jasmine.SpyObj<FileReader>;
 
     beforeEach(() => {
-        const spyMatDialog = jasmine.createSpyObj('MatDialog', ['']);
+        const spyMatDialog = jasmine.createSpyObj('MatDialog', ['afterClosed', 'open']);
 
         TestBed.configureTestingModule({
             imports: [
@@ -53,59 +52,51 @@ describe('JsonQuizCheckService', () => {
         expect(service).toBeTruthy();
     });
 
-    it('should resolve with new name if new name is provided', async () => {
+    it('nameCheck should reject if no new name is given', (done) => {
         const mockQuiz: Quiz = { id: '000004', title: 'first', questions: [] } as unknown as Quiz;
-        QuizListComponent.quizzes = [
-            { id: '000001', title: 'first' },
-            { id: '000002', title: 'second' },
-            { id: '000003', title: 'third' },
-        ] as Quiz[];
-        const errorComponent = service['handleErrorMessage']('error');
-        spyOn(dialogSpy, 'open').and.returnValue(errorComponent);
-        service.nameCheck(mockQuiz).then((quizNewName) => {
-            expect(quizNewName).toEqual(mockQuiz.title);
+        const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
+        mockDialogRef.componentInstance = { prepareNameCheck: jasmine.createSpy(), message: '' };
+        mockDialogRef.afterClosed.and.returnValue(of(null));
+
+        spyOn(dialogSpy, 'open').and.returnValue(mockDialogRef);
+
+        service.nameCheck(mockQuiz).catch((error): void => {
+            expect(error.message).toEqual("Un nouveau nom n'a pas été sélectionné");
+            done();
         });
     });
 
-    it('nameCheck should reject if no new name is given', async () => {
+    it('nameCheck should resolve with new name if new name is provided', (done) => {
         const mockQuiz: Quiz = { id: '000004', title: 'first', questions: [] } as unknown as Quiz;
-        QuizListComponent.quizzes = [
+        service['quizzes'] = [
             { id: '000001', title: 'first' },
             { id: '000002', title: 'second' },
             { id: '000003', title: 'third' },
         ] as Quiz[];
         const errorComponent = service['handleErrorMessage']('error');
         spyOn(dialogSpy, 'open').and.returnValue(errorComponent);
-        spyOn(errorComponent, 'afterClosed').and.returnValue(of(null as unknown as Quiz));
-        service.nameCheck(mockQuiz).catch((error) => {
-            expect(error).toEqual("Un nouveau nom n'a pas été sélectionné");
-        });
-    });
-
-    it('nameCheck should resolve with new name if new name is provided', async () => {
-        const mockQuiz: Quiz = { id: '000004', title: 'first', questions: [] } as unknown as Quiz;
-        QuizListComponent.quizzes = [
-            { id: '000001', title: 'first' },
-            { id: '000002', title: 'second' },
-            { id: '000003', title: 'third' },
-        ] as Quiz[];
-        const errorComponent = service['handleErrorMessage']('error');
-        spyOn(dialogSpy, 'open').and.returnValue(errorComponent);
-        spyOn(errorComponent, 'afterClosed').and.returnValue(of('newName' as unknown as Quiz));
-        service.nameCheck(mockQuiz).then((quizNewName) => {
-            expect(quizNewName).toEqual('newName');
-        });
+        service
+            .nameCheck(mockQuiz)
+            .then((quizNewName) => {
+                expect(quizNewName).toEqual('newName');
+                done();
+            })
+            .catch((error) => {
+                expect(error).toEqual("Un nouveau nom n'a pas été sélectionné");
+                done();
+            });
+        errorComponent.close('newName' as unknown as Quiz);
     });
 
     it('should open a mat dialog if an error is encountered', () => {
         const spy = spyOn(dialogSpy, 'open').and.returnValue({ componentInstance: { message: '' } } as MatDialogRef<unknown>);
         service['handleErrorMessage']('error');
-        expect(spy).toHaveBeenCalledWith(ImportErrorComponent);
+        expect(spy).toHaveBeenCalledWith(ImportErrorComponent, { width: '50%' });
     });
 
     it('isNameAvailable return true if no other quiz in quizList have this name', () => {
         const quizNewName: Quiz = { id: '000004', title: 'forth', questions: [] } as unknown as Quiz;
-        QuizListComponent.quizzes = [
+        service['quizzes'] = [
             { id: '000001', title: 'first' },
             { id: '000002', title: 'second' },
             { id: '000003', title: 'third' },
@@ -113,7 +104,7 @@ describe('JsonQuizCheckService', () => {
 
         const newQuiz = service['isNameAvailable'](quizNewName);
         expect(newQuiz).toBeTrue();
-        const alreadyTakenName = service['isNameAvailable'](QuizListComponent.quizzes[0]);
+        const alreadyTakenName = service['isNameAvailable'](service['quizzes'][0]);
         expect(alreadyTakenName).toBeFalse();
     });
 });

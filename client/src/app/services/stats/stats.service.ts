@@ -7,12 +7,29 @@ const MINUS_ONE = -1;
     providedIn: 'root',
 })
 export class StatService {
-    sortPlayerByPoints(players: PlayerInfo[]): PlayerInfo[] {
-        return players.sort((playerOne, playerTwo) => {
-            if ((playerOne.score ?? 0) > (playerTwo.score ?? 0)) return MINUS_ONE;
-            if ((playerOne.score ?? 0) < (playerTwo.score ?? 0)) return 1;
+    sortPlayerByPoints(players: PlayerInfo[], isAscending: boolean): PlayerInfo[] {
+        const list = players.sort((playerOne, playerTwo) => {
+            if ((playerOne.score ?? 0) > (playerTwo.score ?? 0)) return 1;
+            if ((playerOne.score ?? 0) < (playerTwo.score ?? 0)) return MINUS_ONE;
             return playerOne.name.localeCompare(playerTwo.name);
         });
+        return isAscending ? list : list.reverse();
+    }
+
+    sortPlayerByUserName(players: PlayerInfo[], isAscending: boolean): PlayerInfo[] {
+        const list = players.sort((playerOne, playerTwo) => {
+            return playerOne.name.localeCompare(playerTwo.name);
+        });
+        return isAscending ? list : list.reverse();
+    }
+
+    sortPlayerByState(players: PlayerInfo[], isAscending: boolean): PlayerInfo[] {
+        const list = players.sort((playerOne, playerTwo) => {
+            if ((playerOne.state ?? 0) > (playerTwo.state ?? 0)) return 1;
+            if ((playerOne.state ?? 0) < (playerTwo.state ?? 0)) return MINUS_ONE;
+            return playerOne.name.localeCompare(playerTwo.name);
+        });
+        return isAscending ? list : list.reverse();
     }
 
     staysInInterval(last: number, value: number, first: number = 0): boolean {

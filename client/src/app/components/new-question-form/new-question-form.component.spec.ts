@@ -2,8 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AbstractControl, FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogActions, MatDialogRef } from '@angular/material/dialog';
-import { BaseMultipleChoiceQuestion, Choice, MultipleChoiceQuestion, TypeEnum } from '@app/interfaces/question-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { BaseQuestion, Choice, Question, TypeEnum } from '@app/interfaces/question-model';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { QuestionBankService } from '@app/services/question-bank/question-bank.service';
 import { QuestionService } from '@app/services/question/question.service';
 import { of } from 'rxjs';
@@ -16,7 +16,7 @@ describe('NewQuestionFormComponent', () => {
     let mockQuestionBankService: jasmine.SpyObj<QuestionBankService>;
     let mockMatDialog: jasmine.SpyObj<MatDialog>;
     let mockMatDialogRef: jasmine.SpyObj<MatDialogRef<NewQuestionFormComponent>>;
-    let mockDialogError: jasmine.SpyObj<DialogErrorService>;
+    let mockDialogAlert: jasmine.SpyObj<DialogAlertService>;
     let abstractControl: AbstractControl;
     let fb: FormBuilder;
     let choices: FormArray;
@@ -35,7 +35,7 @@ describe('NewQuestionFormComponent', () => {
         fb = new FormBuilder();
         mockMatDialog = jasmine.createSpyObj('MatDialog', ['open', 'close', 'afterClosed']);
         mockMatDialogRef = jasmine.createSpyObj('MatDialogRef', ['open', 'close', 'afterClosed']);
-        mockDialogError = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog']);
+        mockDialogAlert = jasmine.createSpyObj('DialogAlertService', ['openErrorDialog']);
 
         TestBed.configureTestingModule({
             imports: [ReactiveFormsModule],
@@ -50,7 +50,7 @@ describe('NewQuestionFormComponent', () => {
                 { provide: QuestionService, useValue: mockQuestionService },
                 { provide: QuestionBankService, useValue: mockQuestionBankService },
                 { provide: MatDialogActions, useValue: {} },
-                { provide: DialogErrorService, useValue: mockDialogError },
+                { provide: DialogAlertService, useValue: mockDialogAlert },
             ],
         }).compileComponents();
 
@@ -71,7 +71,7 @@ describe('NewQuestionFormComponent', () => {
         component.ngOnInit();
         expect(component.questionForm.value).toEqual({
             type: 'QCM',
-            question: '',
+            text: '',
             points: 10,
             choices: [],
         });
@@ -83,7 +83,7 @@ describe('NewQuestionFormComponent', () => {
         component.ngOnInit();
         expect(component.questionForm.value).toEqual({
             type: question.type,
-            question: question.text,
+            text: question.text,
             points: question.points,
             choices: question.choices,
         });
@@ -91,13 +91,15 @@ describe('NewQuestionFormComponent', () => {
 
     it('onSubmit should close the dialog with the form value', () => {
         const mockQuestion = generateMockQuestion(TypeEnum.QCM);
-        const mockChoices = { text: getRandomString(), isCorrect: mockQuestion.choices[0].isCorrect === true ? false : true };
-        mockQuestion.choices.push(mockChoices);
+        if (mockQuestion.choices) {
+            const mockChoices = { text: getRandomString(), isCorrect: mockQuestion.choices[0].isCorrect === true ? false : true };
+            mockQuestion.choices.push(mockChoices);
+        }
         component.data = { baseQuestion: mockQuestion };
         component.ngOnInit();
         component.questionForm.setValue({
             type: mockQuestion.type,
-            question: mockQuestion.text,
+            text: mockQuestion.text,
             points: 10,
             choices: mockQuestion.choices,
         });
@@ -106,18 +108,20 @@ describe('NewQuestionFormComponent', () => {
 
         component.onSubmit();
 
-        expect(mockMatDialogRef.close).toHaveBeenCalledWith(component.questionForm.value as BaseMultipleChoiceQuestion);
+        expect(mockMatDialogRef.close).toHaveBeenCalledWith(component.questionForm.value as BaseQuestion);
     });
 
     it('onSubmit should alert if Question is invalid', () => {
         const mockQuestion = generateMockQuestion(TypeEnum.QCM);
-        const mockChoices = { text: getRandomString(), isCorrect: mockQuestion.choices[0].isCorrect === true ? false : true };
-        mockQuestion.choices.push(mockChoices);
+        if (mockQuestion.choices) {
+            const mockChoices = { text: getRandomString(), isCorrect: mockQuestion.choices[0].isCorrect === true ? false : true };
+            mockQuestion.choices.push(mockChoices);
+        }
         component.data = { baseQuestion: mockQuestion };
         component.ngOnInit();
         component.questionForm.setValue({
             type: mockQuestion.type,
-            question: mockQuestion.text,
+            text: mockQuestion.text,
             points: 10,
             choices: mockQuestion.choices,
         });
@@ -125,7 +129,7 @@ describe('NewQuestionFormComponent', () => {
         mockQuestionService.checkValidity.and.returnValue(of(false));
         component.onSubmit();
 
-        expect(mockDialogError.openErrorDialog).toHaveBeenCalledWith('Formulaire invalide');
+        expect(mockDialogAlert.openErrorDialog).toHaveBeenCalledWith('Formulaire invalide');
     });
 
     it('onSubmit should call checkErrors if form is invalid', () => {
@@ -135,7 +139,7 @@ describe('NewQuestionFormComponent', () => {
         component.ngOnInit();
         component.questionForm.setValue({
             type: mockQuestion.type,
-            question: mockQuestion.text,
+            text: mockQuestion.text,
             points: mockQuestion.points,
             choices: mockQuestion.choices,
         });
@@ -150,13 +154,13 @@ describe('NewQuestionFormComponent', () => {
     it('checkErrors should call openErrorDialog with formError when formError is not null', () => {
         mockQuestionBankService.checkErrors.and.returnValue('test est nécessaire');
         component['checkErrors'](abstractControl, 'test');
-        expect(mockDialogError.openErrorDialog).toHaveBeenCalledWith('test est nécessaire');
+        expect(mockDialogAlert.openErrorDialog).toHaveBeenCalledWith('test est nécessaire');
     });
 
     it('checkErrors should not call openErrorDialog when formError is null', () => {
         mockQuestionBankService.checkErrors.and.returnValue(null);
         component['checkErrors'](abstractControl, 'test');
-        expect(mockDialogError.openErrorDialog).not.toHaveBeenCalled();
+        expect(mockDialogAlert.openErrorDialog).not.toHaveBeenCalled();
     });
 
     it('cancel should close the dialog', () => {
@@ -196,9 +200,53 @@ describe('NewQuestionFormComponent', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect((component as any).isMultipleOfIdentifier(control)).toEqual({ notMultipleOf10: true });
     });
+
+    it('should remove "choices" control when type is "QRL"', () => {
+        component['setupTypeControl']();
+        component.questionForm.get('type')?.setValue('QRL');
+        expect(component.questionForm.get('choices')).toBeNull();
+    });
+
+    it('should add "choices" control when type is "QCM" and it does not already exist', () => {
+        component['setupTypeControl']();
+        component.questionForm.removeControl('choices');
+        expect(component.questionForm.get('choices')).toBeNull(); // Ensure control is not there before test
+        component.questionForm.get('type')?.setValue('QCM');
+        expect(component.questionForm.get('choices')).toBeTruthy();
+    });
+
+    it('should return a FormArray with no validators if type is QRL', () => {
+        component['newQuestion'] = { type: TypeEnum.QRL, text: 'Sample', points: 10 };
+        const formArray = component['getChoicesFormArray']();
+        expect(formArray.validator).toBeNull();
+    });
+
+    it('should return a FormArray with validators if type is not QRL', () => {
+        component['newQuestion'] = { type: TypeEnum.QCM, text: 'Sample', points: 10, choices: [{ text: 'Option 1' }] };
+        const formArray = component['getChoicesFormArray']();
+        expect(formArray.validator).toBeTruthy();
+    });
+
+    it('should handle no choices provided', () => {
+        component['newQuestion'] = { type: TypeEnum.QCM, text: 'Sample', points: 10 };
+        const formArray = component['getChoicesFormArray']();
+        expect(formArray.length).toEqual(0);
+    });
+
+    it('should handle existing choices', () => {
+        const choices2: Choice[] = [
+            { text: 'Option 1', isCorrect: true },
+            { text: 'Option 2', isCorrect: false },
+        ];
+        component['newQuestion'] = { type: TypeEnum.QCM, text: 'Sample', points: 10, choices: choices2 };
+        const formArray = component['getChoicesFormArray']();
+        expect(formArray.length).toEqual(2);
+        expect(formArray.at(0).value).toEqual(choices2[0]);
+        expect(formArray.at(1).value).toEqual(choices2[1]);
+    });
 });
 
-const generateMockQuestion = (type: TypeEnum): MultipleChoiceQuestion => {
+const generateMockQuestion = (type: TypeEnum): Question => {
     return {
         type,
         text: getRandomString(),

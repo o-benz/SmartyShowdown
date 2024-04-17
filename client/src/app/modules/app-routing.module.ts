@@ -6,7 +6,6 @@ import { CreateQuizComponent } from '@app/pages/create-quiz/create-quiz.componen
 import { JoinGameComponent } from '@app/pages/join-game/join-game.component';
 import { LobbyPageComponent } from '@app/pages/lobby-page/lobby-page.component';
 import { MainPageComponent } from '@app/pages/main-page/main-page.component';
-import { QuestionBankComponent } from '@app/pages/question-bank/question-bank.component';
 import { ResultPageComponent } from '@app/pages/result-page/result-page.component';
 import { TrueGameComponent } from '@app/pages/true-game/true-game.component';
 import { AuthGuardService } from '@app/services/authguard/auth.guard';
@@ -20,7 +19,6 @@ const routes: Routes = [
     { path: 'game/lobby', component: LobbyPageComponent },
     { path: 'game/test/:id', component: TrueGameComponent },
     { path: 'game/play', component: TrueGameComponent },
-    { path: 'questionbank', component: QuestionBankComponent, canActivate: [AuthGuardService] },
     { path: 'joingame', component: JoinGameComponent },
     { path: 'game/result', component: ResultPageComponent },
     { path: '**', redirectTo: '/home' },

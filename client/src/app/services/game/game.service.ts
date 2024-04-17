@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Choice, Question } from '@app/interfaces/quiz-model';
-import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
+import { GameStats } from '@app/interfaces/game-stats';
+import { BaseQuestion, Choice } from '@app/interfaces/question-model';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -11,13 +11,11 @@ import { environment } from 'src/environments/environment';
 export class GameService {
     currentChoices: Choice[] = [];
     score: number = 0;
+    previousScore: number = 0;
     quizId: string;
     isChoiceFinal: boolean = false;
-
-    constructor(
-        private http: HttpClient,
-        private socketService: SocketCommunicationService,
-    ) {}
+    readonly bonus: number = 1.2;
+    constructor(private http: HttpClient) {}
 
     staysInInterval(last: number, value: number, first: number = 0): boolean {
         return first <= value && value < last;
@@ -32,12 +30,26 @@ export class GameService {
         });
     }
 
-    getAnswers(question: Question): string[] {
+    getAnswers(question: BaseQuestion): string[] {
         if (question.choices) return question.choices.filter((choice) => choice.isCorrect).map((choice) => choice.text);
         return [];
     }
 
-    isValidAnswer(questionIndex: number): Observable<boolean> {
-        return this.socketService.isAnswerValid({ answers: this.currentChoices, questionIndex });
+    gamestatsToQuestions(gameStats: GameStats): BaseQuestion[] {
+        return gameStats.questions.map((question) => {
+            return {
+                text: question.title,
+                type: question.type,
+                points: question.points,
+                choices: question.statLines.map((line) => {
+                    return { text: line.label, isCorrect: line.isCorrect };
+                }),
+            };
+        });
+    }
+
+    giveUserPoints(currentQuestion: BaseQuestion): void {
+        if (currentQuestion.type === 'QCM') this.score += currentQuestion.points * this.bonus;
+        else if (currentQuestion.type === 'QRL') this.score += currentQuestion.points;
     }
 }

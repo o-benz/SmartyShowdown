@@ -1,0 +1,31 @@
+export enum ErrorMessages {
+    QuestionInvalid = "Question n'est pas valide",
+    QuizNotAvailable = "Ce quiz n'est pas disponible pour le moment.",
+    QuizInvalid = 'Quiz non valide',
+    DeleteQuestionError = 'Erreur lors de la suppression de la question. Veuillez réessayer.',
+    UpdateQuestionError = 'Erreur lors de la modification de la question. Veuillez réessayer.',
+    AddQuestionError = "Erreur lors de l'ajout de la question. Veuillez réessayer.",
+    InvalidForm = 'Formulaire invalide',
+    NotLockRoom = 'La salle doit etre verrouiller',
+    NoPlayer = 'Aucun joueur avec qui jouer 😔',
+    QuitRoom = "Tout les joueurs ont quitté, la salle c'est fermé.",
+    ClosedRoom = "La salle c'est fermée, vous avez été redirigé vers la page d'accueil.",
+    RefusedAccess = 'Accès refusé.',
+    ConnectionError = 'Erreur de connexion. Veuillez réessayer.',
+    AddQuestionToBank = "Erreur lors de l'ajout de la question à la banque. Veuillez réessayer.",
+    QuestionAlreadyInBank = 'La question est déjà dans la banque.',
+}
+
+export enum SuccessMessages {
+    QuestionValid = 'Question valide',
+    QuestionAdded = 'Question ajoutée avec succès!',
+    QuestionDeleted = 'Question supprimée avec succès!',
+    QuestionUpdated = 'Question mise à jour avec succès!',
+    QuestionBankAdded = 'Question ajoutée à la banque avec succès!',
+    QuestionBankDeleted = 'Question supprimée de la banque avec succès!',
+    QuestionBankUpdated = 'Question mise à jour dans la banque avec succès!',
+    QuizValid = 'Quiz valide',
+    QuizAdded = 'Quiz ajouté avec succès!',
+    QuizDeleted = 'Quiz supprimé avec succès!',
+    QuizUpdated = 'Quiz mis à jour avec succès!',
+}

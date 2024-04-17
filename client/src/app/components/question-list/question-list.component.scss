@@ -1,10 +1,27 @@
 @import '../../../styles.scss';
 
+.sort {
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
 h1{
   user-select: none;
-  margin: 1%;
+  margin-top: 1%;
+  margin-bottom: 1%;
+  margin-left: 10px;
+  margin-right: 10px;
   color: $main-green;
   text-shadow: 0 0 10px $text-shadow;
+}
+
+.scrollable-list {
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .qst {
@@ -31,6 +48,14 @@ h1{
   position: relative;
   transition: transform 0.5s ease;
   transform-style: preserve-3d;
+}
+
+.mcq {
+  background-color: $main-pink;
+}
+
+.oeq {
+  background-color: $dark-green;
 }
 
 .front, .back {
@@ -105,12 +130,46 @@ h3 {
   width: 50%;
 }
 
-button{
-  font-size: 2vmin;
+button {
   background-color: $main-purple;
   color: $white;
+  padding: 9px 1px;
+  margin-bottom: 2px;
+  border: none;
+  font-size: 2vmin;
   width: 50%;
   cursor: pointer;
+  border-radius: 50px;
+  transition: all 0.3s;
+  &:hover {
+    transform: translateY(-2px);
+  }
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.sort-button{
+  background-color: $main-pink;
+  color: $white;
+  padding: 9px 1px;
+  margin-bottom: 2px;
+  border: none;
+  font-size: 2vmin;
+  width: 33%;
+  cursor: pointer;
+  border-radius: 50px;
+  transition: all 0.3s;
+  &:hover {
+    transform: translateY(-2px);
+  }
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.sort-button.active {
+  background-color: $main-purple;
 }
 
 .create {

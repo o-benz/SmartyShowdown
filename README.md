@@ -9,6 +9,7 @@ SmartyShowdown is a web-based quiz platform that lets you create, play, and shar
 - [Installation](#installation)
 - [Usage](#usage)
 - [Development](#development)
+- [Creators](#creators)
 
 ## Features
 
@@ -36,6 +37,7 @@ Here are SmartyShowdown's various pages:
 - **Admin view**: This is where you can create, modify, delete, export, or import quizzes. You can also manage the question bank and the quiz history.
 ![QuizList](/doc/admin-quiz-list.png)
 ![QuestionList](/doc/admin-question-list.png)
+![History](/doc/admin-history.png)
 
 - **Create session view**: This is where you can select a quiz and create a session for other players to join. You can also test a quiz before creating a session.
 ![CreateGame](/doc/create-game.png)
@@ -70,3 +72,13 @@ SmartyShowdown has been meticulously developed, leveraging a range of tools and 
 - **Socket.IO**: Integrated for enabling real-time communication between the web client and the dynamic server, ensuring seamless multiplayer quiz experiences.
 - **GitLab Pages and AWS EC2**: Leveraged for deploying the web client and dynamic server respectively, enabling efficient hosting and scalability.
 - **MongoDB Atlas**: Utilized for hosting the MongoDB database in the cloud, ensuring reliability, scalability, and ease of management.
+
+## Creators
+
+SmartyShowdown is the result of the collaborative effort of:
+- Omar BENZEKRI
+- Charles DESROSIERS
+- Hugo LEFEBVRE
+- Thomas ROULEAU
+- Yassine SEDDAOUI
+- Éloi VINCENT-LÉGARÉ

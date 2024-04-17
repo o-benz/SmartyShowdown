@@ -1,7 +1,7 @@
 <form [formGroup]="questionForm" (ngSubmit)="onSubmit()">
   <div class="question">
     <h3>Question :</h3>
-    <input type="text" placeholder="Question" formControlName="question">
+    <input type="text" placeholder="Question" formControlName="text">
   </div>
 
   <div class="type">
@@ -9,6 +9,7 @@
       Type :
       <select placeholder="QCM" formControlName="type">
         <option value="QCM">QCM</option>
+        <option value="QRL">QRL</option>
       </select>
     </h3>
   </div>
@@ -17,23 +18,24 @@
     <h3>Points :</h3>
     <input type="number" placeholder="Points" formControlName="points" min="0" max="100" step="10">
   </div>
+  <div *ngIf="type?.value === 'QCM'">
+    <h3>Ajouter choix de réponses</h3>
 
-  <h3>Ajouter choix de réponses</h3>
-
-  <div class="choices" formArrayName="choices">
-    <div *ngFor="let choice of choices.controls; let i = index" class="qcm" [formGroupName]="i">
-      <input class="choice" type="text" formControlName="text">
-      <input type="checkbox" formControlName="isCorrect">
-      <button type="button" (click)="deleteMultipleChoice(choice.value)">-</button>
-      <button type="button" (click)="placeChoiceHigher(choice.value)">↑</button>
-      <button type="button" (click)="placeChoiceLower(choice.value)">↓</button>
+    <div class="choices" formArrayName="choices">
+      <div *ngFor="let choice of choices.controls; let i = index" class="qcm" [formGroupName]="i">
+        <input class="choice" type="text" formControlName="text">
+        <input type="checkbox" formControlName="isCorrect">
+        <button type="button" (click)="deleteMultipleChoice(choice.value)">-</button>
+        <button type="button" (click)="placeChoiceHigher(choice.value)">↑</button>
+        <button type="button" (click)="placeChoiceLower(choice.value)">↓</button>
+      </div>
     </div>
-  </div>
 
-  <div class="add-new-qcm">
-    <input class="new-choice" type="text" #newChoiceText placeholder="Choix">
-    <input type="checkbox" #newChoiceIsCorrect>
-    <button type="button" (click)="addMultipleChoice(newChoiceText.value, newChoiceIsCorrect.checked)">+</button>
+    <div class="add-new-qcm">
+      <input class="new-choice" type="text" #newChoiceText placeholder="Choix">
+      <input type="checkbox" #newChoiceIsCorrect>
+      <button type="button" (click)="addMultipleChoice(newChoiceText.value, newChoiceIsCorrect.checked)">+</button>
+    </div>
   </div>
 
   <mat-dialog-actions>

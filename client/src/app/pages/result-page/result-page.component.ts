@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { GameStats, PlayerInfo, QuestionStats } from '@app/interfaces/game-stats';
 import { GameService } from '@app/services/game/game.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
-import { StatService } from '@app/services/stats/stats.service';
-import { Observable, Subject, Subscription, of } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-result-page',
@@ -18,7 +17,7 @@ export class ResultPageComponent implements OnInit {
         users: [],
         name: '',
     };
-    protected playerSubject: Observable<PlayerInfo[]>;
+    protected playerSubject: PlayerInfo[];
     protected selectedQuestion = new Subject<QuestionStats>();
     protected totalQuestions: number;
     protected questionIndex: number = 0;
@@ -27,14 +26,13 @@ export class ResultPageComponent implements OnInit {
     constructor(
         private socketService: SocketCommunicationService,
         private gameService: GameService,
-        private statService: StatService,
     ) {}
 
     ngOnInit(): void {
         this.subscription = this.socketService.getStats().subscribe({
             next: (value) => {
                 this.gameStats = value;
-                this.playerSubject = of(this.statService.sortPlayerByPoints(this.gameStats.users));
+                this.playerSubject = this.gameStats.users;
                 this.selectedQuestion.next(this.gameStats.questions[0]);
                 this.totalQuestions = this.gameStats.questions.length;
             },

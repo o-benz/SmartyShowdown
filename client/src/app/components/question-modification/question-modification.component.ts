@@ -1,8 +1,10 @@
-import { Component, Input, OnDestroy, TemplateRef, ViewChild } from '@angular/core';
+import { Component, Input, OnDestroy } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { ErrorMessages } from '@app/interfaces/error-messages';
-import { Question, Quiz, QuizEnum } from '@app/interfaces/quiz-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { NewQuestionFormComponent } from '@app/components/new-question-form/new-question-form.component';
+import { ErrorMessages, SuccessMessages } from '@app/interfaces/alert-messages';
+import { BaseQuestion } from '@app/interfaces/question-model';
+import { Quiz } from '@app/interfaces/quiz-model';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { QuestionService } from '@app/services/question/question.service';
 import { Subscription } from 'rxjs';
 
@@ -12,43 +14,34 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./question-modification.component.scss'],
 })
 export class QuestionModificationComponent implements OnDestroy {
-    @ViewChild('dialogTemplate') dialogTemplate: TemplateRef<unknown>;
-    @Input() question: Question;
+    @Input() question: BaseQuestion;
     @Input() quizModified: Quiz;
     dialogRef: MatDialogRef<unknown>;
 
-    protected previousSelectedQuestion: Question;
+    protected previousSelectedQuestion: BaseQuestion;
     private questionModificationSubscription: Subscription;
 
     constructor(
         private questionService: QuestionService,
         public dialog: MatDialog,
-        private dialogService: DialogErrorService,
+        private dialogAlertService: DialogAlertService,
     ) {}
 
-    closeDialog(): void {
-        if (this.dialogRef) {
-            this.question = JSON.parse(JSON.stringify(this.previousSelectedQuestion));
-            this.dialogRef.close();
-        }
-    }
-
-    openDialog(): void {
-        this.previousSelectedQuestion = JSON.parse(JSON.stringify(this.question));
-        setTimeout(() => {
-            this.dialogRef = this.dialog.open(this.dialogTemplate, {
-                width: '50%',
-                disableClose: true,
-            });
+    modifyQuestion(): void {
+        const dialogRef = this.dialog.open(NewQuestionFormComponent, {
+            data: { baseQuestion: this.question },
+            width: '50%',
+            disableClose: true,
+        });
+        dialogRef.afterClosed().subscribe((result: BaseQuestion) => {
+            if (result) {
+                this.quizModified.questions[this.quizModified.questions.indexOf(this.question)] = result;
+            }
         });
     }
 
-    addMultipleChoice(text: string, isCorrect: boolean) {
-        this.questionService.addMultipleChoice({ text, isCorrect }, this.question);
-    }
-
-    deleteQuestion(): void {
-        this.questionService.deleteQuestion(this.question, this.quizModified);
+    deleteQuizQuestion(): void {
+        this.questionService.deleteQuizQuestion(this.question, this.quizModified);
     }
 
     placeQuestionHigher(): void {
@@ -59,23 +52,19 @@ export class QuestionModificationComponent implements OnDestroy {
         this.questionService.placeLower(this.question, this.quizModified);
     }
 
-    saveChanges(): void {
-        if (this.question.type === QuizEnum.QCM) {
-            this.questionModificationSubscription = this.questionService.checkValidity(this.question).subscribe((isValid) => {
-                if (isValid) {
-                    this.dialogRef.close();
+    addToBank(question: BaseQuestion): void {
+        this.questionModificationSubscription = this.questionService.addQuestionToBank(question).subscribe({
+            next: () => {
+                this.dialogAlertService.openSuccessDialog(SuccessMessages.QuestionBankAdded);
+            },
+            error: (error) => {
+                if (error.error.includes('Question already exists')) {
+                    this.dialogAlertService.openErrorDialog(ErrorMessages.QuestionAlreadyInBank);
                 } else {
-                    this.question = JSON.parse(JSON.stringify(this.previousSelectedQuestion));
-                    this.dialogService.openErrorDialog(ErrorMessages.QuestionInvalid);
+                    this.dialogAlertService.openErrorDialog(ErrorMessages.AddQuestionToBank);
                 }
-            });
-        } else {
-            this.dialogRef.close();
-        }
-    }
-
-    addToBank(qcm: Question): void {
-        this.questionModificationSubscription = this.questionService.addQuestionToBank(qcm).subscribe({});
+            },
+        });
     }
 
     ngOnDestroy(): void {

@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { NavigationStart, Router } from '@angular/router';
 import { UsernamePickerComponent } from '@app/components/username-picker/username-picker.component';
 import { Naviguation, SocketAnswer } from '@app/interfaces/socket-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Subscription } from 'rxjs';
 
@@ -18,13 +18,12 @@ export class JoinGameComponent implements OnInit, OnDestroy {
     protected username: string;
     private socketSubscription: Subscription;
 
-    // On utilise eslint-disable ici car on a trop de params
     /* eslint-disable max-params */
     constructor(
         private socketService: SocketCommunicationService,
         private router: Router,
         private dialog: MatDialog,
-        private dialogService: DialogErrorService,
+        private dialogService: DialogAlertService,
     ) {}
 
     ngOnInit(): void {

@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Choice, Question } from '@app/interfaces/quiz-model';
+import { BaseQuestion, Choice } from '@app/interfaces/question-model';
 import { GameService } from '@app/services/game/game.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { of } from 'rxjs';
 import { AnswerZoneComponent } from './answer-zone.component';
-
+/* eslint-disable max-lines */
 describe('AnswerZoneComponent', () => {
     let component: AnswerZoneComponent;
     let fixture: ComponentFixture<AnswerZoneComponent>;
@@ -29,7 +28,14 @@ describe('AnswerZoneComponent', () => {
                 internalCurrentChoices = value;
             }),
         });
-        socketServiceSpy = jasmine.createSpyObj('SocketCommunicationService', ['onFinalizeAnswers', 'confirmAnswer', 'addAnswer']);
+        socketServiceSpy = jasmine.createSpyObj('SocketCommunicationService', [
+            'sendTextAnswer',
+            'onFinalizeAnswers',
+            'confirmAnswer',
+            'addAnswer',
+            'getUser',
+            'makeUserActive',
+        ]);
         await TestBed.configureTestingModule({
             declarations: [AnswerZoneComponent],
             imports: [HttpClientTestingModule],
@@ -45,6 +51,7 @@ describe('AnswerZoneComponent', () => {
         component = fixture.componentInstance;
         gameServiceSpy = TestBed.inject(GameService) as jasmine.SpyObj<GameService>;
         gameServiceSpy.postCurrentChoices.and.returnValue(of(true));
+        socketServiceSpy.getUser.and.returnValue(of({ score: 100, username: 'bob', answered: false }));
     });
 
     it('should create', () => {
@@ -52,7 +59,7 @@ describe('AnswerZoneComponent', () => {
     });
 
     it('should initialize choices when ngOnChanges is called', () => {
-        const mockQuestion: Question = {
+        const mockQuestion: BaseQuestion = {
             type: 'QCM',
             text: 'Sample question',
             points: 10,
@@ -72,6 +79,22 @@ describe('AnswerZoneComponent', () => {
         component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         component.ngOnChanges();
         expect(component.choices).toEqual(mockQuestion.choices || []);
+    });
+
+    it('should initialize not choices when ngOnChanges is called without choices', () => {
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
+        component.ngOnChanges();
+        expect(component.choices).toEqual([]);
     });
 
     it('should initialize currentChoices at [] when ngOnChanges is called when round is over', () => {
@@ -113,8 +136,50 @@ describe('AnswerZoneComponent', () => {
         expect(socketServiceSpy.confirmAnswer).toHaveBeenCalledWith(mockRoundEndedQuestionPackage.questionIndex);
     });
 
+    it('should call onFinalizeAnswers on init and set isChoiceFinal to true', () => {
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: true,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
+        socketServiceSpy.getUser.and.returnValue(of({ score: 100, username: 'organisateur', answered: false }));
+        component.isRandom = true;
+        component.ngOnInit();
+
+        expect(socketServiceSpy.onFinalizeAnswers).toHaveBeenCalled();
+        expect(gameServiceSpy.isChoiceFinal).toBeTrue();
+        expect(socketServiceSpy.confirmAnswer).toHaveBeenCalledWith(mockRoundEndedQuestionPackage.questionIndex);
+    });
+
+    it('should call onFinalizeAnswers on init and set isChoiceFinal to true and setText', () => {
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: true,
+            question: {
+                type: 'QRL',
+                text: 'Sample question',
+                points: 10,
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
+        component.ngOnInit();
+
+        expect(socketServiceSpy.onFinalizeAnswers).toHaveBeenCalled();
+        expect(gameServiceSpy.isChoiceFinal).toBeTrue();
+        expect(socketServiceSpy.sendTextAnswer).toHaveBeenCalled();
+        expect(socketServiceSpy.confirmAnswer).toHaveBeenCalledWith(mockRoundEndedQuestionPackage.questionIndex);
+    });
+
     it('should lock answer and emit qcmFinishedEvent when lockAnswer is called', () => {
-        const mockQuestion: Question = {
+        const mockQuestion: BaseQuestion = {
             type: 'QCM',
             text: 'Sample question',
             points: 10,
@@ -143,8 +208,54 @@ describe('AnswerZoneComponent', () => {
         expect(component.qcmFinishedEvent.emit).toHaveBeenCalledOnceWith(true);
     });
 
+    it('should not lock answer and emit qcmFinishedEvent when lockAnswer is called whith invalid data', () => {
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+            mode: 'test',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
+        component.textAnswer = '';
+        component['gameService'].currentChoices = [];
+
+        spyOn(component.qcmFinishedEvent, 'emit');
+
+        component.lockAnswer();
+
+        expect(component.qcmFinishedEvent.emit).not.toHaveBeenCalled();
+    });
+
+    it('should lock answer and confirmAnswer and sendText when lockAnswer is called in QRL', () => {
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QRL',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
+        component.textAnswer = '';
+        component['gameService'].currentChoices = [{ text: 'Sample choice' }];
+
+        component.lockAnswer();
+
+        expect(gameServiceSpy.isChoiceFinal).toBeTrue();
+        expect(socketServiceSpy.sendTextAnswer).toHaveBeenCalled();
+        expect(socketServiceSpy.confirmAnswer).toHaveBeenCalledWith(mockRoundEndedQuestionPackage.questionIndex);
+    });
+
     it('should lock answer and emit qcmFinishedEvent when lockAnswer is called with textAnswer', () => {
-        const mockQuestion: Question = {
+        const mockQuestion: BaseQuestion = {
             type: 'QCM',
             text: 'Sample question',
             points: 10,
@@ -196,7 +307,7 @@ describe('AnswerZoneComponent', () => {
     it('should unsubscribe from gameSubscription when ngOnDestroy is called', () => {
         component['gameSubscription'] = {
             unsubscribe: jasmine.createSpy('unsubscribe'),
-        } as any;
+        } as any;  // eslint-disable-line
         component.ngOnDestroy();
         expect(component['gameSubscription']?.unsubscribe).toHaveBeenCalled();
     });
@@ -212,7 +323,18 @@ describe('AnswerZoneComponent', () => {
 
     it('should call lockAnswer when Enter key is pressed', () => {
         spyOn(component, 'lockAnswer');
-
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         const event = new KeyboardEvent('keydown', { key: 'Enter' });
         component.buttonDetect(event);
 
@@ -221,7 +343,18 @@ describe('AnswerZoneComponent', () => {
 
     it('should call chooseChoice with index 0 when 1 key is pressed', () => {
         spyOn(component, 'chooseChoice');
-
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         const event = new KeyboardEvent('keydown', { key: '1' });
         component.buttonDetect(event);
 
@@ -230,7 +363,18 @@ describe('AnswerZoneComponent', () => {
 
     it('should call chooseChoice with index 1 when 2 key is pressed', () => {
         spyOn(component, 'chooseChoice');
-
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         const event = new KeyboardEvent('keydown', { key: '2' });
         component.buttonDetect(event);
 
@@ -239,7 +383,18 @@ describe('AnswerZoneComponent', () => {
 
     it('should call chooseChoice with index 2 when 3 key is pressed', () => {
         spyOn(component, 'chooseChoice');
-
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         const event = new KeyboardEvent('keydown', { key: '3' });
         component.buttonDetect(event);
 
@@ -248,10 +403,40 @@ describe('AnswerZoneComponent', () => {
 
     it('should call chooseChoice with index 3 when 4 key is pressed', () => {
         spyOn(component, 'chooseChoice');
-
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QCM',
+                text: 'Sample question',
+                points: 10,
+                choices: [{ text: 'Choice 1' }, { text: 'Choice 2' }],
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
         const event = new KeyboardEvent('keydown', { key: '4' });
         component.buttonDetect(event);
 
         expect(component.chooseChoice).toHaveBeenCalledWith(3);
+    });
+
+    it('should make user active if pressing a key when QRL', () => {
+        spyOn(component, 'chooseChoice');
+        const mockRoundEndedQuestionPackage = {
+            isRoundEnded: false,
+            question: {
+                type: 'QRL',
+                text: 'Sample question',
+                points: 10,
+            },
+            questionIndex: 1,
+            mode: '',
+        };
+        component.roundEndedQuestionPackage = mockRoundEndedQuestionPackage;
+        const event = new KeyboardEvent('keydown', { key: 'g' });
+        component.buttonDetect(event);
+
+        expect(socketServiceSpy.makeUserActive).toHaveBeenCalled();
     });
 });

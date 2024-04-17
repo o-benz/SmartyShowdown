@@ -68,3 +68,12 @@
     font-size: 5vmin;
     animation: pulse 0.5s infinite alternate;
 }
+
+@keyframes pulse {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.3);
+    }
+}

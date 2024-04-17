@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./waiting-room-list.component.scss'],
 })
 export class WaitingRoomListComponent implements OnInit, OnDestroy {
-    @Input() isOrganisateur: boolean;
+    @Input() isOrganizer: boolean;
     protected userList: User[] = [];
     private socketSubscription: Subscription;
     private user: User;

@@ -2,7 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { SocketAnswer } from '@app/interfaces/socket-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Subscription } from 'rxjs';
 
@@ -22,7 +22,7 @@ export class UsernamePickerComponent {
         @Inject(MAT_DIALOG_DATA) public data: { roomCode: string },
         private socketService: SocketCommunicationService,
         private router: Router,
-        private dialogService: DialogErrorService,
+        private dialogService: DialogAlertService,
     ) {}
 
     login(): void {

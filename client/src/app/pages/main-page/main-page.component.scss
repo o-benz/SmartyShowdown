@@ -38,7 +38,6 @@ header {
     font-size: 9vmin;
     color: $main-green;
     text-shadow: 0 0 10px $text-shadow;
-    box-shadow: 0 0 10px $box-shadow;
     transition: background-color 0.3s;
 }
 
@@ -103,6 +102,21 @@ span:hover::before {
 span:nth-child(1):hover::before {
     content: $css-king;
     left: -260px;
+}
+
+span:nth-child(2):hover::before {
+    content: $brick-king;
+    left: -285px;
+}
+
+span:nth-child(3):hover::before {
+    content: $hugo;
+    left: -300px;
+}
+
+span:nth-child(4):hover::before {
+    content: $asshole;
+    left: -300px;
 }
 
 span:nth-child(5):hover::before {

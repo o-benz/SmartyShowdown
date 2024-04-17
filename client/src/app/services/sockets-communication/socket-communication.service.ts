@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { GameStats, QuestionStats, QuestionStatsServer, ServerStats, UserSocket } from '@app/interfaces/game-stats';
-import { Answer, Answers } from '@app/interfaces/quiz-model';
+import { GameStats, PlayerInfo, PlayerState, QuestionStats, QuestionStatsServer, ServerStats, UserSocket } from '@app/interfaces/game-stats';
+import { Answer, Quiz } from '@app/interfaces/quiz-model';
 import { SocketAnswer, User } from '@app/interfaces/socket-model';
 import { Observable } from 'rxjs';
 import { Socket, io } from 'socket.io-client';
@@ -50,6 +50,15 @@ export class SocketCommunicationService {
         });
     }
 
+    getRandom(): Observable<boolean> {
+        return new Observable<boolean>((subscriber) => {
+            this.socket.emit('getRandom', null, (response: boolean) => {
+                subscriber.next(response);
+                subscriber.complete();
+            });
+        });
+    }
+
     onStatsUpdated(action: () => void): void {
         this.on(SOCKET_EVENTS.getStats, action);
     }
@@ -75,6 +84,14 @@ export class SocketCommunicationService {
         });
     }
 
+    onPanicEnabled(action: (isPanicEnabled: boolean) => void): void {
+        this.on(SOCKET_EVENTS.panicEnabled, action);
+    }
+
+    paniqueMode(questionIndex: number, timeLeft: number): void {
+        this.send(SOCKET_EVENTS.paniqueMode, { questionIndex, timeLeft });
+    }
+
     getUser(): Observable<User> {
         return new Observable<User>((subscriber) => {
             this.send(SOCKET_EVENTS.getUser, null, (res: User) => {
@@ -82,6 +99,10 @@ export class SocketCommunicationService {
                 subscriber.complete();
             });
         });
+    }
+
+    pauseTimer(): void {
+        this.send(SOCKET_EVENTS.pauseTimer);
     }
 
     banUser(username: string): void {
@@ -131,6 +152,23 @@ export class SocketCommunicationService {
         this.send(SOCKET_EVENTS.endGame);
     }
 
+    sendTextAnswer(textAnswer: string): void {
+        this.send(SOCKET_EVENTS.sendTextAnswer, textAnswer);
+    }
+
+    changeQrlQuestion(questionIndex: number): void {
+        this.send(SOCKET_EVENTS.changeQrlQuestion, questionIndex.toString());
+    }
+
+    getTextAnswers(): Observable<string[]> {
+        return new Observable<string[]>((subscriber) => {
+            this.send(SOCKET_EVENTS.getTextAnswers, (res: string[]) => {
+                subscriber.next(res);
+                subscriber.complete();
+            });
+        });
+    }
+
     onShowResults(action: () => void): void {
         this.on(SOCKET_EVENTS.showResults, action);
     }
@@ -147,19 +185,24 @@ export class SocketCommunicationService {
         this.send(SOCKET_EVENTS.confirmAnswer, questionIndex.toString());
     }
 
+    makeUserActive(questionIndex: number): void {
+        this.send(SOCKET_EVENTS.makeUserActive, questionIndex.toString());
+    }
+
+    endCorrection(questionIndex: number): void {
+        this.send(SOCKET_EVENTS.endCorrection, questionIndex.toString());
+    }
+
     onEndRound(action: () => void): void {
         this.on(SOCKET_EVENTS.endRound, action);
     }
-
-    isAnswerValid(answer: Answers): Observable<boolean> {
-        return new Observable<boolean>((subscriber) => {
-            this.send(SOCKET_EVENTS.isAnswerValid, answer, (res: boolean) => {
-                subscriber.next(res);
-                subscriber.complete();
-            });
-        });
+    /* eslint-disable max-params */
+    givePoints(pointsGiven: number, username: string, percentageGiven: string, questionIndex: number): void {
+        this.send(SOCKET_EVENTS.givePoints, { pointsGiven, username, percentageGiven, questionIndex });
     }
-
+    onCorrectQrlQuestions(action: () => void): void {
+        this.on(SOCKET_EVENTS.correctQrlQuestions, action);
+    }
     updateUsers(): Observable<string[]> {
         return new Observable<string[]>((subscriber) => {
             this.send(SOCKET_EVENTS.updateUsers, null, (response: string[]) => {
@@ -193,11 +236,37 @@ export class SocketCommunicationService {
     createRoom(quizId: string): Observable<string> {
         return new Observable<string>((subscriber) => {
             this.socket.emit(SOCKET_EVENTS.createRoom, quizId, (roomCode: string) => {
-                localStorage.setItem('isOrganizer', 'true');
-
                 subscriber.next(roomCode);
                 subscriber.complete();
             });
+        });
+    }
+
+    createRandomRoom(quiz: Quiz): Observable<string> {
+        return new Observable<string>((subscriber) => {
+            this.socket.emit(SOCKET_EVENTS.createRandomRoom, quiz, (roomCode: string) => {
+                subscriber.next(roomCode);
+                subscriber.complete();
+            });
+        });
+    }
+
+    updatePlayerState(state: PlayerState): void {
+        this.send<PlayerState>(SOCKET_EVENTS.updatePlayerState, state);
+    }
+
+    mutePlayer(username: string): void {
+        this.send<string>(SOCKET_EVENTS.mutePlayer, username);
+    }
+
+    onPlayerMuted(action: () => void): void {
+        this.on('playerMuted', action);
+    }
+
+    onPlayerStateChange(action: (playerInfo: PlayerInfo) => void): void {
+        this.on(SOCKET_EVENTS.changedPlayerState, (userStats: UserSocket) => {
+            const stats = this.adaptUserStat(userStats);
+            action(stats);
         });
     }
 
@@ -226,18 +295,25 @@ export class SocketCommunicationService {
 
     private adaptServerStats(serverStats: ServerStats): GameStats {
         const statsOut: GameStats = { id: serverStats.id, duration: serverStats.duration, questions: [], users: [], name: serverStats.name };
-        statsOut.users = serverStats.users.map((userSocket: UserSocket) => {
-            return {
-                name: userSocket.data.username,
-                score: userSocket.data.score,
-                bonusCount: userSocket.data.bonus,
-                hasLeft: userSocket.data.hasLeft,
-            };
+        statsOut.users = serverStats.users.map((user) => {
+            return this.adaptUserStat(user);
         });
         statsOut.questions = serverStats.questions.map((question) => {
             return this.adaptServerQuestionStat(question);
         });
         return statsOut;
+    }
+
+    private adaptUserStat(serverUser: UserSocket): PlayerInfo {
+        return {
+            name: serverUser.data.username,
+            score: serverUser.data.score,
+            bonusCount: serverUser.data.bonus,
+            hasLeft: serverUser.data.hasLeft,
+            state: serverUser.data.state && !serverUser.data.hasLeft ? serverUser.data.state : PlayerState.PlayerLeft,
+            isMuted: serverUser.data.isMuted ? serverUser.data.isMuted : false,
+            textAnswer: serverUser.data.textAnswer ? serverUser.data.textAnswer : '',
+        };
     }
 
     private adaptServerQuestionStat(serverQuestion: QuestionStatsServer): QuestionStats {

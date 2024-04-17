@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 
 @Component({
     selector: 'app-right-answer-popup',
@@ -7,14 +7,14 @@ import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-er
     styleUrls: ['./right-answer-popup.component.scss'],
 })
 export class RightAnswerPopupComponent {
-    constructor(private dialogService: DialogErrorService) {}
+    constructor(private dialogService: DialogAlertService) {}
 
     get answerArray(): string[] {
-        return this.dialogService.getAnswerArray();
+        return this.dialogService.getAlertArray();
     }
 
     get errorMessage(): string {
-        return this.dialogService.getErrorMessage();
+        return this.dialogService.getAlertMessage();
     }
 
     get pointsGained(): number {

@@ -1,4 +1,4 @@
-<div class="scrollable-list" *ngIf="roundEndedQuestionPackage.question !== undefined && choices !== undefined">
+<div class="scrollable-list" *ngIf="roundEndedQuestionPackage.question && choices">
     <ng-container *ngIf="roundEndedQuestionPackage.question.type === 'QCM'">
         <div *ngFor="let choice of roundEndedQuestionPackage.question.choices; index as choiceId" class="qst">
             <button class="choice" [class.selected]="isChoiceSelected(choice)" (click)="chooseChoice(choiceId)">
@@ -35,7 +35,8 @@
     </ng-container>
     <ng-container *ngIf="roundEndedQuestionPackage.question.type === 'QRL'">
         <div class="blackboard">
-            <input [(ngModel)]="textAnswer" placeholder="Entrez votre réponse..."/>
+            <input [(ngModel)]="textAnswer" placeholder="Entrez votre réponse..." maxlength="200" [readonly]="this['gameService'].isChoiceFinal"/>
+            <div class="remaining-chars">{{200 - textAnswer.length}} charactères restants</div>
         </div>
     </ng-container>
 </div>

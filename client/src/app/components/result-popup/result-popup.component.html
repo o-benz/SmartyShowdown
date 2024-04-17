@@ -1,12 +1,38 @@
 <div class="popup-container">
-    <div class="next-content" *ngIf="mode !== 'test'">
+
+    <div class="next-content" *ngIf="mode !== 'test' && !isRandom">
         <div class="score">
             Prochaine question dans : 
         </div>
         <div class="timer">
-            {{ time }}
+            {{ popupDuration }}
         </div>
     </div>
+
+    <div class="popup-content" *ngIf="isRandom" [ngClass]="{'correct': questionBooleanPackage.isAnswerCorrect, 'incorrect': !questionBooleanPackage.isAnswerCorrect}">
+        
+            <div class="score">
+                {{ questionBooleanPackage.isAnswerCorrect ? 'Bonne Réponse' : 'Mauvaise Réponse' }}
+            </div>
+            <div class="correct-answer">
+                La bonne réponse est :
+            </div>
+            <div class="correct-answer" *ngFor="let choice of questionBooleanPackage.question.choices; index as choiceId">
+                <div *ngIf="choice.isCorrect">
+                    <div>&#8226; {{ choice.text }}</div>
+                </div>
+            </div>
+
+            <div class="bonus" *ngIf="isFirstAnswer">Vous avez obtenu un bonus de 20% pour la première réponse correcte.</div>
+
+            <div class="score" *ngIf="questionBooleanPackage.isLastQuestion">
+                Quiz fini! On vous ramène vers la vue résultat dans: 
+            </div>
+        
+        <div class="timer">{{ popupDuration }}</div>
+    </div>
+
+
     <div class="popup-content" *ngIf="mode === 'test'" [ngClass]="{'correct': questionBooleanPackage.isAnswerCorrect, 'incorrect': !questionBooleanPackage.isAnswerCorrect}">
         <div class="score">
             {{ questionBooleanPackage.isAnswerCorrect ? 'Bonne Réponse' : 'Mauvaise Réponse' }}
@@ -22,6 +48,6 @@
             </div>
         </div>
         <div class="bonus" *ngIf="questionBooleanPackage.isAnswerCorrect">Vous avez obtenu un bonus de 20% pour la première réponse correcte.</div>
-        <div class="timer">{{ time }}</div>
+        <div class="timer">{{ popupDuration }}</div>
     </div>
 </div>

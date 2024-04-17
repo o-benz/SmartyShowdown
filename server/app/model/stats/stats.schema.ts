@@ -14,12 +14,26 @@ export interface QuestionStats {
     type: string;
     points: number;
     timeFinished?: boolean;
+    pointsGiven?: PointsPercentage;
+}
+
+export interface PointsPercentage {
+    none: string[];
+    half: string[];
+    all: string[];
 }
 
 export interface StatsLine {
     label: string;
     users: string[];
     isCorrect?: boolean;
+}
+
+export enum PlayerState {
+    AnswerConfirmed = 3,
+    FirstInteraction = 2,
+    NoInteraction = 1,
+    PlayerLeft = 0,
 }
 
 export const FAKE_STAT_LINE: StatsLine = { label: '', users: [] };

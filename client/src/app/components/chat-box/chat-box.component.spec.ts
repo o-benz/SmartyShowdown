@@ -9,13 +9,13 @@ describe('ChatBoxComponent', () => {
     let component: ChatBoxComponent;
     let fixture: ComponentFixture<ChatBoxComponent>;
     let chatServiceMock: jasmine.SpyObj<SocketCommunicationService>;
-
     beforeEach(() => {
         chatServiceMock = {
             send: jasmine.createSpy('send').and.returnValue(of(null)),
             onMessageReceived: jasmine.createSpy('onMessageReceived').and.callFake((callback) => callback(null)),
             getUser: jasmine.createSpy('getUser').and.returnValue(of({ username: 'testUser' })),
             getAllMessages: jasmine.createSpy('getAllMessages').and.returnValue(of(null)),
+            onPlayerMuted: jasmine.createSpy('onPlayerMuted'),
         } as jasmine.SpyObj<SocketCommunicationService>;
 
         TestBed.configureTestingModule({
@@ -23,7 +23,6 @@ describe('ChatBoxComponent', () => {
             imports: [FormsModule],
             providers: [{ provide: SocketCommunicationService, useValue: chatServiceMock }],
         });
-
         chatServiceMock = TestBed.inject(SocketCommunicationService) as jasmine.SpyObj<SocketCommunicationService>;
         fixture = TestBed.createComponent(ChatBoxComponent);
         component = fixture.componentInstance;
@@ -49,8 +48,16 @@ describe('ChatBoxComponent', () => {
         expect(component.roomMessages).toEqual(messages);
     });
 
+    it('should return true if input is diabled', () => {
+        component.roomMessage = 'Short message';
+        expect(component.isInputDisabled).toBe(false);
+
+        component.roomMessage = new Array(LIMIT_MESSAGES_CHARACTERS + 1).join('a');
+        expect(component.isInputDisabled).toBe(true);
+    });
+
     it('should disable button when message is too long', () => {
-        component.roomMessage = new Array(component.limitMessagesCharacters + 1).join('a');
+        component.roomMessage = new Array(LIMIT_MESSAGES_CHARACTERS + 1).join('a');
         component.limitMessageLength();
         expect(component.isMessageTooLong).toBeTrue();
     });
@@ -78,6 +85,16 @@ describe('ChatBoxComponent', () => {
         component.roomMessages.push('new message');
         fixture.detectChanges();
         expect(component.scrollToBottomAfterViewChecked).toHaveBeenCalled();
+    });
+
+    it('scrollToBottomAfterViewChecked should call scroll to view on the last element', () => {
+        component.roomMessages = [];
+        component.roomMessages.push('new message');
+        fixture.detectChanges();
+        const spy = spyOn(component.messageList.last.nativeElement, 'scrollIntoView').and.callThrough();
+
+        component.scrollToBottomAfterViewChecked();
+        expect(spy).toHaveBeenCalled();
     });
 
     it('should receive message and add it to room messages', () => {
@@ -112,5 +129,20 @@ describe('ChatBoxComponent', () => {
         component.roomMessages = [];
         component.roomMessages.push(message);
         expect(component.isSent(message)).toBeTrue();
+    });
+
+    it('should mute player', () => {
+        spyOn(component, 'receiveMessage');
+        spyOn(component, 'getAllMessages');
+        spyOn(component, 'getUserInfo');
+        component.roomMessages = [];
+        component['user'].isMuted = false;
+        chatServiceMock.onPlayerMuted.and.callFake((callback) => callback());
+        component.ngOnInit();
+        expect(component['user'].isMuted).toBe(true);
+        expect(component.roomMessages).toContain('vous etes muet');
+        component.ngOnInit();
+        expect(component['user'].isMuted).toBe(false);
+        expect(component.roomMessages).toContain('vous pouvez parler');
     });
 });

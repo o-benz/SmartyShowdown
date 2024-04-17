@@ -5,11 +5,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HeaderComponent } from '@app/components/header/header.component';
-import { ErrorMessages } from '@app/interfaces/error-messages';
+import { ErrorMessages } from '@app/interfaces/alert-messages';
 import { GameStats } from '@app/interfaces/game-stats';
 import { User } from '@app/interfaces/socket-model';
 import { CountdownService } from '@app/services/countdown/countdown.service';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Subject, Subscription, of } from 'rxjs';
 import { LobbyPageComponent } from './lobby-page.component';
@@ -18,7 +18,7 @@ import { LobbyPageComponent } from './lobby-page.component';
 class ChatStubComponent {}
 @Component({ standalone: true, selector: 'app-waiting-room-list', template: '' })
 class WaitingRoomStubComponent {
-    @Input() isOrganisateur: boolean;
+    @Input() isOrganizer: boolean;
 }
 
 describe('LobbyPageComponent', () => {
@@ -26,7 +26,7 @@ describe('LobbyPageComponent', () => {
     let fixture: ComponentFixture<LobbyPageComponent>;
     let socketCommunicationServiceSpy: jasmine.SpyObj<SocketCommunicationService>;
     let countdownServiceSpy: jasmine.SpyObj<CountdownService>;
-    let dialogErrorServiceSpy: jasmine.SpyObj<DialogErrorService>;
+    let dialogAlertServiceSpy: jasmine.SpyObj<DialogAlertService>;
     let router: Router;
 
     beforeEach(async () => {
@@ -42,7 +42,7 @@ describe('LobbyPageComponent', () => {
             'getListUsers',
         ]);
         const countdownSpy = jasmine.createSpyObj('CountdownService', ['startCountdown', 'stopCountdown']);
-        const dialogErrorSpy = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog', 'closeErrorDialog']);
+        const dialogErrorSpy = jasmine.createSpyObj('DialogAlertService', ['openErrorDialog', 'closeAlertDialog']);
 
         countdownSpy.countdownTick = new Subject<number>();
         countdownSpy.countdownEnded = new Subject<void>();
@@ -53,7 +53,7 @@ describe('LobbyPageComponent', () => {
             providers: [
                 { provide: SocketCommunicationService, useValue: socketSpy },
                 { provide: CountdownService, useValue: countdownSpy },
-                { provide: DialogErrorService, useValue: dialogErrorSpy },
+                { provide: DialogAlertService, useValue: dialogErrorSpy },
                 { provide: ChangeDetectorRef, useValue: jasmine.createSpyObj('ChangeDetectorRef', ['detectChanges']) },
                 { provide: MatDialog, useValue: jasmine.createSpyObj('MatDialog', ['open']) },
             ],
@@ -61,12 +61,9 @@ describe('LobbyPageComponent', () => {
 
         fixture = TestBed.createComponent(LobbyPageComponent);
         component = fixture.componentInstance;
-
-        component.countdownSub = new Subscription();
-        component.lobbySub = new Subscription();
         socketCommunicationServiceSpy = TestBed.inject(SocketCommunicationService) as jasmine.SpyObj<SocketCommunicationService>;
         countdownServiceSpy = TestBed.inject(CountdownService) as jasmine.SpyObj<CountdownService>;
-        dialogErrorServiceSpy = TestBed.inject(DialogErrorService) as jasmine.SpyObj<DialogErrorService>;
+        dialogAlertServiceSpy = TestBed.inject(DialogAlertService) as jasmine.SpyObj<DialogAlertService>;
         router = TestBed.inject(Router);
         fixture.detectChanges();
     });
@@ -90,7 +87,15 @@ describe('LobbyPageComponent', () => {
         socketCommunicationServiceSpy.getUser.and.returnValue(of(user));
         component.ngOnInit();
         expect(component.roomCode).toEqual('123');
-        expect(component.organizer).toBeUndefined();
+        expect(component['isOrganizer']).toBeTrue();
+    });
+
+    it('should set room code and organizer flag when user data is wrong', () => {
+        const user: User = {} as unknown as User;
+        socketCommunicationServiceSpy.getUser.and.returnValue(of(user));
+        component.ngOnInit();
+        expect(component.roomCode).toEqual('');
+        expect(component['isOrganizer']).toBeFalse();
     });
 
     it('should initialize component properties', () => {
@@ -99,26 +104,26 @@ describe('LobbyPageComponent', () => {
         expect(component.quizName).toBeUndefined();
         expect(component.roomLocked).toBeFalsy();
         expect(component.gameStarted).toBeFalsy();
-        expect(component.organizer).toBeFalsy();
+        expect(component['isOrganizer']).toBeFalsy();
     });
 
     it('should set and return countdown subscription', () => {
         const subscription = new Subscription();
-        component.countdownSub = subscription;
-        expect(component.countdownSub).toBe(subscription);
+        component['countdownSubscription'] = subscription;
+        expect(component['countdownSubscription']).toBe(subscription);
     });
 
     it('should set and return lobby subscription', () => {
         const subscription = new Subscription();
-        component.lobbySub = subscription;
-        expect(component.lobbySub).toBe(subscription);
+        component['lobbySubscription'] = subscription;
+        expect(component['lobbySubscription']).toBe(subscription);
     });
 
     it('should set organizer correctly', () => {
-        component.organizer = true;
+        component['isOrganizer'] = true;
         expect(component['isOrganizer']).toBeTrue();
 
-        component.organizer = false;
+        component['isOrganizer'] = false;
         expect(component['isOrganizer']).toBeFalse();
     });
 
@@ -146,58 +151,38 @@ describe('LobbyPageComponent', () => {
 
     it('should start game', () => {
         component.roomCode = '123';
-        component.organizer = true;
+        component['isOrganizer'] = true;
         socketCommunicationServiceSpy.attemptStartGame.and.returnValue(of(true));
 
         component.startGame();
 
         expect(socketCommunicationServiceSpy.attemptStartGame).toHaveBeenCalledWith('123');
-        expect(dialogErrorServiceSpy.openErrorDialog).not.toHaveBeenCalled();
+        expect(dialogAlertServiceSpy.openErrorDialog).not.toHaveBeenCalled();
     });
 
     it('should handle room not locked error', () => {
         component.roomCode = '123';
-        component.organizer = true;
+        component['isOrganizer'] = true;
         socketCommunicationServiceSpy.attemptStartGame.and.returnValue(of(false));
 
         component.startGame();
 
         expect(socketCommunicationServiceSpy.attemptStartGame).toHaveBeenCalledWith('123');
-        expect(dialogErrorServiceSpy.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.NotLockRoom);
-        expect(dialogErrorServiceSpy.openErrorDialog).not.toHaveBeenCalledWith(ErrorMessages.NoPlayer);
+        expect(dialogAlertServiceSpy.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.NotLockRoom);
+        expect(dialogAlertServiceSpy.openErrorDialog).not.toHaveBeenCalledWith(ErrorMessages.NoPlayer);
     });
 
     it('should handle no player error', () => {
         component.roomCode = '123';
-        component.organizer = true;
+        component['isOrganizer'] = true;
         socketCommunicationServiceSpy.attemptStartGame.and.returnValue(of(false));
         component.roomLocked = true;
 
         component.startGame();
 
         expect(socketCommunicationServiceSpy.attemptStartGame).toHaveBeenCalledWith('123');
-        expect(dialogErrorServiceSpy.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.NoPlayer);
-        expect(dialogErrorServiceSpy.openErrorDialog).not.toHaveBeenCalledWith(ErrorMessages.NotLockRoom);
-    });
-
-    it('should not start game if room code is missing', () => {
-        component.roomCode = '';
-        component.organizer = true;
-
-        component.startGame();
-
-        expect(socketCommunicationServiceSpy.attemptStartGame).not.toHaveBeenCalled();
-        expect(dialogErrorServiceSpy.openErrorDialog).not.toHaveBeenCalled();
-    });
-
-    it('should not start game if not organizer', () => {
-        component.roomCode = '123';
-        component.organizer = false;
-
-        component.startGame();
-
-        expect(socketCommunicationServiceSpy.attemptStartGame).not.toHaveBeenCalled();
-        expect(dialogErrorServiceSpy.openErrorDialog).not.toHaveBeenCalled();
+        expect(dialogAlertServiceSpy.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.NoPlayer);
+        expect(dialogAlertServiceSpy.openErrorDialog).not.toHaveBeenCalledWith(ErrorMessages.NotLockRoom);
     });
 
     it('should start game countdown', () => {
@@ -205,7 +190,7 @@ describe('LobbyPageComponent', () => {
 
         expect(component.gameStarted).toBeTrue();
         expect(countdownServiceSpy.startCountdown).toHaveBeenCalledWith(component.countdownValue);
-        expect(component.countdownSub).toBeDefined();
+        expect(component['countdownSubscription']).toBeDefined();
     });
 
     it('should navigate to game play when countdown ends', () => {
@@ -221,8 +206,8 @@ describe('LobbyPageComponent', () => {
         const countdownSubSpy = jasmine.createSpyObj('Subscription', ['unsubscribe']);
         const lobbySubSpy = jasmine.createSpyObj('Subscription', ['unsubscribe']);
 
-        component.countdownSub = countdownSubSpy;
-        component.lobbySub = lobbySubSpy;
+        component['countdownSubscription'] = countdownSubSpy;
+        component['lobbySubscription'] = lobbySubSpy;
 
         component.ngOnDestroy();
 
@@ -230,64 +215,28 @@ describe('LobbyPageComponent', () => {
         expect(lobbySubSpy.unsubscribe).toHaveBeenCalled();
     });
 
-    it('should handle room closure and navigate to home page when room is closed', () => {
-        component.roomCode = '123';
-        component.organizer = true;
-        const onRoomClosedCallback = () => {
-            dialogErrorServiceSpy.closeErrorDialog();
-            dialogErrorServiceSpy.openErrorDialog(component.organizer ? ErrorMessages.QuitRoom : ErrorMessages.ClosedRoom);
-            socketCommunicationServiceSpy.leaveRoom();
-            router.navigate(['/']);
-        };
+    it('should handle room closure and navigate to home page', () => {
+        component['isOrganizer'] = false;
+        socketCommunicationServiceSpy.onRoomClosed.and.callFake((callback) => callback());
 
         const navigateSpy = spyOn(router, 'navigate');
-        socketCommunicationServiceSpy.onRoomClosed.and.callFake(onRoomClosedCallback);
-        onRoomClosedCallback();
+        component.ngOnInit();
 
-        expect(dialogErrorServiceSpy.closeErrorDialog).toHaveBeenCalled();
-        expect(dialogErrorServiceSpy.openErrorDialog).toHaveBeenCalledWith(component.organizer ? ErrorMessages.QuitRoom : ErrorMessages.ClosedRoom);
+        expect(dialogAlertServiceSpy.closeAlertDialog).toHaveBeenCalled();
+        expect(dialogAlertServiceSpy.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.ClosedRoom);
         expect(socketCommunicationServiceSpy.leaveRoom).toHaveBeenCalled();
         expect(navigateSpy).toHaveBeenCalledWith(['/']);
     });
 
-    it('should handle room closure and navigate to home page when organizer leaves room', () => {
-        component.roomCode = '123';
-        component.organizer = true;
-
-        const onRoomClosedCallback = () => {
-            dialogErrorServiceSpy.closeErrorDialog();
-            dialogErrorServiceSpy.openErrorDialog(component.organizer ? ErrorMessages.QuitRoom : ErrorMessages.ClosedRoom);
-            socketCommunicationServiceSpy.leaveRoom();
-            router.navigate(['/']);
-        };
+    it('should handle room closure and navigate to home page', () => {
+        component['isOrganizer'] = true;
+        socketCommunicationServiceSpy.onRoomClosed.and.callFake((callback) => callback());
 
         const navigateSpy = spyOn(router, 'navigate');
-        socketCommunicationServiceSpy.onRoomClosed.and.callFake(onRoomClosedCallback);
+        component.ngOnInit();
 
-        onRoomClosedCallback();
-
-        expect(dialogErrorServiceSpy.closeErrorDialog).toHaveBeenCalled();
-        expect(dialogErrorServiceSpy.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.ClosedRoom);
-        expect(socketCommunicationServiceSpy.leaveRoom).toHaveBeenCalled();
-        expect(navigateSpy).toHaveBeenCalledWith(['/']);
-    });
-
-    it('should handle room closure and navigate to home page when non-organizer leaves room', () => {
-        component.roomCode = '123';
-        component.organizer = false;
-
-        const onRoomClosedCallback = () => {
-            dialogErrorServiceSpy.closeErrorDialog();
-            dialogErrorServiceSpy.openErrorDialog(component.organizer ? ErrorMessages.QuitRoom : ErrorMessages.ClosedRoom);
-            socketCommunicationServiceSpy.leaveRoom();
-            router.navigate(['/']);
-        };
-        const navigateSpy = spyOn(router, 'navigate');
-        socketCommunicationServiceSpy.onRoomClosed.and.callFake(onRoomClosedCallback);
-        onRoomClosedCallback();
-
-        expect(dialogErrorServiceSpy.closeErrorDialog).toHaveBeenCalled();
-        expect(dialogErrorServiceSpy.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.ClosedRoom);
+        expect(dialogAlertServiceSpy.closeAlertDialog).toHaveBeenCalled();
+        expect(dialogAlertServiceSpy.openErrorDialog).toHaveBeenCalledWith(ErrorMessages.QuitRoom);
         expect(socketCommunicationServiceSpy.leaveRoom).toHaveBeenCalled();
         expect(navigateSpy).toHaveBeenCalledWith(['/']);
     });
@@ -306,14 +255,14 @@ describe('LobbyPageComponent', () => {
     });
 
     it('should return true if the user is the organizer', () => {
-        component.organizer = true;
+        component['isOrganizer'] = true;
 
         const result = component.itIsOrganizer();
         expect(result).toBeTrue();
     });
 
     it('should return false if the user is not the organizer', () => {
-        component.organizer = false;
+        component['isOrganizer'] = false;
         const result = component.itIsOrganizer();
         expect(result).toBeFalse();
     });

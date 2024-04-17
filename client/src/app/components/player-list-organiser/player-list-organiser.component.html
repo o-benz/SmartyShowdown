@@ -1,0 +1,35 @@
+<div class="player-list-container">
+       <div class="order">
+              <select class="dropdown" [(ngModel)]="selectedOption" (ngModelChange)="sort()">
+                     <option value="name">Nom</option>
+                     <option value="score">Score</option>
+                     <option value="state">État</option>
+              </select>
+              <button class="dropdown" (click)="reverseOrder()">{{ isAscending ? 'Croissant' : 'Décroissant'}}</button>
+       </div>
+
+       <div *ngFor="let player of players" >
+              <h4 [ngClass]="{
+                     'answer-confirmed': player.state === 3,
+                     'first-interaction': player.state === 2,
+                     'no-interaction': player.state === 1,
+                     'player-left': player.state === 0
+              }">
+                     <img
+                     (click) = "mutePlayer(player.name)"
+                     *ngIf="player.state !== 0"
+                     [src]="player.isMuted ? './assets/mute.png' : './assets/sound.png'"
+                     alt="Sound icon"
+                     class="sound">
+                     <span class="name" [class.player-left]="player.state === 0">
+                            {{player.name}}
+                     </span>
+                     <span class="score" *ngIf="player.score" [class.player-left]="player.state === 0">
+                            {{player.score}}pts
+                     </span>
+                     <span class="bonus" *ngIf="player.bonusCount && player.bonusCount>0" [class.player-left]="player.state === 0"> 
+                            {{player.bonusCount}} bonus
+                     </span>
+              </h4>
+       </div>
+   </div>

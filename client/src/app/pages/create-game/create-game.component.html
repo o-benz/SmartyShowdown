@@ -20,7 +20,7 @@
             </ol>
             <mat-dialog-actions>
                 <button id="closeBtn" (click)="closeDialog()">Fermer</button>
-                <button id="testBtn" (click)="validateBeforeClosing()" *ngIf="selectedQuiz.title !== 'Mode Aléatoire'">Tester!</button>
+                <button id="testBtn" (click)="validateBeforeClosing()" *ngIf="!isRandom">Tester!</button>
                 <button id="createBtn" (click)="createGameRoom()">Créer une partie</button>
             </mat-dialog-actions>
         </div>

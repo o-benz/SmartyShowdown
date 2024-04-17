@@ -1,6 +1,8 @@
 export enum GameEvents {
     RoomMessage = 'roomMessage',
     CreateRoom = 'createRoom',
+    CreateRoomRandom = 'createRoomRandom',
+    GetRandom = 'getRandom',
     JoinRoom = 'joinRoom',
     Login = 'login',
     Logout = 'logout',
@@ -22,6 +24,16 @@ export enum GameEvents {
     SendMessage = 'sendMessage',
     GetAllMessages = 'getAllMessages',
     IsAnswerValid = 'isAnswerValid',
+    UpdatePlayerState = 'updatePlayerState',
+    MutePlayer = 'mutePlayer',
+    PauseTimer = 'pauseTimer',
+    PanicMode = 'panicMode',
+    SendTextAnswer = 'sendTextAnswer',
+    GetTextAnswers = 'getTextAnswers',
+    GivePoints = 'givePoints',
+    EndCorrection = 'endCorrection',
+    ChangeQrlQuestion = 'changeQrlQuestion',
+    MakeUserActive = 'makeUserActive',
 }
 
 export enum GameClientEvents {
@@ -37,6 +49,11 @@ export enum GameClientEvents {
     AnswerChange = 'answerChange',
     GameStarted = 'gameStarted',
     GameStartResponse = 'gameStartResponse',
+    PlayerStateChange = 'playerStateChange',
+    PlayerMuted = 'playerMuted',
+    Tick = 'tick',
+    PanicEnabled = 'panicEnabled',
+    CorrectQrlQuestions = 'correctQrlQuestions',
 }
 
 export enum GameEnum {

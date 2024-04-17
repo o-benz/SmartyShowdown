@@ -1,13 +1,11 @@
-<div class="titles">
-    <h1>Liste de quiz</h1>
-    <h1 class="bank-button" (click)="questionBank()">Banque de questions</h1>
-</div>
+<h1>Liste de quiz</h1>
+<a #exportLink></a>
 <div class="scrollable-list">
     <div *ngFor="let quiz of quizzes">
         <div class="quiz">
             <div class="quiz-info">
                 <span class="quiz-title">
-                    <h2>Titre:</h2> 
+                    <h2>Titre:</h2>
                     <h3>{{ quiz.title }}</h3>
                 </span>
                 <span class="quiz-date">

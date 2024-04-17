@@ -13,15 +13,6 @@
     }
 }
 
-@keyframes pulse {
-    from {
-        transform: scale(1);
-    }
-    to {
-        transform: scale(1.3);
-    }
-}
-
 @keyframes crownAppear {
     0% { opacity: 0; }
     100% { opacity: 1; }
@@ -99,6 +90,10 @@ $background: url('./assets/background.jpg');
 $css-king: url('./assets/css-king.png');
 $scout-king: url('./assets/scout-king.png');
 $carry-king: url('./assets/carry-king.png');
+$brick-king: url('./assets/brick-king.png');
+$hugo: url('./assets/hugo.png');
+$asshole: url('./assets/asshole.png');
+
 
 /* Tags */
 html,
@@ -168,7 +163,6 @@ app-new-question-form {
     user-select: none;
     padding: 0px !important;
     border-radius: 15px !important;
-    display: block !important;
 }
 
 /* Abandon/Panic Button */
@@ -222,7 +216,7 @@ app-new-question-form {
     font-size: 2vmin;
     font-weight: bold;
     color: $white;
-    background: hsl(345deg 100% 47%);
+    background: #f0003c;
     will-change: transform;
     transform: translateY(-4px);
     transition: transform 600ms cubic-bezier(.3, .7, .4, 1);

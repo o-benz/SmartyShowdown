@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { Quiz } from '@app/interfaces/quiz-model';
 import { AdminQuizHandler } from '@app/services/admin-quiz-handler/admin-quiz-handler.service';
@@ -12,7 +12,8 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./quiz-list.component.scss'],
 })
 export class QuizListComponent implements OnInit, OnDestroy {
-    static quizzes: Quiz[];
+    @ViewChild('exportLink') exportLink: ElementRef;
+    quizzes: Quiz[];
     subscription: Subscription;
     errorMessage: string | null = null;
 
@@ -22,12 +23,9 @@ export class QuizListComponent implements OnInit, OnDestroy {
         private router: Router,
     ) {}
 
-    get quizzes() {
-        return QuizListComponent.quizzes;
-    }
     ngOnInit(): void {
         this.subscription = this.service.getAllQuiz().subscribe((quizzes: Quiz[]) => {
-            QuizListComponent.quizzes = quizzes;
+            this.quizzes = quizzes;
         });
     }
 
@@ -42,18 +40,22 @@ export class QuizListComponent implements OnInit, OnDestroy {
     modify(quiz: Quiz) {
         this.router.navigate(['/createquiz'], { queryParams: { id: quiz.id } });
     }
+
     export(quiz: Quiz) {
-        this.adminQuizHandler.export(quiz);
+        this.exportLink.nativeElement.href = this.adminQuizHandler.export(quiz);
+        this.exportLink.nativeElement.download = `${quiz.title}.json`;
+        this.exportLink.nativeElement.click();
     }
+
     create() {
         this.router.navigate(['/createquiz']);
     }
 
     async delete(quizId: string): Promise<void> {
         if (confirm('Êtes-vous sûr de vouloir supprimer ce quiz ?')) {
-            await this.adminQuizHandler.delete(quizId).subscribe({
+            this.adminQuizHandler.delete(quizId).subscribe({
                 next: () => {
-                    QuizListComponent.quizzes = QuizListComponent.quizzes.filter((quiz) => quiz.id !== quizId);
+                    this.quizzes = this.quizzes.filter((quiz) => quiz.id !== quizId);
                 },
                 error: () => {
                     this.errorMessage = 'Erreur lors de la suppression du quiz. Veuillez réessayer.';

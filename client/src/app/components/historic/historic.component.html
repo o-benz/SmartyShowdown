@@ -1,0 +1,41 @@
+<div class="titles">
+  <h1>Historique des jeux</h1>
+  <div class="options">
+    <button (click)="toggleSortCriteria()" class="sort-button">
+      Trier par : {{ isSortingByName ? 'Nom' : 'Date' }}
+    </button>
+    <button (click)="toggleSortOrder()" class="sort-button">
+      Ordre : {{ isAscending ? 'Ascendant' : 'Descendant' }}
+    </button>
+
+    <button (click)="resetHistoricGames()" class="button-82-pushable" role="button">
+      <span class="button-82-shadow"></span>
+      <span class="button-82-edge"></span>
+      <span class="button-82-front text">
+        Réinitialiser l'historique
+      </span>
+    </button>
+  </div>
+</div>
+<div class="scrollable-list">
+  <div *ngFor="let game of historicGames">
+    <div class="quiz">
+          <span class="quiz-title">
+              <h2>Titre:</h2> 
+              <h3>{{ game.gameName }}</h3>
+          </span>
+          <span class="quiz-date">
+              <h2>Date:</h2>
+              <h3>{{ game.date | date: 'yyyy-MM-dd HH:mm:ss' }}</h3>
+          </span>
+          <span class="quiz-title">
+            <h2>Nombre de joueurs:</h2> 
+            <h3>{{ game.nPlayers }}</h3>
+          </span>
+          <span class="quiz-date">
+            <h2>Meilleur score:</h2>
+            <h3>{{ game.bestScore }}</h3>
+          </span>
+    </div>
+  </div>
+</div>

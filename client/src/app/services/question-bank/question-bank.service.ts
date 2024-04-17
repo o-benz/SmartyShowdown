@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder } from '@angular/forms';
-import { Choice } from '@app/interfaces/quiz-model';
+import { Choice } from '@app/interfaces/question-model';
 
 @Injectable({
     providedIn: 'root',
@@ -48,6 +48,8 @@ export class QuestionBankService {
             minlength: `${controlName} doit avoir au moins ${control?.errors?.minlength?.requiredLength} choix`,
             maxlength: `${controlName} doit avoir au maximum ${control?.errors?.maxlength?.requiredLength} choix`,
             notMultipleOf10: `${controlName} doit être un multiple de 10`,
+            notEnoughTrueChoices: 'Il doit y avoir au moins 1 réponse correcte',
+            notEnoughFalseChoices: 'Il doit y avoir au moins 1 réponse incorrecte',
         };
 
         const errorKey = Object.keys(control.errors || {}).find((key) => control.getError(key));

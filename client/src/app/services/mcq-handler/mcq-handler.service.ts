@@ -1,50 +1,50 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseMultipleChoiceQuestion, MultipleChoiceQuestion } from '@app/interfaces/question-model';
+import { BaseQuestion, Question } from '@app/interfaces/question-model';
 import { Observable, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
     providedIn: 'root',
 })
-export class AdminQuestionHandlerService {
+export class McqHandlerService {
     constructor(private http: HttpClient) {}
 
-    getAllMultipleChoiceQuestions(): Observable<MultipleChoiceQuestion[]> {
-        type LocalMCQ = MultipleChoiceQuestion & { question?: string };
-
-        return this.http.get<MultipleChoiceQuestion[]>(`${environment.serverUrl}/question-mcq/`).pipe(
-            map((response: LocalMCQ[]) => {
-                const sortedResponse = response.sort(
-                    (a: MultipleChoiceQuestion, b: MultipleChoiceQuestion) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-                );
-
-                return sortedResponse.map(
-                    (item: LocalMCQ) =>
-                        ({
-                            ...item,
-                            text: item.question,
-                        }) as MultipleChoiceQuestion,
-                );
+    getAllMultipleChoiceQuestions(): Observable<Question[]> {
+        return this.http.get<Question[]>(`${environment.serverUrl}/question-mcq/`).pipe(
+            map((response: Question[]) => {
+                return response.sort((a: Question, b: Question) => new Date(b.date).getTime() - new Date(a.date).getTime());
             }),
         );
     }
 
-    getMultipleChoiceQuestionById(id: string): Observable<MultipleChoiceQuestion> {
-        return this.http.get<MultipleChoiceQuestion>(`${environment.serverUrl}/question-mcq/${id}`);
+    getMultipleChoiceQuestionById(id: string): Observable<Question> {
+        return this.http.get<Question>(`${environment.serverUrl}/question-mcq/${id}`);
     }
 
-    addMultipleChoiceQuestion(question: BaseMultipleChoiceQuestion): Observable<MultipleChoiceQuestion> {
-        return this.http.post<MultipleChoiceQuestion>(`${environment.serverUrl}/question-mcq/`, question);
+    addMultipleChoiceQuestion(question: BaseQuestion): Observable<Question> {
+        return this.http.post<Question>(`${environment.serverUrl}/question-mcq/`, {
+            type: question.type,
+            text: question.text,
+            points: question.points,
+            choices: question.choices,
+        });
     }
 
     deleteMultipleChoiceQuestion(id: string): Observable<void> {
         return this.http.delete<void>(`${environment.serverUrl}/question-mcq/${id}`);
     }
 
-    updateMultipleChoiceQuestion(question: MultipleChoiceQuestion): Observable<MultipleChoiceQuestion> {
-        // eslint-disable-next-line no-underscore-dangle
-        return this.http.patch<MultipleChoiceQuestion>(`${environment.serverUrl}/question-mcq/`, question);
+    updateMultipleChoiceQuestion(question: Question): Observable<Question> {
+        return this.http.patch<Question>(`${environment.serverUrl}/question-mcq/`, {
+            type: question.type,
+            text: question.text,
+            points: question.points,
+            choices: question.choices,
+            // _id is a MongoDB property
+            // eslint-disable-next-line no-underscore-dangle
+            _id: question._id,
+        });
     }
 
     getMultipleChoiceQuestionChoices(id: string): Observable<string[]> {

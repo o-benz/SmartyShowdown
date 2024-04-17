@@ -1,45 +1,57 @@
+import { DataBaseQuiz, QuizDocument } from '@app/model/database/quiz-database.schema';
 import { Question, Quiz, QuizEnum } from '@app/model/quiz/quiz.schema';
-import { Answers } from '@app/model/socket/socket.schema';
 import { GameStats } from '@app/model/stats/stats.schema';
-import { FileManagerService } from '@app/services/file-manager/file-manager.service';
 import { SocketService } from '@app/services/socket/socket.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { join } from 'path';
-import { Server, Socket } from 'socket.io';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-const NOTFOUND = -1;
-const QUIZ_DEFAULT_PATH = '/../../../../assets/quiz-example.json';
+import { Server, Socket } from 'socket.io';
 
 @Injectable()
 export class QuizService {
-    path: string = join(__dirname, QUIZ_DEFAULT_PATH);
     constructor(
-        private fileManager: FileManagerService,
+        @InjectModel(DataBaseQuiz.name, 'quizzes')
+        private quizModel: Model<QuizDocument>,
         private socket: SocketService,
     ) {}
 
     async getAllQuiz(): Promise<Quiz[]> {
-        return JSON.parse(await this.fileManager.readCustomFile(this.path));
+        try {
+            return this.quizModel.find({}, { _id: 0 });
+        } catch (error) {
+            return Promise.reject('Failed to get quizzes');
+        }
     }
 
     async getQuizById(id: string): Promise<Quiz> {
-        const quizList = await this.getAllQuiz();
-        return quizList.find((quiz) => quiz.id === id) || null;
+        try {
+            return this.quizModel.findOne({ id }, { _id: 0 });
+        } catch (error) {
+            return Promise.reject(`Failed to get quiz: ${error}`);
+        }
     }
 
-    async checkQuestion(question: Question): Promise<boolean> {
+    async checkMCQ(question: Question): Promise<boolean> {
         let countCorrect = 0;
         question.choices.forEach((choice) => {
             if (choice.isCorrect) countCorrect++;
         });
 
         if (
-            question.text === '' ||
-            question.points === null ||
             countCorrect < 1 ||
             question.choices.length > QuizEnum.MAXCHOICESLENGTH ||
             question.choices.length <= QuizEnum.MINCHOICESLENGTH ||
-            question.choices.length - countCorrect < 1 ||
+            question.choices.length - countCorrect < 1
+        )
+            return false;
+        return true;
+    }
+
+    async checkQuestionProperties(question: Question): Promise<boolean> {
+        if (
+            question.text === '' ||
+            question.points === null ||
             question.points % QuizEnum.MINPOINTS !== 0 ||
             question.points < QuizEnum.MINPOINTS ||
             question.points > QuizEnum.MAXPOINTS
@@ -48,25 +60,43 @@ export class QuizService {
         return true;
     }
 
+    async checkQuestion(question: Question): Promise<boolean> {
+        const isPropertiesValid = await this.checkQuestionProperties(question);
+        let isQuestionValid = true;
+        if (question.type === 'QCM') {
+            isQuestionValid = await this.checkMCQ(question);
+        }
+        return isPropertiesValid && isQuestionValid;
+    }
+
     async addQuiz(quiz: Quiz): Promise<boolean> {
-        const quizList = await this.getAllQuiz();
-        const validate = this.validateQuiz(quiz);
-        const alreadyExist = quizList.find((item) => item.id === quiz.id);
+        try {
+            const validate = this.validateQuiz(quiz);
+            quiz.lastModification = new Date().toISOString();
 
-        quiz.lastModification = new Date().toISOString();
+            if (!validate) {
+                return false;
+            }
 
-        if (validate && alreadyExist) {
-            const index = quizList.findIndex((item) => item.id === quiz.id);
-            quizList[index] = quiz;
-            await this.fileManager.writeCustomFile(this.path, JSON.stringify(quizList, null, 2));
-            return true;
-        } else if (validate) {
-            quiz.id = this.generateRandomID(QuizEnum.IDLENGTH);
-            quizList.push(quiz);
-            await this.fileManager.writeCustomFile(this.path, JSON.stringify(quizList, null, 2));
-            return true;
-        } else {
-            return false;
+            const existingQuiz = await this.quizModel.findOne({
+                $or: [{ id: quiz.id }, { title: quiz.title }],
+            });
+
+            if (existingQuiz) {
+                if (quiz.id !== existingQuiz.id) {
+                    return false;
+                } else {
+                    await this.quizModel.updateOne({ id: quiz.id }, quiz);
+                    return true;
+                }
+            } else {
+                quiz.id = this.generateRandomID(QuizEnum.IDLENGTH);
+                const createdQuiz = new this.quizModel(quiz);
+                await createdQuiz.save();
+                return true;
+            }
+        } catch (error) {
+            return Promise.reject(`Failed to add quiz: ${error}`);
         }
     }
 
@@ -78,18 +108,54 @@ export class QuizService {
             users: [],
             name: '',
         };
-        this.getQuizById(quizID).then((quiz) => {
+        await this.getQuizById(quizID).then((quiz) => {
             stats.duration = quiz.duration;
             stats.name = quiz.title;
             quiz.questions.forEach((question) => {
-                stats.questions.push({
-                    title: question.text,
-                    type: question.type,
-                    points: question.points,
-                    statLines: question.choices?.map((choice) => {
+                if (question.type === 'QCM') {
+                    stats.questions.push({
+                        title: question.text,
+                        type: question.type,
+                        points: question.points,
+                        statLines: question.choices?.map((choice) => {
+                            return { label: choice.text, users: [], isCorrect: choice.isCorrect };
+                        }),
+                    });
+                } else if (question.type === 'QRL') {
+                    stats.questions.push({
+                        title: question.text,
+                        type: question.type,
+                        points: question.points,
+                        statLines: [
+                            { label: 'active', users: [], isCorrect: false },
+                            { label: 'inactive', users: [], isCorrect: false },
+                        ],
+                        pointsGiven: { none: [], half: [], all: [] },
+                    });
+                }
+            });
+        });
+        return stats;
+    }
+
+    async populateGameStatsRandom(server: Server, socket: Socket, quiz: Quiz): Promise<GameStats> {
+        const stats: GameStats = {
+            id: quiz.id,
+            duration: quiz.duration,
+            name: quiz.title,
+            questions: [],
+            users: [],
+        };
+        const selectedQuestions: Question[] = quiz.questions;
+        selectedQuestions.forEach((question) => {
+            stats.questions.push({
+                title: question.text,
+                type: question.type,
+                points: question.points,
+                statLines:
+                    question.choices?.map((choice) => {
                         return { label: choice.text, users: [], isCorrect: choice.isCorrect };
-                    }),
-                });
+                    }) || [],
             });
         });
         return stats;
@@ -110,49 +176,26 @@ export class QuizService {
     }
 
     async updateQuizVisibility(id: string): Promise<Quiz> {
-        const quiz = await this.getQuizById(id);
-        if (!quiz) {
-            throw new NotFoundException(`Quiz with ID ${id} not found`);
+        try {
+            const quiz = await this.quizModel.findOne({ id });
+            if (!quiz) {
+                throw new NotFoundException(`Quiz with ID ${id} not found`);
+            }
+            quiz.visible = !quiz.visible;
+            await quiz.save();
+            return quiz;
+        } catch (error) {
+            return Promise.reject(`Failed to update quiz visibility: ${error}`);
         }
-        quiz.visible = !quiz.visible;
-
-        const quizList = await this.getAllQuiz();
-        const index = quizList.findIndex((item) => item.id === quiz.id);
-        if (index !== NOTFOUND) {
-            quizList[index] = quiz;
-        } else {
-            throw new NotFoundException(`Quiz with ID ${id} not found in the list`);
-        }
-
-        await this.fileManager.writeCustomFile(this.path, JSON.stringify(quizList, null, 2));
-        return quiz;
     }
 
     async deleteQuiz(id: string): Promise<void> {
-        const quiz = await this.getQuizById(id);
-        if (!quiz) {
-            throw new NotFoundException(`Quiz with ID ${id} not found`);
-        }
-        quiz.visible = !quiz.visible;
-
-        const quizList = await this.getAllQuiz();
-        const index = quizList.findIndex((item) => item.id === quiz.id);
-        if (index !== NOTFOUND) {
-            quizList.splice(index, 1);
-        } else {
-            throw new NotFoundException(`Quiz with ID ${id} not found in the list`);
-        }
-
-        await this.fileManager.writeCustomFile(this.path, JSON.stringify(quizList, null, 2));
-    }
-
-    validateAnswer(socket: Socket, answer: Answers, gameStats: GameStats): boolean {
-        const correctStatLines = gameStats.questions[answer.questionIndex].statLines;
-        correctStatLines.forEach((line) => {
-            if (line.isCorrect && !answer.answers.find((choice) => choice.text === line.label)) {
-                return false;
+        try {
+            if ((await this.quizModel.deleteOne({ id })).deletedCount === 0) {
+                throw new NotFoundException(`Quiz with ID ${id} not found`);
             }
-        });
-        return true;
+        } catch (error) {
+            return Promise.reject(`Failed to delete quiz: ${error}`);
+        }
     }
 }

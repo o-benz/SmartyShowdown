@@ -1,9 +1,9 @@
 import { Component, OnDestroy } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AdminConnection } from '@app/interfaces/admin-connection';
-import { ErrorMessages } from '@app/interfaces/error-messages';
+import { ErrorMessages } from '@app/interfaces/alert-messages';
 import { AuthenticationService } from '@app/services/authentication/authentication.service';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -13,19 +13,14 @@ import { Subscription } from 'rxjs';
 })
 export class LoginFormComponent implements OnDestroy {
     adminConnection: AdminConnection;
-    component: { closed: false };
     private loginSubscription: Subscription | null = null;
 
     constructor(
         public dialogRef: MatDialogRef<LoginFormComponent>,
         private authService: AuthenticationService,
-        private errorDialogService: DialogErrorService,
+        private errorDialogService: DialogAlertService,
     ) {
         this.adminConnection = { password: '' };
-    }
-
-    get isLoginSubscriptionClosed(): boolean {
-        return this.loginSubscription ? this.loginSubscription.closed : true;
     }
 
     onLogin() {

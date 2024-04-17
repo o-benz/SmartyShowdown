@@ -15,6 +15,8 @@ describe('QuizController', () => {
             getQuizById: jest.fn(),
             updateQuizVisibility: jest.fn(),
             deleteQuiz: jest.fn(),
+            checkQuestion: jest.fn(),
+            addQuiz: jest.fn(),
         };
 
         const module: TestingModule = await Test.createTestingModule({
@@ -114,5 +116,36 @@ describe('QuizController', () => {
             expect(quizService.getQuizById).toHaveBeenCalledWith(quizId);
             expect(quizService.deleteQuiz).not.toHaveBeenCalled();
         });
+    });
+
+    it('addQuestionToQuiz', async () => {
+        const question = {
+            text: 'Question 1',
+            type: 'text',
+            points: 10,
+            choices: [],
+        };
+        const result = true;
+
+        jest.spyOn(quizService, 'checkQuestion').mockResolvedValue(result);
+
+        expect(await controller.addQuestionToQuiz(question)).toBe(result);
+    });
+
+    it('addQuiz', async () => {
+        const quiz: Quiz = {
+            id: '1a2b3d',
+            visible: true,
+            title: 'Questionnaire sur le JS 1',
+            description: 'Questions de pratique sur le langage JavaScript',
+            duration: 60,
+            lastModification: '2018-11-13T20:20:39+00:00',
+            questions: [],
+        };
+        const result = true;
+
+        jest.spyOn(quizService, 'addQuiz').mockResolvedValue(result);
+
+        expect(await controller.addQuiz(quiz)).toBe(result);
     });
 });

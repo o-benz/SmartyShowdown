@@ -1,0 +1,3 @@
+<div [ngClass]="{'success-container': alertType === 'success', 'error-container': alertType === 'error'}">
+    <h2 [ngClass]="{'success-heading': alertType === 'success', 'error-heading': alertType === 'error'}">{{alertMessage}}</h2>
+</div>

@@ -1,7 +1,10 @@
 import { GameClientEvents, GameEnum } from '@app/gateways/game/game.gateway.events';
 import { Room, SocketAnswer, UserSocket } from '@app/model/socket/socket.schema';
+import { GameStats, PlayerState, QuestionStats } from '@app/model/stats/stats.schema';
 import { Injectable } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+
+const DEFAULT_DELAY = 1000;
 
 @Injectable()
 export class SocketService {
@@ -27,7 +30,8 @@ export class SocketService {
     }
 
     async getSocketsInRoom(room: string): Promise<UserSocket[]> {
-        return await this.server.in(room).fetchSockets();
+        const sockets = await this.server.in(room).fetchSockets();
+        return sockets;
     }
 
     async getAllUsernamesInRoom(room: string): Promise<string[]> {
@@ -56,6 +60,32 @@ export class SocketService {
             bannedUsers: [],
             gameStats: undefined,
             isStarted: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                this.server.to(socket.data.room).emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            isPaused: false,
+            startingTime: '',
+            isRandom: false,
+            socketTimers: new Map(),
+        });
+    }
+
+    populateRandomRoom(rooms: Map<string, Room>, socket: Socket): void {
+        rooms.set(socket.data.room, {
+            roomMessages: [],
+            isOpen: true,
+            bannedUsers: [],
+            gameStats: undefined,
+            isStarted: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                this.server.to(socket.data.room).emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            isPaused: false,
+            startingTime: '',
+            isRandom: true,
+            socketTimers: new Map(),
         });
     }
 
@@ -63,6 +93,15 @@ export class SocketService {
         socket.data.room = room;
         socket.data.id = socket.id;
         socket.data.username = GameEnum.Organizer;
+    }
+
+    // eslint-disable-next-line max-params
+    initializeRandomOrganizerSocket(socket: Socket, room: string, rooms: Map<string, Room>, gameStats: GameStats): void {
+        const organizerUserSocket = this.populateUserSocket(socket.id, GameEnum.Organizer, room);
+        socket.data = { ...organizerUserSocket.data };
+        this.populateRandomRoom(rooms, socket);
+        rooms.get(room).gameStats = gameStats;
+        rooms.get(room).gameStats.users.push(organizerUserSocket);
     }
 
     canJoinRoom(rooms: Map<string, Room>, room: string): boolean {
@@ -97,6 +136,8 @@ export class SocketService {
                 answered: false,
                 firstToAnswer: false,
                 hasLeft: false,
+                state: PlayerState.NoInteraction,
+                isMuted: false,
             },
         };
         return socket;
@@ -153,6 +194,7 @@ export class SocketService {
         room?.gameStats.users.forEach((user) => {
             user.data.firstToAnswer = false;
             user.data.answered = false;
+            if (user.data.state !== PlayerState.PlayerLeft) user.data.state = PlayerState.NoInteraction;
         });
     }
 
@@ -160,10 +202,37 @@ export class SocketService {
         room.isOpen = !room.isOpen;
     }
 
-    async destroyRoom(socket: Socket, roomCode: string, room: Room): Promise<boolean> {
-        return (
-            (socket.data.username && socket.data.username.toLowerCase() === GameEnum.Organizer) ||
-            (room && room.isStarted && (await this.getSocketsInRoom(roomCode)).length <= 1)
-        );
+    isOrganiser(username: string): boolean {
+        return username && username.toLowerCase() === GameEnum.Organizer;
+    }
+
+    async isLastInRoom(room: Room, roomCode: string): Promise<boolean> {
+        return room && room.isStarted && (await this.getSocketsInRoom(roomCode)).length <= 1;
+    }
+
+    async canDestroyRoom(socket: Socket, roomCode: string, room: Room): Promise<boolean> {
+        return this.isOrganiser(socket.data.username) || this.isLastInRoom(room, roomCode);
+    }
+
+    getTextsFromRoom(room: Room): string[] {
+        const textAnswers = room.gameStats.users.map((user) => user.data.textAnswer);
+        return textAnswers;
+    }
+
+    changeQrlStatlines(room: Room, questionIndex: number): void {
+        const question = room.gameStats.questions[questionIndex];
+        question.statLines = [
+            { label: '0%', users: question.pointsGiven.none, isCorrect: false },
+            { label: '50%', users: question.pointsGiven.half, isCorrect: false },
+            { label: '100%', users: question.pointsGiven.all, isCorrect: false },
+        ];
+    }
+
+    findNameInStatLine(question: QuestionStats, username: string, statlineIndex: number): string {
+        return question.statLines[statlineIndex].users.find((name) => name === username);
+    }
+
+    wereStatlinesChanged(question: QuestionStats): boolean {
+        return question.statLines.length >= 3;
     }
 }

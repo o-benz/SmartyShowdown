@@ -18,7 +18,7 @@ export class CountdownService {
         this.countdownSubscription = interval(LIMIT)
             .pipe(
                 take(duration + 1),
-                map(() => currentDuration--),
+                map(() => --currentDuration),
             )
             .subscribe((value) => {
                 this.countdownTick.emit(value);

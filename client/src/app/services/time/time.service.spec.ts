@@ -5,14 +5,12 @@ import { TimeService } from './time.service';
 describe('TimeService', () => {
     let timeService: TimeService;
     let mockSocketServiceSpy: jasmine.SpyObj<SocketCommunicationService>;
-    // J'ai besoin de Function
     // eslint-disable-next-line
     let tickCallback: Function;
 
     beforeEach(() => {
         mockSocketServiceSpy = jasmine.createSpyObj('SocketCommunicationService', ['onTick']);
 
-        // J'ai besoin de Function
         // eslint-disable-next-line
         mockSocketServiceSpy.onTick.and.callFake((callback: Function) => {
             tickCallback = callback;

@@ -1,4 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ElementRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -50,6 +51,19 @@ describe('QuizListComponent', () => {
 
         fixture = TestBed.createComponent(QuizListComponent);
         component = fixture.componentInstance;
+        component.quizzes = [
+            { id: '000001', visible: false },
+            { id: '000002', visible: true },
+            { id: '000003', visible: true },
+            { id: '000004', visible: false },
+        ] as unknown as Quiz[];
+        component['exportLink'] = {
+            nativeElement: {
+                click: () => {
+                    /* body*/
+                },
+            },
+        } as ElementRef;
         fixture.detectChanges();
     });
 
@@ -82,15 +96,16 @@ describe('QuizListComponent', () => {
         expect(spy).toHaveBeenCalledWith(['/questionbank']);
     });
 
-    it('delete quiz should remove quiz from list if the service return true', async () => {
+    it('delete quiz should remove quiz from list if the service return true', (done) => {
         const id = '000001';
-
+        const handlerSpy = spyOn(adminQuizHandlerSpy, 'delete').and.returnValue(of(undefined));
         spyOn(window, 'confirm').and.returnValue(true);
 
-        await component.delete(id);
-
-        // expect(handlerSpy).toHaveBeenCalledWith(id);
-        expect(component.quizzes).not.toContain({ id } as Quiz);
+        component.delete(id).then(() => {
+            expect(handlerSpy).toHaveBeenCalledWith(id);
+            expect(component.quizzes).not.toContain({ id } as Quiz);
+            done();
+        });
     });
 
     it('delete quiz should modifie error message if the service return false', async () => {
@@ -98,11 +113,24 @@ describe('QuizListComponent', () => {
         spyOn(adminQuizHandlerSpy, 'delete').and.returnValue(throwError(() => new Error('error')));
         spyOn(window, 'confirm').and.returnValue(true);
 
-        await component.delete(id);
-        expect(component.quizzes).toContain({ id, visible: false } as Quiz);
+        component.delete(id).then(() => {
+            expect(component.quizzes).toContain({ id, visible: false } as Quiz);
+        });
     });
 
-    it('hide quiz should change visibility of quiz on list', () => {
+    it('hide quiz should change visibility of quiz on list', async () => {
+        const id = '000001';
+        const quiz: Quiz = component.quizzes[0];
+        quiz.visible = true;
+        const handlerSpy = spyOn(adminQuizHandlerSpy, 'toggleQuizVisibility').and.returnValue(of(quiz));
+
+        component.hide(quiz).then(() => {
+            expect(handlerSpy).toHaveBeenCalledWith(id);
+            expect(component.quizzes[0].visible).toBeTrue();
+        });
+    });
+
+    it('hide quiz should modifie error message if the service return false', async () => {
         const id = '000001';
         const quiz: Quiz = component.quizzes[0];
         const handlerSpy = spyOn(adminQuizHandlerSpy, 'toggleQuizVisibility').and.returnValue(throwError(() => new Error('{status: 404}')));
@@ -111,5 +139,15 @@ describe('QuizListComponent', () => {
 
         expect(handlerSpy).toHaveBeenCalledWith(id);
         expect(component.quizzes[0].visible).toBeFalse();
+    });
+
+    it('delete quiz should modify error message if the service return nothing', async () => {
+        const id = '000001';
+        spyOn(adminQuizHandlerSpy, 'delete').and.returnValue(throwError(() => new Error('{status: 404}')));
+        spyOn(window, 'confirm').and.returnValue(true);
+
+        component.delete(id).then(() => {
+            expect(component.quizzes).toContain({ id, visible: false } as Quiz);
+        });
     });
 });

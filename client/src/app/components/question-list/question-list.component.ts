@@ -1,11 +1,11 @@
 import { Component, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { NewQuestionFormComponent } from '@app/components/new-question-form/new-question-form.component';
-import { ErrorMessages } from '@app/interfaces/error-messages';
-import { BaseMultipleChoiceQuestion, MultipleChoiceQuestion, QuestionModel } from '@app/interfaces/question-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
-import { AdminQuestionHandlerService } from '@app/services/mcq-handler/mcq-handler.service';
-import { Subscription } from 'rxjs';
+import { ErrorMessages, SuccessMessages } from '@app/interfaces/alert-messages';
+import { BaseQuestion, Question, TypeEnum } from '@app/interfaces/question-model';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
+import { QuestionService } from '@app/services/question/question.service';
+import { Observable, Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-question-list',
@@ -13,22 +13,24 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./question-list.component.scss'],
 })
 export class QuestionListComponent implements OnInit, OnDestroy {
-    static questions: QuestionModel[];
+    static questions: Question[];
     @ViewChild('dialogTemplate') dialogTemplate: TemplateRef<unknown>;
+    protected filterState = TypeEnum.ALL;
+    protected typeEnum = TypeEnum;
     private questionsSubscription: Subscription;
 
     constructor(
-        private adminQuestionHandler: AdminQuestionHandlerService,
+        private questionService: QuestionService,
         private dialog: MatDialog,
-        private dialogErrorService: DialogErrorService,
+        private dialogAlertService: DialogAlertService,
     ) {}
 
     get questions() {
         return QuestionListComponent.questions;
     }
     ngOnInit(): void {
-        this.questionsSubscription = this.adminQuestionHandler.getAllMultipleChoiceQuestions().subscribe((questions: MultipleChoiceQuestion[]) => {
-            QuestionListComponent.questions = questions as QuestionModel[];
+        this.questionsSubscription = this.questionService.getAllQuestionsInformation().subscribe((questions: Question[]) => {
+            QuestionListComponent.questions = questions as Question[];
         });
     }
 
@@ -36,15 +38,16 @@ export class QuestionListComponent implements OnInit, OnDestroy {
         this.questionsSubscription.unsubscribe();
     }
 
-    deleteQuestion(id: string): void {
+    deleteQuestion(question: Question): void {
         if (confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
-            this.adminQuestionHandler.deleteMultipleChoiceQuestion(id).subscribe({
+            this.questionService.deleteQuestionFromBank(question).subscribe({
                 next: () => {
                     // eslint-disable-next-line no-underscore-dangle
-                    QuestionListComponent.questions = QuestionListComponent.questions.filter((question) => question._id !== id);
+                    QuestionListComponent.questions = QuestionListComponent.questions.filter((questions) => questions._id !== question._id);
+                    this.dialogAlertService.openSuccessDialog(SuccessMessages.QuestionDeleted);
                 },
                 error: () => {
-                    this.dialogErrorService.openErrorDialog(ErrorMessages.DeleteQuestionError);
+                    this.dialogAlertService.openErrorDialog(ErrorMessages.DeleteQuestionError);
                 },
             });
         }
@@ -57,8 +60,8 @@ export class QuestionListComponent implements OnInit, OnDestroy {
             width: '50%',
             disableClose: true,
         });
-        dialogRef.afterClosed().subscribe((result: QuestionModel) => {
-            if (this.isMultipleChoiceQuestion(result)) {
+        dialogRef.afterClosed().subscribe((result: Question) => {
+            if (this.isValidQuestion(result)) {
                 this.updateQuestion(result, id);
             }
         });
@@ -71,43 +74,68 @@ export class QuestionListComponent implements OnInit, OnDestroy {
             disableClose: true,
         });
 
-        dialogRef.afterClosed().subscribe((result: QuestionModel) => {
-            if (this.isMultipleChoiceQuestion(result)) {
+        dialogRef.afterClosed().subscribe((result: Question) => {
+            if (this.isValidQuestion(result)) {
                 this.addQuestion(result);
             }
         });
     }
 
-    protected isMultipleChoiceQuestion(question: QuestionModel): question is MultipleChoiceQuestion {
+    protected setFilterState(state: TypeEnum) {
+        this.filterState = state;
+        this.updateQuestionsList();
+    }
+
+    protected isMultipleChoiceQuestion(question: Question): question is Question {
         return question.type === 'QCM';
     }
 
-    private updateQuestion(result: QuestionModel, id: string): void {
-        this.adminQuestionHandler.updateMultipleChoiceQuestion({ ...(result as MultipleChoiceQuestion), _id: id }).subscribe({
+    protected isOpenEndedQuestion(question: Question): question is Question {
+        return question.type === 'QRL';
+    }
+
+    private isValidQuestion(result: Question): boolean {
+        return result && (this.isMultipleChoiceQuestion(result) || this.isOpenEndedQuestion(result));
+    }
+
+    private updateQuestion(result: Question, id: string): void {
+        this.questionService.updateQuestionInBank({ ...(result as Question), _id: id }).subscribe({
             next: () => {
                 this.updateQuestionsList();
+                this.dialogAlertService.openSuccessDialog(SuccessMessages.QuestionUpdated);
             },
-            error: () => {
-                this.dialogErrorService.openErrorDialog(ErrorMessages.UpdateQuestionError);
+            error: (error) => {
+                if (error.error?.includes('Question already exists')) {
+                    this.dialogAlertService.openErrorDialog(ErrorMessages.QuestionAlreadyInBank);
+                } else {
+                    this.dialogAlertService.openErrorDialog(ErrorMessages.UpdateQuestionError);
+                }
             },
         });
     }
 
-    private addQuestion(result: QuestionModel): void {
-        const multipleChoiceQuestion = result as BaseMultipleChoiceQuestion;
-        this.adminQuestionHandler.addMultipleChoiceQuestion(multipleChoiceQuestion).subscribe({
+    private addQuestion(result: Question): void {
+        const multipleChoiceQuestion = result as BaseQuestion;
+        this.questionService.addQuestionToBank(multipleChoiceQuestion).subscribe({
             next: () => {
                 this.updateQuestionsList();
+                this.dialogAlertService.openSuccessDialog(SuccessMessages.QuestionAdded);
             },
-            error: () => {
-                this.dialogErrorService.openErrorDialog(ErrorMessages.AddQuestionError);
+            error: (error) => {
+                if (error.error?.includes('Question already exists')) {
+                    this.dialogAlertService.openErrorDialog(ErrorMessages.QuestionAlreadyInBank);
+                } else {
+                    this.dialogAlertService.openErrorDialog(ErrorMessages.AddQuestionToBank);
+                }
             },
         });
     }
 
     private updateQuestionsList(): void {
-        this.adminQuestionHandler.getAllMultipleChoiceQuestions().subscribe((questions: MultipleChoiceQuestion[]) => {
-            QuestionListComponent.questions = questions as QuestionModel[];
+        const questionsObservable: Observable<Question[]> = this.questionService.getQuestionsByType(this.filterState);
+
+        questionsObservable.subscribe((questions: Question[]) => {
+            QuestionListComponent.questions = questions;
         });
     }
 }

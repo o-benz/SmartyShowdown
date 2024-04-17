@@ -20,13 +20,12 @@ export class QuizAddService {
                 this.stealthPageReload();
             },
             error: () => {
-                this.jsonCheckService.handleErrorMessage("Erreur lors de l'ajou du quiz au database");
+                this.jsonCheckService.handleErrorMessage("Erreur lors de l'ajout du quiz au database");
             },
         });
     }
 
     private async stealthPageReload() {
-        this.router.navigateByUrl('/', { skipLocationChange: true });
-        this.router.navigate(['/admin']);
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(async () => this.router.navigate(['/admin']));
     }
 }

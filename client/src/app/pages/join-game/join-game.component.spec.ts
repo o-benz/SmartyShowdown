@@ -4,7 +4,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NavigationStart, Router } from '@angular/router';
 import { HeaderComponent } from '@app/components/header/header.component';
 import { Naviguation, SocketAnswer } from '@app/interfaces/socket-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Observable, Subscription, of } from 'rxjs';
 import { JoinGameComponent } from './join-game.component';
@@ -14,7 +14,7 @@ describe('JoinGameComponent', () => {
     let fixture: ComponentFixture<JoinGameComponent>;
     let dialogSpy: jasmine.SpyObj<MatDialog>;
     let socketServiceSpy: jasmine.SpyObj<SocketCommunicationService>;
-    let dialogServiceSpy: jasmine.SpyObj<DialogErrorService>;
+    let dialogServiceSpy: jasmine.SpyObj<DialogAlertService>;
 
     class MockRouter {
         events: Observable<unknown> = of(new NavigationStart(0, 'some-url'));
@@ -37,7 +37,7 @@ describe('JoinGameComponent', () => {
             'connect',
             'disconnect',
         ]);
-        dialogServiceSpy = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog']);
+        dialogServiceSpy = jasmine.createSpyObj('DialogAlertService', ['openErrorDialog']);
 
         TestBed.configureTestingModule({
             declarations: [JoinGameComponent, HeaderComponent],
@@ -46,7 +46,7 @@ describe('JoinGameComponent', () => {
                 { provide: MatDialog, useValue: dialogSpy },
                 { provide: SocketCommunicationService, useValue: socketServiceSpy },
                 { provide: Router, useValue: mockRouter },
-                { provide: DialogErrorService, useValue: dialogServiceSpy },
+                { provide: DialogAlertService, useValue: dialogServiceSpy },
             ],
             imports: [FormsModule],
         });

@@ -106,6 +106,18 @@ describe('QuizImportService', () => {
         await service.importQuiz(file);
         expect(mockJsonCheckService.handleErrorMessage).toHaveBeenCalled();
     });
+
+    it('nameCheck should call handleErrorMessage if nameCheck fails', async () => {
+        const errorMessage = 'Test error message';
+        mockJsonCheckService.nameCheck.and.returnValue(Promise.reject(new Error(errorMessage)));
+        try {
+            await service['quizNameCheck']();
+        } catch (error) {
+            expect(error).toBe(errorMessage);
+        }
+
+        expect(mockJsonCheckService.handleErrorMessage).toHaveBeenCalledWith(errorMessage);
+    });
 });
 
 const HALF = 0.5;

@@ -1,5 +1,5 @@
 <div class="player-list-container">
-       <div *ngFor="let player of players | async" [class.left]="player.hasLeft">
+       <div *ngFor="let player of players" [class.left]="player.hasLeft">
               <h4>
                      {{player.name}}
                      <span  class="score" *ngIf="player.score">  Score: {{player.score}}

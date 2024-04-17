@@ -63,12 +63,17 @@ export class QuizImportService {
     }
 
     private async quizNameCheck(): Promise<void> {
-        await this.jsonCheckService.nameCheck(this.checkService.sanitizedQuiz).then((quizNewName) => {
-            if (quizNewName) {
-                this.quizAddService.addToQuizList(quizNewName as Quiz);
-            } else {
-                this.jsonCheckService.handleErrorMessage("Un nouveau nom n'a pas été sélectionné");
-            }
-        });
+        return this.jsonCheckService
+            .nameCheck(this.checkService.sanitizedQuiz)
+            .then((quizNewName) => {
+                if (quizNewName) {
+                    this.quizAddService.addToQuizList(quizNewName as Quiz);
+                } else {
+                    this.jsonCheckService.handleErrorMessage("Un nouveau nom n'a pas été sélectionné");
+                }
+            })
+            .catch((error) => {
+                this.jsonCheckService.handleErrorMessage(error.message);
+            });
     }
 }

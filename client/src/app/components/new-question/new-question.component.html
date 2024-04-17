@@ -1,0 +1,37 @@
+<p>Filtres :
+<button [ngClass]="{'active': filterState === typeEnum.QRL}" (click)="setFilterState(typeEnum.QRL)">QRL</button>
+<button [ngClass]="{'active': filterState === typeEnum.QCM}" (click)="setFilterState(typeEnum.QCM)">QCM</button>
+<button [ngClass]="{'active': filterState === typeEnum.ALL}" (click)="setFilterState(typeEnum.ALL)">TOUT</button>
+</p>
+<div class="select">
+    <select [(ngModel)]="newQuestion">
+        <option [ngValue]="null">Choisir depuis la banque de questions</option>
+        <option *ngFor="let question of listQuestion" [ngValue]="question" [ngClass]="{'oeq': question.type === 'QRL', 'mcq': question.type === 'QCM'}">
+            ({{question.type}}) {{ question.text }}
+        </option>
+    </select>
+</div>
+
+<div *ngIf="newQuestion && newQuestion.text">
+    <h2>{{ newQuestion.text }}</h2>
+    <p>Type : {{ newQuestion.type }}</p>
+    <p>Points : {{ newQuestion.points }}</p>
+
+    <p *ngIf="newQuestion.type !== 'QRL'">Choix : </p>
+    <ul>
+        <li *ngFor="let choice of newQuestion.choices">
+            <span [class.correct]="choice.isCorrect" [class.incorrect]="!choice.isCorrect">
+                {{ choice.isCorrect ? '✅' : '❌' }} {{ choice.text }}
+            </span>
+        </li>
+    </ul>
+    <div class="create-button">
+        <button type="button" (click)="addQuestionToQuiz(newQuestion)">Ajouter au quiz</button>
+    </div>
+</div>
+
+<div class="add-new-question">
+    <button type="button" (click)="createQuestion()">Créer une nouvelle question</button>
+</div>
+
+

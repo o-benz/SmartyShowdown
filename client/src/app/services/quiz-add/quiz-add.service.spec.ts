@@ -32,19 +32,20 @@ describe('QuizAddService', () => {
         expect(service).toBeTruthy();
     });
 
-    it('should add quiz to list and reload page', () => {
+    it('should add quiz to list call for reload page', () => {
         const quiz: Quiz = {
             id: '000004',
             title: 'forth',
             questions: [],
         } as unknown as Quiz;
         mockQuizService.addQuiz.and.returnValue(of(true));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const spy = spyOn<any>(service, 'stealthPageReload');
 
         service.addToQuizList(quiz);
 
         expect(mockQuizService.addQuiz).toHaveBeenCalledWith(quiz);
-        expect(mockRouter.navigateByUrl).toHaveBeenCalledWith('/', { skipLocationChange: true });
-        expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin']);
+        expect(spy).toHaveBeenCalled();
     });
 
     it('should handle error when adding quiz fails', () => {
@@ -58,13 +59,13 @@ describe('QuizAddService', () => {
         service.addToQuizList(quiz);
 
         expect(mockQuizService.addQuiz).toHaveBeenCalledWith(quiz);
-        expect(mockJsonCheckService.handleErrorMessage).toHaveBeenCalledWith("Erreur lors de l'ajou du quiz au database");
+        expect(mockJsonCheckService.handleErrorMessage).toHaveBeenCalledWith("Erreur lors de l'ajout du quiz au database");
     });
 
     it('stealthPageReload should navigate to admin page', async () => {
-        await service['stealthPageReload']();
-
-        expect(mockRouter.navigateByUrl).toHaveBeenCalledWith('/', { skipLocationChange: true });
-        expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin']);
+        mockRouter.navigateByUrl.and.resolveTo(true);
+        service['stealthPageReload']().then(() => {
+            expect(mockRouter.navigateByUrl).toHaveBeenCalledWith('/', { skipLocationChange: true });
+        });
     });
 });

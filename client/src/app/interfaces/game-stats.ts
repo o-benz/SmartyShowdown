@@ -1,4 +1,4 @@
-import { Question } from './quiz-model';
+import { BaseQuestion } from './question-model';
 
 export interface GameStats {
     id: string;
@@ -26,6 +26,9 @@ export interface PlayerInfo {
     score?: number;
     bonusCount?: number;
     hasLeft?: boolean;
+    textAnswer?: string;
+    state?: PlayerState;
+    isMuted?: boolean;
 }
 
 export interface ServerStats {
@@ -59,11 +62,30 @@ export interface UserSocket {
         answered: boolean;
         firstToAnswer?: boolean;
         hasLeft?: boolean;
+        textAnswer?: string;
+        state?: PlayerState;
+        isMuted?: boolean;
     };
 }
 
 export interface TimePackage {
     time: number;
-    question: Question;
+    question: BaseQuestion;
     currentQuestionIndex: number;
+}
+
+export interface QuestionTimePackage {
+    time: number;
+    question: BaseQuestion;
+    isTimeOver: boolean;
+    mode: string;
+    isOrganizer?: boolean;
+    currentQuestionIndex: number;
+}
+
+export enum PlayerState {
+    AnswerConfirmed = 3,
+    FirstInteraction = 2,
+    NoInteraction = 1,
+    PlayerLeft = 0,
 }

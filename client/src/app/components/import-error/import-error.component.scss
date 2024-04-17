@@ -7,11 +7,14 @@
 
 h3 {
     user-select: none;
-    color: $black;
-    font-weight: bold;
-    font-size: 2vmin;
-    margin-block-start: 0;
-    margin-bottom: 2%;
+    font-size: 3vmin;
+    padding: 10px;
+}
+
+p {
+    user-select: none;
+    font-size: 3vmin;
+    padding: 10px;
 }
 
 input[type="text"] {
@@ -23,7 +26,15 @@ input[type="text"] {
     outline: none;
 }
 
-p {
-    margin-block-start: 0;
-    margin-block-end: 0;
+.error-container {
+    background-color: #ffe6e6;
+    border: 1px solid #ff6666;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.error-heading {
+    color: #ff6666;
+    font-size: 18px;
+    margin: 0;
 }

@@ -1,15 +1,19 @@
-import { Room } from '@app/model/socket/socket.schema';
+import { Answer, GivePointsInfo, Room, UserSocket } from '@app/model/socket/socket.schema';
 import { GameStats } from '@app/model/stats/stats.schema';
+import { HistoricService } from '@app/services/historic-manager/historic.service';
 import { QuizService } from '@app/services/quiz/quiz.service';
 import { SocketGameManagerService } from '@app/services/socket-game-manager/socket-game-manager.service';
+import { SocketTimeManagerService } from '@app/services/socket-time-manager/socket-time-manager.service';
 import { SocketService } from '@app/services/socket/socket.service';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Socket } from 'socket.io';
 import { GameGateway } from './game.gateway';
-import { GameClientEvents, GameEnum } from './game.gateway.events';
+import { GameClientEvents, GameEnum, GameEvents } from './game.gateway.events';
 /* eslint-disable max-lines */
 
 jest.useFakeTimers();
 jest.spyOn(global, 'setInterval');
+const DEFAULT_DELAY = 1000;
 
 describe('GameGateway', () => {
     let gateway: GameGateway;
@@ -17,6 +21,8 @@ describe('GameGateway', () => {
     const mockQuizService = {
         generateRandomID: jest.fn(),
         populateGameStats: jest.fn(),
+        populateGameStatsRandom: jest.fn(),
+        validateAnswer: jest.fn(),
     };
 
     const mockSocketService = {
@@ -43,7 +49,12 @@ describe('GameGateway', () => {
         userLeaveRoom: jest.fn(),
         resetUser: jest.fn(),
         updateLockRoom: jest.fn(),
-        destroyRoom: jest.fn(),
+        initializeRandomOrganizerSocket: jest.fn(),
+        canDestroyRoom: jest.fn(),
+        getTextsFromRoom: jest.fn(),
+        changeQrlStatlines: jest.fn(),
+        findNameInStatLine: jest.fn(),
+        wereStatlinesChanged: jest.fn(),
     };
 
     const mockSocket = {
@@ -68,6 +79,19 @@ describe('GameGateway', () => {
         isMessageValid: jest.fn(),
         handleRoomMessage: jest.fn(),
         checkAnswers: jest.fn(),
+        getQuestionType: jest.fn(),
+        sendPlayerLeftMessage: jest.fn(),
+        givePoints: jest.fn(),
+        changeUserActivityOnPress: jest.fn(),
+    };
+
+    const mockSocketTimeManagerService = {
+        setServer: jest.fn(),
+        resetTimer: jest.fn(),
+        setTimer: jest.fn(),
+        pauseTimer: jest.fn(),
+        getQuestionType: jest.fn(),
+        panicTimer: jest.fn(),
     };
 
     const mockServer = {
@@ -82,7 +106,7 @@ describe('GameGateway', () => {
     const mockGameStats: GameStats = {
         id: '',
         duration: 10,
-        questions: [],
+        questions: [{ title: 'deez', statLines: [], type: 'QCM', points: 100000000000 }],
         users: [],
         name: '',
     };
@@ -94,6 +118,9 @@ describe('GameGateway', () => {
                 { provide: QuizService, useValue: mockQuizService },
                 { provide: SocketService, useValue: mockSocketService },
                 { provide: SocketGameManagerService, useValue: mockSocketGameManagerService },
+                { provide: SocketTimeManagerService, useValue: mockSocketTimeManagerService },
+                { provide: HistoricService, useValue: {} },
+                { provide: HistoricService, useValue: { populateHistory: jest.fn() } },
             ],
         }).compile();
 
@@ -104,8 +131,32 @@ describe('GameGateway', () => {
         gateway['server'] = mockServer as any;
     });
 
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
     it('should be defined', () => {
         expect(gateway).toBeDefined();
+    });
+
+    it('should create a random room', async () => {
+        mockQuizService.generateRandomID.mockReturnValue('1234');
+        mockQuizService.populateGameStatsRandom.mockResolvedValue(mockGameStats);
+        const mockQuiz = {
+            id: 'string',
+            visible: true,
+            title: 'string',
+            description: 'string',
+            duration: 20,
+            lastModification: 'string',
+            questions: [],
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = await gateway.createRoomRandom(mockSocket as any, mockQuiz);
+
+        expect(result).toBe('1234');
+        expect(mockSocketService.initializeRandomOrganizerSocket).toHaveBeenCalled();
+        expect(mockQuizService.populateGameStatsRandom).toHaveBeenCalled();
     });
 
     it('should create a room', async () => {
@@ -132,6 +183,7 @@ describe('GameGateway', () => {
     });
 
     it('should login', async () => {
+        mockSocketService.canJoinRoom.mockReturnValue(true);
         mockSocketService.attemptLogin.mockReturnValue({ joined: true });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = await gateway.login(mockSocket as any, 'test');
@@ -139,9 +191,17 @@ describe('GameGateway', () => {
     });
 
     it('should not login with empty username', async () => {
+        mockSocketService.canJoinRoom.mockReturnValue(true);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = await gateway.login(mockSocket as any, '');
         expect(result).toEqual({ joined: false, message: GameEnum.UserNotValidMessage });
+    });
+
+    it('should not login when room is not open', async () => {
+        mockSocketService.canJoinRoom.mockReturnValue(false);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = await gateway.login(mockSocket as any, '');
+        expect(result).toEqual({ joined: false, message: GameEnum.ErrorMessage });
     });
 
     it('should update room', async () => {
@@ -166,6 +226,13 @@ describe('GameGateway', () => {
             bannedUsers: [],
             gameStats: mockGameStats,
             isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
         };
         const mockBannedSocket = { id: 'bannedSocketId', data: { room: '1234', username: mockUsername }, leave: jest.fn() };
         gateway['rooms'] = new Map();
@@ -232,6 +299,13 @@ describe('GameGateway', () => {
             bannedUsers: [],
             gameStats: mockGameStats,
             isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
         };
         gateway['rooms'] = new Map();
         gateway['rooms'].set(mockRoomCode, mockRoom);
@@ -239,7 +313,7 @@ describe('GameGateway', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         gateway.destroyRoom(mockSocket as any);
         expect(gateway['rooms'].has(mockRoomCode)).toBeTruthy();
-        expect(gateway['server'].to).toHaveBeenCalledWith(mockRoomCode);
+        expect(gateway['server'].to).toHaveBeenCalledWith('1');
         expect(gateway['server'].emit).toHaveBeenCalledWith(GameClientEvents.RoomClosed);
     });
 
@@ -256,6 +330,13 @@ describe('GameGateway', () => {
             bannedUsers: [],
             gameStats: mockGameStats,
             isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
         };
 
         const mockRoomCode = '1234';
@@ -280,6 +361,13 @@ describe('GameGateway', () => {
             bannedUsers: [],
             gameStats: mockGameStats,
             isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
         };
 
         const mockRoomCode = '1234';
@@ -306,18 +394,25 @@ describe('GameGateway', () => {
             bannedUsers: [],
             gameStats: mockGameStats,
             isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
         };
 
         const mockRoomCode = '1234';
         gateway['rooms'] = new Map();
         gateway['rooms'].set(mockRoomCode, mockRoom);
 
-        mockSocketService.destroyRoom.mockResolvedValue(true);
+        mockSocketService.canDestroyRoom.mockResolvedValue(true);
         jest.spyOn(gateway, 'leaveRoom').mockImplementation();
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await gateway.handleDisconnect(mockSocket as any);
-        expect(mockSocketService.destroyRoom).toHaveBeenCalled();
+        expect(mockSocketService.canDestroyRoom).toHaveBeenCalled();
         expect(gateway.leaveRoom).toHaveBeenCalled();
     });
 
@@ -328,18 +423,25 @@ describe('GameGateway', () => {
             bannedUsers: [],
             gameStats: mockGameStats,
             isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
         };
 
         const mockRoomCode = '1234';
         gateway['rooms'] = new Map();
         gateway['rooms'].set(mockRoomCode, mockRoom);
 
-        mockSocketService.destroyRoom.mockResolvedValue(false);
+        mockSocketService.canDestroyRoom.mockResolvedValue(false);
         jest.spyOn(gateway, 'leaveRoom').mockImplementation();
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await gateway.handleDisconnect(mockSocket as any);
-        expect(mockSocketService.destroyRoom).toHaveBeenCalled();
+        expect(mockSocketService.canDestroyRoom).toHaveBeenCalled();
         expect(gateway.leaveRoom).toHaveBeenCalled();
     });
 
@@ -357,32 +459,99 @@ describe('GameGateway', () => {
         expect(mockSocketGameManagerService.setServer).toHaveBeenCalledWith(mockServer);
     });
 
-    it('should set up an interval and emit tick events', () => {
-        const TICK_MS = 1000;
-        gateway.afterInit();
-        jest.advanceTimersByTime(TICK_MS);
-
-        expect(setInterval).toHaveBeenCalledTimes(1);
-        expect(setInterval).toHaveBeenLastCalledWith(expect.any(Function), TICK_MS);
-        expect(mockServer.emit).toHaveBeenCalledWith('tick', {});
+    it('should emit when player gets muted', () => {
+        const mockSocketUser: UserSocket = {
+            data: {
+                id: 'socketId',
+                username: 'test',
+                answered: false,
+                isMuted: false,
+            },
+        };
+        mockSocketService.findSocketUser.mockReturnValue(mockSocketUser);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        gateway.muteUser(mockSocket as any, 'test');
+        expect(mockServer.to).toHaveBeenCalledWith('socketId');
+        expect(mockSocketUser.data.isMuted).toBe(true);
     });
 
-    it('should show result on end game', () => {
+    it('should emit when player state change', () => {
+        const mockSocketUser: UserSocket = {
+            data: {
+                room: '0',
+                id: 'socketId',
+                username: 'test',
+                answered: false,
+                state: 0,
+            },
+        };
+        mockSocketService.findSocketUser.mockReturnValue(mockSocketUser);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        gateway.updatePlayerState(mockSocket as any, 2);
+        expect(gateway['server'].emit).toHaveBeenCalledWith(GameClientEvents.PlayerStateChange, mockSocketUser);
+        expect(mockSocketUser.data.state).toBe(2);
+    });
+
+    it('should show result and populate history on end game', () => {
         const mockRoom: Room = {
             roomMessages: [],
             isOpen: false,
             bannedUsers: [],
             gameStats: mockGameStats,
             isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
         };
 
         const mockRoomCode = '1234';
         gateway['rooms'] = new Map();
         gateway['rooms'].set(mockRoomCode, mockRoom);
         mockSocket.data.room = mockRoomCode;
+        mockSocket.data.username = 'organisateur';
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         gateway.endGame(mockSocket as any);
+
         expect(gateway['server'].emit).toHaveBeenCalledWith(GameClientEvents.ShowResults);
+    });
+
+    it('should finalize answer if round over', () => {
+        const mockSocketUser: UserSocket = {
+            data: {
+                room: '0',
+                id: 'socketId',
+                username: 'organisateur',
+                answered: false,
+                state: 0,
+            },
+        };
+        const mockRoom: Room = {
+            roomMessages: [],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        mockSocketService.findSocketUser.mockReturnValue(mockSocketUser);
+        const mockRoomCode = '1234';
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        mockSocket.data.room = mockRoomCode;
+        mockSocketUser.data.state = 1;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        gateway.roundOver(mockSocketUser as any, '0');
+        expect(gateway['server'].emit).toHaveBeenCalledWith(GameClientEvents.FinalizeAnswers);
     });
 
     it('should finalize answer if round over', () => {
@@ -392,7 +561,16 @@ describe('GameGateway', () => {
             bannedUsers: [],
             gameStats: mockGameStats,
             isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
         };
+        mockSocketGameManagerService.finishQuestion.mockImplementation();
+        const spy = jest.spyOn(mockSocketGameManagerService, 'finishQuestion');
 
         const mockRoomCode = '1234';
         gateway['rooms'] = new Map();
@@ -400,7 +578,7 @@ describe('GameGateway', () => {
         mockSocket.data.room = mockRoomCode;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         gateway.roundOver(mockSocket as any, '0');
-        expect(gateway['server'].emit).toHaveBeenCalledWith(GameClientEvents.FinalizeAnswers);
+        expect(spy).toHaveBeenCalled();
     });
 
     it('should change question if next question is called', () => {
@@ -410,6 +588,13 @@ describe('GameGateway', () => {
             bannedUsers: [],
             gameStats: mockGameStats,
             isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
         };
 
         const mockRoomCode = '1234';
@@ -422,13 +607,20 @@ describe('GameGateway', () => {
         expect(mockSocketService.resetUser).toHaveBeenCalledWith(mockRoom);
     });
 
-    it('should endRound if all users have confirmed', () => {
+    it('should go the QRL route if confirm answer QRL', () => {
         const mockRoom: Room = {
             roomMessages: [],
             isOpen: false,
             bannedUsers: [],
             gameStats: mockGameStats,
             isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
         };
         const mockRoomCode = '1234';
         gateway['rooms'] = new Map();
@@ -437,10 +629,559 @@ describe('GameGateway', () => {
         mockSocketGameManagerService.canConfirmAnswer.mockResolvedValue(true);
         mockSocketGameManagerService.allAnswered.mockResolvedValue(true);
         mockSocketGameManagerService.checkAnswer.mockImplementation();
+        mockSocketGameManagerService.getQuestionType.mockImplementation(() => {
+            return 'QRL';
+        });
         mockSocketService.findSocketUser.mockReturnValue(mockSocket);
+        mockGameStats.questions[0] = {
+            title: 'string',
+            statLines: [],
+            type: 'QRL',
+            points: 0,
+            timeFinished: false,
+        };
+        gateway.getAnswers = jest.fn();
+        const spy = jest.spyOn(gateway, 'updatePlayerState');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         gateway.confirmAnswer(mockSocket as any, '0');
-        expect(gateway['server'].emit).toHaveBeenCalledWith(GameClientEvents.EndRound);
-        expect(mockSocketService.resetUser).toHaveBeenCalledWith(mockRoom);
+        expect(spy).toHaveBeenCalled();
+    });
+
+    it('should change state when user confirm and time not ended', () => {
+        const mockRoom: Room = {
+            roomMessages: [],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        const mockRoomCode = '1234';
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        mockSocket.data.room = mockRoomCode;
+        mockSocketGameManagerService.canConfirmAnswer.mockResolvedValue(true);
+        mockSocketGameManagerService.allAnswered.mockResolvedValue(true);
+        mockSocketGameManagerService.checkAnswer.mockImplementation();
+        mockSocketGameManagerService.getQuestionType.mockImplementation(() => {
+            return 'QCM';
+        });
+        mockSocketService.findSocketUser.mockReturnValue(mockSocket);
+        mockGameStats.questions[0] = {
+            title: 'string',
+            statLines: [],
+            type: 'QCM',
+            points: 0,
+            timeFinished: false,
+        };
+        gateway.getAnswers = jest.fn();
+        const spy = jest.spyOn(gateway, 'updatePlayerState');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        gateway.confirmAnswer(mockSocket as any, '0');
+        expect(spy).toHaveBeenCalled();
+    });
+
+    it('should call sendMessage with the correct arguments', () => {
+        const mockRoom: Room = {
+            roomMessages: [],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        const message = 'testMessage';
+        const mockRoomCode = '1234';
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        mockSocketGameManagerService.isRoomValid.mockReturnValue(true);
+        mockSocketGameManagerService.isMessageValid.mockReturnValue(true);
+        gateway.sendMessage = jest.fn();
+        gateway.handleRoomMessage(mockSocket as unknown as Socket, message);
+
+        expect(mockSocketGameManagerService.isRoomValid).toHaveBeenCalledWith(gateway['rooms'], mockSocket as unknown as Socket);
+        expect(gateway.sendMessage).toHaveBeenCalled();
+    });
+
+    it('handleRoomMessage should return if the room is invalid', () => {
+        mockSocketGameManagerService.isRoomValid.mockReturnValue(false);
+        gateway.sendMessage = jest.fn();
+        gateway.handleRoomMessage(mockSocket as unknown as Socket, 'testMessage');
+        expect(mockSocketGameManagerService.isRoomValid).toHaveBeenCalledWith(gateway['rooms'], mockSocket as unknown as Socket);
+        expect(gateway.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('handleRoomMessage should return if message is invalid', () => {
+        const mockSocketUser: UserSocket = {
+            data: {
+                id: 'socketId',
+                username: 'test',
+                answered: false,
+                isMuted: false,
+            },
+        };
+        mockSocketService.findSocketUser.mockReturnValue(mockSocketUser);
+        mockSocketGameManagerService.isRoomValid.mockReturnValue(true);
+        mockSocketGameManagerService.isMessageValid.mockReturnValue(false);
+        gateway.sendMessage = jest.fn();
+        gateway.handleRoomMessage(mockSocket as unknown as Socket, 'testMessage');
+        expect(mockSocketGameManagerService.isMessageValid).toHaveBeenCalledWith('testMessage');
+        expect(gateway.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('handleRoomMessage should return if the user is muted', () => {
+        const mockSocketUser: UserSocket = {
+            data: {
+                id: 'socketId',
+                username: 'test',
+                answered: false,
+                isMuted: true,
+            },
+        };
+        mockSocketService.findSocketUser.mockReturnValue(mockSocketUser);
+        mockSocketGameManagerService.isRoomValid.mockReturnValue(true);
+        gateway.sendMessage = jest.fn();
+        gateway.handleRoomMessage(mockSocket as unknown as Socket, 'testMessage');
+        expect(mockSocketGameManagerService.isRoomValid).toHaveBeenCalledWith(gateway['rooms'], mockSocket as unknown as Socket);
+        expect(gateway.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('sendMessage should emit the message and add it to room message list', () => {
+        const message = 'testMessage';
+        const mockRoomCode = '1234';
+        mockSocket.data.room = mockRoomCode;
+        gateway['server'].to = jest.fn().mockReturnValue({
+            emit: jest.fn(),
+        });
+
+        gateway.sendMessage(mockSocket as unknown as Socket, message);
+        expect(gateway['server'].to).toHaveBeenCalledWith(mockRoomCode);
+        expect(gateway['server'].to(mockRoomCode).emit).toHaveBeenCalledWith(GameEvents.SendMessage, message);
+    });
+
+    it('should return all room messages if room exists', () => {
+        const mockRoom: Room = {
+            roomMessages: ['message1', 'message2'],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        const mockRoomCode = '1234';
+        mockSocket.data.room = mockRoomCode;
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+
+        const result = gateway.getAllMessages(mockSocket as unknown as Socket);
+
+        expect(result).toEqual(mockRoom.roomMessages);
+    });
+
+    it('should call addAnswer and getAnswers with the correct arguments and update player state', () => {
+        const mockSocketUser: UserSocket = {
+            data: {
+                room: '0',
+                id: 'socketId',
+                username: 'test',
+                answered: false,
+                state: 0,
+            },
+        };
+        const mockAnswer: Answer = {
+            questionIndex: 1,
+            answer: 1,
+        };
+        const mockRoom: Room = {
+            roomMessages: ['message1', 'message2'],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        const mockRoomCode = '1234';
+        mockSocket.data.room = mockRoomCode;
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        mockSocketService.findSocketUser.mockReturnValue(mockSocketUser);
+        mockSocketGameManagerService.addAnswer = jest.fn();
+        gateway.getAnswers = jest.fn();
+        const spy = jest.spyOn(gateway, 'updatePlayerState');
+        gateway.addAnswer(mockSocket as unknown as Socket, mockAnswer);
+
+        expect(spy).toHaveBeenCalled();
+        expect(mockSocketGameManagerService.addAnswer).toHaveBeenCalledWith(mockSocket, mockAnswer, gateway['rooms']);
+        expect(gateway.getAnswers).toHaveBeenCalledWith(mockSocket, mockAnswer.questionIndex);
+    });
+
+    it('should call server.to.emit with the correct arguments if room exists', () => {
+        const mockRoom: Room = {
+            roomMessages: ['message1', 'message2'],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        const mockRoomCode = '1234';
+        const questionIndex = 1;
+        mockSocket.data.room = mockRoomCode;
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        gateway['server'].to = jest.fn().mockReturnValue({
+            emit: jest.fn(),
+        });
+
+        gateway.getAnswers(mockSocket as unknown as Socket, questionIndex);
+
+        expect(gateway['server'].to).toHaveBeenCalledWith(mockRoomCode);
+        expect(gateway['server'].to(mockRoomCode).emit).toHaveBeenCalledWith(GameEvents.GetAnswers, mockRoom.gameStats.questions[questionIndex]);
+    });
+
+    it('should return gameStats if room exists', () => {
+        const mockRoom: Room = {
+            roomMessages: [],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        const mockRoomCode = '1234';
+        mockSocket.data.room = mockRoomCode;
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+
+        const result = gateway.getStats(mockSocket as unknown as Socket);
+
+        expect(result).toEqual(mockRoom.gameStats);
+    });
+
+    it('should return socket data', () => {
+        const mockSocketData = mockSocket.data;
+        const result = gateway.getUserInfo(mockSocket as unknown as Socket);
+        expect(result).toEqual(mockSocketData);
+    });
+
+    it('should return true or false if socket is in random room or not', () => {
+        let result = gateway.getRandom(mockSocket as unknown as Socket);
+        expect(result).toEqual(null);
+        mockSocket.data.room = '0';
+        gateway['rooms'].set('0', { isRandom: true } as unknown as Room);
+        result = gateway.getRandom(mockSocket as unknown as Socket);
+        expect(result).toEqual(true);
+    });
+
+    it('should pause the timer', () => {
+        gateway['rooms'] = new Map();
+        const mockRoom: Room = {
+            roomMessages: [],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        gateway['rooms'].set('1234', mockRoom);
+        mockSocket.data.room = '1234';
+
+        gateway.pauseTimer(mockSocket as unknown as Socket);
+        expect(mockSocketTimeManagerService.pauseTimer).toHaveBeenCalledWith(gateway['rooms'].get('1234'), '1234');
+    });
+
+    it('should start panic mode', () => {
+        gateway['rooms'] = new Map();
+        const mockRoom: Room = {
+            roomMessages: [],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        gateway['rooms'].set('1234', mockRoom);
+        mockSocket.data.room = '1234';
+        const timeLeft = 50;
+        const questionIndex = 0;
+        mockSocketTimeManagerService.panicTimer.mockReturnValue(true);
+        gateway.panicMode(mockSocket as unknown as Socket, { questionIndex: 0, timeLeft });
+        expect(mockSocketTimeManagerService.panicTimer).toHaveBeenCalledWith(gateway['rooms'].get('1234'), '1234', timeLeft, questionIndex);
+        expect(gateway['server'].to).toHaveBeenCalledWith('1234');
+    });
+
+    describe('startGame', () => {
+        it('should set the startingTime for the room when the game starts', () => {
+            // Mock a room and its starting state
+            const mockRoom: Room = {
+                isOpen: true,
+                bannedUsers: [],
+                gameStats: mockGameStats,
+                isStarted: false,
+                isPaused: false,
+                delayTick: 1000,
+                roomMessages: [],
+                startingTime: '',
+                timer: undefined,
+                socketTimers: new Map(),
+            };
+
+            // Set the room in the gateway's rooms Map
+            gateway['rooms'].set(mockSocket.data.room, mockRoom);
+
+            // Call startGame method with the mock socket
+            gateway.startGame(mockSocket as unknown as Socket);
+
+            // Get the room after the method call to check if startingTime was set
+            const updatedRoom = gateway['rooms'].get(mockSocket.data.room);
+
+            // Check if startingTime was updated
+            expect(updatedRoom.startingTime).not.toBe('');
+            expect(new Date(updatedRoom.startingTime)).toBeInstanceOf(Date);
+        });
+    });
+
+    it('should send Text to user if sendTextAnswer socket is called', () => {
+        const mockSocketUser: UserSocket = {
+            data: {
+                room: '0',
+                id: 'socketId',
+                username: 'test',
+                answered: false,
+                state: 0,
+            },
+        };
+        const mockRoom: Room = {
+            roomMessages: ['message1', 'message2'],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        const mockRoomCode = '1234';
+        mockSocket.data.room = mockRoomCode;
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        mockSocketService.findSocketUser.mockReturnValue(mockSocketUser);
+        const spy = jest.spyOn(gateway, 'sendTextAnswer');
+        gateway.sendTextAnswer(mockSocket as unknown as Socket, 'testText');
+
+        expect(spy).toHaveBeenCalled();
+        expect(mockSocketUser.data.textAnswer).toEqual('testText');
+    });
+
+    it('should return textAnswers if room exists', () => {
+        const mockRoom: Room = {
+            roomMessages: [],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        const mockRoomCode = '1234';
+        mockSocket.data.room = mockRoomCode;
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        mockSocketService.getTextsFromRoom.mockReturnValue(['lol', 'xD']);
+        const spy = jest.spyOn(mockSocketService, 'getTextsFromRoom');
+        gateway.getTextAnswers(mockSocket as unknown as Socket);
+
+        expect(spy).toHaveBeenCalled();
+    });
+
+    it('should changeQrlQuestion if room exists', () => {
+        const mockRoom: Room = {
+            roomMessages: [],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        const mockRoomCode = '1234';
+        mockSocket.data.room = mockRoomCode;
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        mockSocketService.changeQrlStatlines.mockImplementation();
+        const spy = jest.spyOn(mockSocketService, 'changeQrlStatlines');
+        gateway.changeQrlQuestion(mockSocket as unknown as Socket, '0');
+
+        expect(spy).toHaveBeenCalled();
+    });
+
+    it('should givePoints', () => {
+        const mockRoom: Room = {
+            roomMessages: ['message1', 'message2'],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        const mockGivePointsInfo: GivePointsInfo = {
+            pointsGiven: 0,
+            username: 'john',
+            percentageGiven: '0%',
+            questionIndex: 0,
+        };
+        const mockRoomCode = '1234';
+        mockSocket.data.room = mockRoomCode;
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        const spy = jest.spyOn(mockSocketGameManagerService, 'givePoints');
+        gateway.givePoints(mockSocket as unknown as Socket, mockGivePointsInfo);
+
+        expect(spy).toHaveBeenCalled();
+    });
+
+    it('should endCorrection and emit EndRound', () => {
+        const mockRoomCode = 'room1';
+
+        const mockRoom: Room = {
+            roomMessages: [],
+            isOpen: true,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        gateway.getAnswers = jest.fn();
+        gateway['server'].to = jest.fn().mockReturnValue({
+            emit: jest.fn(),
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        gateway.endCorrection(mockSocket as any, '0');
+        expect(gateway.getAnswers).toHaveBeenCalledWith(mockSocket, 0);
+    });
+
+    it('should change user activity on makeUserActive socket call', () => {
+        const mockSocketUser: UserSocket = {
+            data: {
+                room: '0',
+                id: 'socketId',
+                username: 'test',
+                answered: false,
+                state: 1,
+            },
+        };
+        // eslint-disable-next-line
+        const mockTimer = setInterval(() => {}, 1000);
+        const mockRoom: Room = {
+            roomMessages: ['message1', 'message2'],
+            isOpen: false,
+            bannedUsers: [],
+            gameStats: mockGameStats,
+            isStarted: false,
+            isPaused: false,
+            delayTick: 1000,
+            timer: setInterval(() => {
+                mockServer.to('1234').emit(GameClientEvents.Tick, {});
+            }, DEFAULT_DELAY),
+            startingTime: '',
+            socketTimers: new Map(),
+        };
+        mockRoom.socketTimers.set('test', mockTimer);
+
+        const mockRoomCode = '1234';
+        mockSocket.data.room = mockRoomCode;
+        gateway['rooms'] = new Map();
+        gateway['rooms'].set(mockRoomCode, mockRoom);
+        jest.useFakeTimers();
+        mockSocketService.findSocketUser.mockReturnValue(mockSocketUser);
+        mockSocketService.wereStatlinesChanged.mockReturnValue(false);
+        mockSocketService.findNameInStatLine.mockReturnValue(false);
+        gateway.getAnswers = jest.fn();
+        const spy = jest.spyOn(gateway, 'updatePlayerState');
+
+        gateway.makeUserActive(mockSocket as unknown as Socket, '0');
+        // eslint-disable-next-line
+        jest.advanceTimersByTime(5000);
+        expect(gateway.getAnswers).toHaveBeenCalledWith(mockSocket, 0);
+        expect(gateway.updatePlayerState).toHaveBeenCalled();
+        expect(spy).toHaveBeenCalled();
+        jest.useRealTimers();
     });
 });

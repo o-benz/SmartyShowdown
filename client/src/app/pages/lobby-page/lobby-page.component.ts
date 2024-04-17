@@ -1,9 +1,9 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ErrorMessages } from '@app/interfaces/error-messages';
+import { ErrorMessages } from '@app/interfaces/alert-messages';
 import { User } from '@app/interfaces/socket-model';
 import { CountdownService } from '@app/services/countdown/countdown.service';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
 import { Subscription } from 'rxjs';
 
@@ -29,29 +29,9 @@ export class LobbyPageComponent implements OnInit, OnDestroy {
         private router: Router,
         private changeDetectorRef: ChangeDetectorRef,
         private socketCommunicationService: SocketCommunicationService,
-        private dialogError: DialogErrorService,
+        private dialogError: DialogAlertService,
         private countdownService: CountdownService,
     ) {}
-
-    get countdownSub(): Subscription {
-        return this.countdownSubscription;
-    }
-
-    get lobbySub(): Subscription {
-        return this.lobbySubscription;
-    }
-
-    set countdownSub(sub: Subscription) {
-        this.countdownSubscription = sub;
-    }
-
-    set lobbySub(sub: Subscription) {
-        this.lobbySubscription = sub;
-    }
-
-    set organizer(bool: boolean) {
-        this.isOrganizer = bool;
-    }
 
     ngOnInit(): void {
         this.getQuizName();
@@ -66,7 +46,7 @@ export class LobbyPageComponent implements OnInit, OnDestroy {
         });
 
         this.socketCommunicationService.onRoomClosed(() => {
-            this.dialogError.closeErrorDialog();
+            this.dialogError.closeAlertDialog();
             this.dialogError.openErrorDialog(this.isOrganizer ? ErrorMessages.QuitRoom : ErrorMessages.ClosedRoom);
             this.socketCommunicationService.leaveRoom();
             this.router.navigate(['/']);
@@ -100,17 +80,12 @@ export class LobbyPageComponent implements OnInit, OnDestroy {
     }
 
     startGame(): void {
-        if (this.roomCode && this.isOrganizer) {
-            this.socketCommunicationService.attemptStartGame(this.roomCode).subscribe((open) => {
-                if (open) {
-                    //
-                } else if (!this.roomLocked) {
-                    this.dialogError.openErrorDialog(ErrorMessages.NotLockRoom);
-                } else {
-                    this.dialogError.openErrorDialog(ErrorMessages.NoPlayer);
-                }
-            });
-        }
+        this.socketCommunicationService.attemptStartGame(this.roomCode).subscribe((open) => {
+            if (!open) {
+                const errorMessage = this.roomLocked ? ErrorMessages.NoPlayer : ErrorMessages.NotLockRoom;
+                this.dialogError.openErrorDialog(errorMessage);
+            }
+        });
     }
 
     startGameCountdown(): void {

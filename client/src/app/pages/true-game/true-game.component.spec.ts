@@ -1,22 +1,22 @@
 /* eslint-disable max-classes-per-file */
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnswerZoneComponent } from '@app/components/answer-zone/answer-zone.component';
 import { HeaderComponent } from '@app/components/header/header.component';
 import { QuestionZoneComponent } from '@app/components/question-zone/question-zone.component';
-import { User } from '@app/interfaces/socket-model';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
-import { GameService } from '@app/services/game/game.service';
-import { QuizService } from '@app/services/quiz/quiz.service';
-import { of, take } from 'rxjs';
-// eslint-disable-next-line
-import { Component } from '@angular/core';
+import { SocketAnswer, User } from '@app/interfaces/socket-model';
 import { OrganizerViewComponent } from '@app/pages/organizer-view/organizer-view.component';
 import { PLACEHOLDER_GAME_STATS } from '@app/services/constants';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
+import { GameService } from '@app/services/game/game.service';
+import { QuizService } from '@app/services/quiz/quiz.service';
 import { SocketCommunicationService } from '@app/services/sockets-communication/socket-communication.service';
+import { of, take } from 'rxjs';
 import { TrueGameComponent } from './true-game.component';
+/* eslint-disable max-lines */
 
 @Component({ standalone: true, selector: 'app-chat-box', template: '' })
 class ChatStubComponent {}
@@ -28,21 +28,25 @@ describe('TrueGameComponent', () => {
     let routerSpy: jasmine.SpyObj<Router>;
     let socketServiceSpy: jasmine.SpyObj<SocketCommunicationService>;
     let quizServiceSpy: jasmine.SpyObj<QuizService>;
-    let dialogServiceSpy: jasmine.SpyObj<DialogErrorService>;
+    let dialogServiceSpy: jasmine.SpyObj<DialogAlertService>;
     // eslint-disable-next-line
     let routeMock: any;
     const durationTest = 60;
-    const pointsModifier = 1.2;
-
     beforeEach(() => {
-        const gameSpy = jasmine.createSpyObj('GameService', ['postCurrentChoices']);
+        const gameSpy = jasmine.createSpyObj('GameService', ['postCurrentChoices', 'giveUserPoints', 'gamestatsToQuestions']);
         socketServiceSpy = jasmine.createSpyObj('SocketCommunicationService', [
             'getUser',
             'getStats',
+            'getRandom',
             'onChangeQuestion',
-            'onFinalizeAnswers',
             'onShowResults',
             'connect',
+            'disconnect',
+            'createRoom',
+            'login',
+            'joinRoom',
+            'lockRoom',
+            'attemptStartGame',
         ]);
         let internalScore = 0;
         Object.defineProperty(gameSpy, 'score', {
@@ -58,7 +62,7 @@ describe('TrueGameComponent', () => {
                 internalIsFinalScore = value;
             }),
         });
-        dialogServiceSpy = jasmine.createSpyObj('DialogErrorService', ['closeErrorDialog']);
+        dialogServiceSpy = jasmine.createSpyObj('DialogAlertService', ['closeAlertDialog']);
         const quizSpy = jasmine.createSpyObj('QuizService', ['getQuizById']);
         routeMock = {
             snapshot: {
@@ -78,7 +82,7 @@ describe('TrueGameComponent', () => {
                 { provide: SocketCommunicationService, useValue: socketServiceSpy },
                 { provide: QuizService, useValue: quizSpy },
                 { provide: GameService, useValue: gameSpy },
-                { provide: DialogErrorService, useValue: dialogServiceSpy },
+                { provide: DialogAlertService, useValue: dialogServiceSpy },
             ],
         });
 
@@ -87,6 +91,19 @@ describe('TrueGameComponent', () => {
         quizServiceSpy = TestBed.inject(QuizService) as jasmine.SpyObj<QuizService>;
         gameServiceSpy = TestBed.inject(GameService) as jasmine.SpyObj<GameService>;
         routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+        gameServiceSpy.gamestatsToQuestions.and.returnValue([
+            {
+                type: 'QCM',
+                text: 'What is 1 + 1?',
+                points: 10,
+                choices: [
+                    { text: '1', isCorrect: false },
+                    { text: '2', isCorrect: true },
+                    { text: '3', isCorrect: false },
+                ],
+            },
+        ]);
+        socketServiceSpy.getRandom.and.returnValue(of(true));
         quizServiceSpy.getQuizById.and.returnValue(
             of({
                 id: 'test-id',
@@ -122,10 +139,21 @@ describe('TrueGameComponent', () => {
             { type: 'QRL', text: 'Question 2', points: 10 },
         ];
         component.mode = 'test';
-        component.questions = testQuestions;
+        component['questions'] = testQuestions;
         component.questionIndex = 0;
         component.nextQuestion(false);
         expect(component.currentQuestion).toEqual(testQuestions[1]);
+    });
+
+    it('should update currentQuestion when advancing to the next question', () => {
+        const testQuestions = [
+            { type: 'QRL', text: 'Question 1', points: 10 },
+            { type: 'QRL', text: 'Question 2', points: 10 },
+        ];
+        component['questions'] = testQuestions;
+        component.questionIndex = 1;
+        component.nextQuestion(false);
+        expect(routerSpy.navigate).toHaveBeenCalledWith(['/game/result']);
     });
 
     it('should go back to quiz selection if game is ended in test mode', () => {
@@ -133,7 +161,7 @@ describe('TrueGameComponent', () => {
             { type: 'QRL', text: 'Question 1', points: 10 },
             { type: 'QRL', text: 'Question 2', points: 10 },
         ];
-        component.questions = testQuestions;
+        component['questions'] = testQuestions;
         component.questionIndex = 1;
         component.mode = 'test';
         component.nextQuestion(false);
@@ -142,7 +170,7 @@ describe('TrueGameComponent', () => {
 
     it('should calculate score correctly in test mode', () => {
         component.currentQuestion = {
-            type: 'Multiple Choice',
+            type: 'QCM',
             text: 'What is 1 + 1?',
             points: 10,
             choices: [
@@ -153,38 +181,10 @@ describe('TrueGameComponent', () => {
         };
         component.mode = 'test';
         component.calculateScore(true);
-        expect(gameServiceSpy.score).toEqual(component.currentQuestion.points * pointsModifier);
+        expect(gameServiceSpy.giveUserPoints).toHaveBeenCalled();
     });
 
-    it('should calculate score correctly when not in test mode', () => {
-        component.currentQuestion = {
-            type: 'Multiple Choice',
-            text: 'What is 1 + 1?',
-            points: 10,
-            choices: [
-                { text: '1', isCorrect: false },
-                { text: '2', isCorrect: true },
-                { text: '3', isCorrect: false },
-            ],
-        };
-        component.mode = '';
-        component.calculateScore(true);
-        expect(gameServiceSpy.score).toEqual(component.currentQuestion.points);
-    });
-
-    it('should focus on chat if setFocusOnChat is called', () => {
-        component.setFocusOnChat();
-        expect(component.isChatFocused).toBeTrue();
-        expect(component.isGameFocused).toBeFalse();
-    });
-
-    it('should focus on chat if setFocusOnChat is called', () => {
-        component.setFocusOnGame();
-        expect(component.isChatFocused).toBeFalse();
-        expect(component.isGameFocused).toBeTrue();
-    });
-
-    it('should go with test mode if the url is for test on Init', fakeAsync(() => {
+    it('should go with test mode if the url is for test on Init', async () => {
         const fakeUser: User = {
             username: 'fakeUser123',
             answered: false,
@@ -195,13 +195,15 @@ describe('TrueGameComponent', () => {
             firstToAnswer: false,
             hasLeft: false,
         };
+        socketServiceSpy.getRandom.and.returnValue(of(true));
         socketServiceSpy.getUser.and.returnValue(of(fakeUser));
+        socketServiceSpy.createRoom.and.returnValue(of('room-101'));
+
+        socketServiceSpy.login.and.returnValue(of({ joined: true } as SocketAnswer));
+        socketServiceSpy.joinRoom.and.returnValue(of({ joined: true } as SocketAnswer));
+        socketServiceSpy.attemptStartGame.and.returnValue(of(true));
 
         socketServiceSpy.onChangeQuestion.and.callFake((callback) => {
-            callback();
-        });
-
-        socketServiceSpy.onFinalizeAnswers.and.callFake((callback) => {
             callback();
         });
 
@@ -209,16 +211,15 @@ describe('TrueGameComponent', () => {
             callback();
         });
         gameServiceSpy.isChoiceFinal = false;
+
         component.ngOnInit();
-        tick();
 
         expect(component.mode).toEqual('test');
         expect(component.time).toEqual(durationTest);
         expect(socketServiceSpy.getUser).toHaveBeenCalled();
         expect(socketServiceSpy.onChangeQuestion).toHaveBeenCalled();
-        expect(socketServiceSpy.onFinalizeAnswers).toHaveBeenCalled();
         expect(socketServiceSpy.onShowResults).toHaveBeenCalled();
-    }));
+    });
 
     it('should go with test mode if the url is for test on Init', fakeAsync(() => {
         routeMock.snapshot.paramMap = {
@@ -235,12 +236,13 @@ describe('TrueGameComponent', () => {
             hasLeft: false,
         };
         socketServiceSpy.getUser.and.returnValue(of(fakeUser));
+        socketServiceSpy.createRoom.and.returnValue(of('room-101'));
+
+        socketServiceSpy.login.and.returnValue(of({ joined: true } as SocketAnswer));
+        socketServiceSpy.joinRoom.and.returnValue(of({ joined: true } as SocketAnswer));
+        socketServiceSpy.attemptStartGame.and.returnValue(of(true));
 
         socketServiceSpy.onChangeQuestion.and.callFake((callback) => {
-            callback();
-        });
-
-        socketServiceSpy.onFinalizeAnswers.and.callFake((callback) => {
             callback();
         });
 
@@ -254,9 +256,49 @@ describe('TrueGameComponent', () => {
         expect(component.mode).toEqual('test');
         expect(socketServiceSpy.getUser).toHaveBeenCalled();
         expect(socketServiceSpy.onChangeQuestion).toHaveBeenCalled();
-        expect(socketServiceSpy.onFinalizeAnswers).toHaveBeenCalled();
         expect(socketServiceSpy.onShowResults).toHaveBeenCalled();
     }));
+
+    it('should not go the is random route', fakeAsync(() => {
+        routeMock.snapshot.paramMap = {
+            get: () => '',
+        };
+        const fakeUser: User = {
+            username: 'fakeUser123',
+            answered: false,
+            id: 'user-001',
+            room: 'room-101',
+            score: 0,
+            bonus: 0,
+            firstToAnswer: false,
+            hasLeft: false,
+        };
+        socketServiceSpy.getRandom.and.returnValue(of(false));
+
+        socketServiceSpy.getUser.and.returnValue(of(fakeUser));
+        socketServiceSpy.createRoom.and.returnValue(of('room-101'));
+
+        socketServiceSpy.login.and.returnValue(of({ joined: true } as SocketAnswer));
+        socketServiceSpy.joinRoom.and.returnValue(of({ joined: true } as SocketAnswer));
+        socketServiceSpy.attemptStartGame.and.returnValue(of(true));
+
+        socketServiceSpy.onChangeQuestion.and.callFake((callback) => {
+            callback();
+        });
+
+        socketServiceSpy.onShowResults.and.callFake((callback) => {
+            callback();
+        });
+        gameServiceSpy.isChoiceFinal = false;
+        component.ngOnInit();
+        tick();
+
+        expect(component.mode).toEqual('test');
+        expect(socketServiceSpy.getUser).toHaveBeenCalled();
+        expect(socketServiceSpy.onChangeQuestion).toHaveBeenCalled();
+        expect(socketServiceSpy.onShowResults).toHaveBeenCalled();
+    }));
+
     it('should use socket if not using test mode on Init', fakeAsync(() => {
         routeMock.snapshot.url = ['live'];
 
@@ -278,10 +320,6 @@ describe('TrueGameComponent', () => {
             callback();
         });
 
-        socketServiceSpy.onFinalizeAnswers.and.callFake((callback) => {
-            callback();
-        });
-
         socketServiceSpy.onShowResults.and.callFake((callback) => {
             callback();
         });
@@ -292,7 +330,6 @@ describe('TrueGameComponent', () => {
         expect(socketServiceSpy.getStats).toHaveBeenCalled();
         expect(socketServiceSpy.getUser).toHaveBeenCalled();
         expect(socketServiceSpy.onChangeQuestion).toHaveBeenCalled();
-        expect(socketServiceSpy.onFinalizeAnswers).toHaveBeenCalled();
         expect(socketServiceSpy.onShowResults).toHaveBeenCalled();
     }));
 

@@ -1,9 +1,9 @@
 import { GameClientEvents, GameEnum } from '@app/gateways/game/game.gateway.events';
 import { BONUS_MULTIPLIER } from '@app/model/quiz/quiz.schema';
-import { Answer, Room, UserSocket } from '@app/model/socket/socket.schema';
+import { Answer, GivePointsInfo, Room, UserSocket } from '@app/model/socket/socket.schema';
 import { Server, Socket } from 'socket.io';
 import { SocketGameManagerService } from './socket-game-manager.service';
-
+/* eslint-disable max-lines */
 describe('SocketGameManager', () => {
     let service: SocketGameManagerService;
     let mockSocket: Socket;
@@ -23,7 +23,15 @@ describe('SocketGameManager', () => {
         } as unknown as Socket;
         mockRoom = {
             gameStats: {
-                questions: [{ statLines: [{ label: 'label', users: [] }], points: 0, title: 'title', type: 'type' }],
+                questions: [
+                    {
+                        statLines: [{ label: 'label', users: [] }],
+                        points: 0,
+                        title: 'title',
+                        type: 'type',
+                        pointsGiven: { none: ['among us'], half: ['baka'], all: ['sussy'] },
+                    },
+                ],
                 users: [],
             },
             roomMessages: [],
@@ -115,6 +123,10 @@ describe('SocketGameManager', () => {
     it('canConfirmAnswer should return true if the user has not answered', () => {
         mockUserSocket.data.answered = false;
         expect(service.canConfirmAnswer(mockUserSocket)).toEqual(true);
+    });
+
+    it('getQuestionType should return the type of the question', () => {
+        expect(service.getQuestionType(mockRoom, '0')).toEqual('type');
     });
 
     it('finishQuestion should set the timeFinished property to true', () => {
@@ -218,11 +230,13 @@ describe('SocketGameManager', () => {
 
     it('checkAnswers should add points if the user answered correctly', () => {
         const expectedScore = 10;
+        const expectedBonus = 2;
         mockRoom.gameStats.questions[0].statLines = [{ label: 'some label', users: ['username'], isCorrect: true }];
         mockRoom.gameStats.questions[0].points = expectedScore;
         mockSocket.data.score = 0;
+        mockRoom.gameStats.users.push(mockSocket);
         service.checkAnswers(mockSocket, 0, mockRoom);
-        expect(mockSocket.data.score).toEqual(expectedScore);
+        expect(mockSocket.data.score).toEqual(expectedScore + expectedBonus);
     });
 
     it('checkAnswers should add bonus points if the user is the first to answer', () => {
@@ -246,24 +260,24 @@ describe('SocketGameManager', () => {
         expect(mockRoom.gameStats.users[0].data.score).toEqual(0);
     });
 
-    it('isRoomValid should return true if room code is not provided', () => {
+    it('isRoomValid should return false if room code is not provided', () => {
         const mockRooms = new Map();
         mockSocket.data.room = null;
         const result = service.isRoomValid(mockRooms, mockSocket);
-        expect(result).toEqual(true);
+        expect(result).toEqual(false);
     });
 
-    it('isRoomValid should return true if room code is provided but room does not exist', () => {
+    it('isRoomValid should return false if room code is provided but room does not exist', () => {
         const mockRooms = new Map();
         const result = service.isRoomValid(mockRooms, mockSocket);
-        expect(result).toEqual(true);
+        expect(result).toEqual(false);
     });
 
-    it('isRoomValid should return false if room code is provided and room exists', () => {
+    it('isRoomValid should return true if room code is provided and room exists', () => {
         const mockRooms = new Map([['room', mockRoom]]);
         mockSocket.data.room = 'room';
         const result = service.isRoomValid(mockRooms, mockSocket);
-        expect(result).toEqual(false);
+        expect(result).toEqual(true);
     });
 
     it('isMessageValid should return false if message is null', () => {
@@ -287,5 +301,57 @@ describe('SocketGameManager', () => {
         const message = 'Hello, world!';
         service.handleRoomMessage(mockRoom, message);
         expect(mockRoom.roomMessages).toContain(message);
+    });
+
+    it('should send player left message', () => {
+        const currentDate = new Date();
+        const expectedMessage = `[${currentDate.getHours()}h:${currentDate.getMinutes()}min Système]: Le joueur "username" a quitté`;
+        service.handleRoomMessage = jest.fn();
+        service.sendPlayerLeftMessage(mockSocket, mockRoom);
+
+        expect(service.handleRoomMessage).toHaveBeenCalledWith(mockRoom, expectedMessage);
+        expect(mockServer.to).toHaveBeenCalledWith(mockSocket.data.room);
+    });
+
+    it('Calling givePoints with 0 should put user in the none zone', () => {
+        const mockGivePointsInfo: GivePointsInfo = {
+            pointsGiven: 0,
+            username: 'john',
+            percentageGiven: '0%',
+            questionIndex: 0,
+        };
+        service.givePoints(mockRoom, mockUserSocket, mockGivePointsInfo);
+        expect(mockRoom.gameStats.questions[0].pointsGiven.none).toContain('john');
+    });
+
+    it('Calling givePoints with 0.5 should put user in the half zone', () => {
+        const mockGivePointsInfo: GivePointsInfo = {
+            pointsGiven: 0.5,
+            username: 'john',
+            percentageGiven: '50%',
+            questionIndex: 0,
+        };
+        service.givePoints(mockRoom, mockUserSocket, mockGivePointsInfo);
+        expect(mockRoom.gameStats.questions[0].pointsGiven.half).toContain('john');
+    });
+
+    it('Calling givePoints with 1 should put user in the all zone', () => {
+        const mockGivePointsInfo: GivePointsInfo = {
+            pointsGiven: 1,
+            username: 'john',
+            percentageGiven: '100%',
+            questionIndex: 0,
+        };
+        service.givePoints(mockRoom, mockUserSocket, mockGivePointsInfo);
+        expect(mockRoom.gameStats.questions[0].pointsGiven.all).toContain('john');
+    });
+
+    it('changeUserActivityOnPress should change user from one statline to the other', () => {
+        mockRoom.gameStats.questions[0].statLines = [
+            { label: 'active', users: ['john'], isCorrect: false },
+            { label: 'inactive', users: [], isCorrect: false },
+        ];
+        service.changeUserActivityOnPress(mockRoom.gameStats.questions[0], 'john', 1, 0);
+        expect(mockRoom.gameStats.questions[0].statLines[1].users).toContain('john');
     });
 });

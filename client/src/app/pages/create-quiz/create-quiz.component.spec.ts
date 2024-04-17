@@ -5,9 +5,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HeaderComponent } from '@app/components/header/header.component';
-import { NewQcmComponent } from '@app/components/new-qcm/new-qcm.component';
+import { NewQuestionComponent } from '@app/components/new-question/new-question.component';
 import { QuestionModificationComponent } from '@app/components/question-modification/question-modification.component';
-import { DialogErrorService } from '@app/services/dialog-error-handler/dialog-error.service';
+import { DialogAlertService } from '@app/services/dialog-alert-handler/dialog-alert.service';
 import { QuizService } from '@app/services/quiz/quiz.service';
 import { of } from 'rxjs';
 import { CreateQuizComponent } from './create-quiz.component';
@@ -17,18 +17,23 @@ describe('CreateQuizComponent', () => {
     let component: CreateQuizComponent;
     let fixture: ComponentFixture<CreateQuizComponent>;
     let quizServiceSpy: SpyObj<QuizService>;
-    let mockDialogErrorService: jasmine.SpyObj<DialogErrorService>;
+    let mockDialogAlertService: jasmine.SpyObj<DialogAlertService>;
+    let mockMatDialog: jasmine.SpyObj<MatDialog>;
 
     beforeEach(() => {
         quizServiceSpy = jasmine.createSpyObj('QuizService', ['getQuizById', 'addQuiz']);
-        mockDialogErrorService = jasmine.createSpyObj('DialogErrorService', ['openErrorDialog']);
+        mockDialogAlertService = jasmine.createSpyObj('DialogAlertService', ['openErrorDialog']);
+        mockMatDialog = jasmine.createSpyObj('MatDialog', ['open']);
+        const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed'], ['confirm']);
+        mockDialogRef.afterClosed.and.returnValue(of(true));
+        mockMatDialog.open.and.returnValue(mockDialogRef);
         TestBed.configureTestingModule({
-            declarations: [CreateQuizComponent, HeaderComponent, QuestionModificationComponent, NewQcmComponent],
+            declarations: [CreateQuizComponent, HeaderComponent, QuestionModificationComponent, NewQuestionComponent],
             imports: [RouterTestingModule, HttpClientModule, FormsModule],
             providers: [
                 { provide: QuizService, useValue: quizServiceSpy },
-                MatDialog,
-                { provide: DialogErrorService, useValue: mockDialogErrorService },
+                { provide: MatDialog, useValue: mockMatDialog },
+                { provide: DialogAlertService, useValue: mockDialogAlertService },
             ],
         });
         fixture = TestBed.createComponent(CreateQuizComponent);
@@ -110,6 +115,6 @@ describe('CreateQuizComponent', () => {
         };
         component.onSubmit();
         expect(quizServiceSpy.addQuiz).toHaveBeenCalled();
-        expect(mockDialogErrorService.openErrorDialog).toHaveBeenCalled();
+        expect(mockDialogAlertService.openErrorDialog).toHaveBeenCalled();
     });
 });
