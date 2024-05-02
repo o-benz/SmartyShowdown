@@ -76,7 +76,7 @@ SmartyShowdown has been meticulously developed, leveraging a range of tools and 
 ## Creators
 
 SmartyShowdown is the result of the collaborative effort of:
-- Omar Benzekri
+- Omar BENZEKRI
 - Charles DESROSIERS
 - Hugo LEFEBVRE
 - Thomas ROULEAU
