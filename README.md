@@ -10,6 +10,7 @@ SmartyShowdown is a web-based quiz platform that lets you create, play, and shar
 - [Usage](#usage)
 - [Development](#development)
 - [Creators](#creators)
+- [License](#license)
 
 ## Features
 
@@ -82,3 +83,7 @@ SmartyShowdown is the result of the collaborative effort of:
 - Thomas ROULEAU
 - Yassine SEDDAOUI
 - Éloi VINCENT-LÉGARÉ
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE), so feel free to use, modify, and share it as you like.
